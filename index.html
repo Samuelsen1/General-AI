@@ -64,7 +64,7 @@
     .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.15rem; color: var(--text); letter-spacing: -0.02em; }
     .logo-icon { color: var(--accent); font-size: 1rem; }
     .tagline { margin: 0.4rem 0 0 1.5rem; font-size: 0.8rem; color: var(--text-dim); font-weight: 400; }
-    .chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.1rem; padding: 0.25rem 0; }
+    .chat { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1.1rem; padding: 0.25rem 0; }
     .message { padding: 1.1rem 1.25rem; border-radius: var(--radius); max-width: 88%; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
     .message:hover { box-shadow: var(--shadow-md); }
     .message .label { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; color: var(--text-dim); }
@@ -236,7 +236,7 @@
         d.innerHTML = "<span class=\"label\">" + (label || (role === "user" ? "You" : "General")) + "</span><p></p>";
         d.querySelector("p").innerHTML = formatMsg(text);
         chat.appendChild(d);
-        chat.scrollTop = chat.scrollHeight;
+        requestAnimationFrame(function () { d.scrollIntoView({ behavior: "auto", block: "end" }); });
       }
 
       function resize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 200) + "px"; }
@@ -246,12 +246,14 @@
         resizeScheduled = true;
         requestAnimationFrame(function () { resize(); resizeScheduled = false; });
       }
-      input.addEventListener("input", scheduleResize, { passive: true });
+      input.addEventListener("input", function() {
+        if (input.value.indexOf("\n") >= 0) input.value = input.value.replace(/\n/g, "");
+        scheduleResize();
+      }, { passive: true });
       input.addEventListener("keydown", function(e) {
-        var isEnter = e.key === "Enter" || e.keyCode === 13;
-        if (isEnter && !e.shiftKey) {
+        if (e.key === "Enter" || e.keyCode === 13) {
           e.preventDefault();
-          if (form && typeof form.requestSubmit === "function") form.requestSubmit(); else if (send) send.click();
+          if (!e.shiftKey) { if (form && typeof form.requestSubmit === "function") form.requestSubmit(); else if (send) send.click(); }
         }
       }, true);
 
@@ -260,7 +262,7 @@
         d.className = "message ai typing";
         d.innerHTML = "<span class=\"label\">General</span><p>Searching…</p>";
         chat.appendChild(d);
-        chat.scrollTop = chat.scrollHeight;
+        requestAnimationFrame(function () { d.scrollIntoView({ behavior: "auto", block: "end" }); });
         return d;
       }
 
@@ -287,7 +289,7 @@
         addMessage("user", displayMsg);
         input.value = "";
         if (file) { chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none"; }
-        resize();
+        requestAnimationFrame(function () { resize(); });
         send.disabled = true;
         const typingEl = addTyping();
 
@@ -302,20 +304,22 @@
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
           try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 3 MB." : "Check /api/chat and DEEPSEEK_API_KEY in Vercel.") }; }
-          typingEl.remove();
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and DEEPSEEK_API_KEY in Vercel.") : "No reply.";
-          addMessage("ai", reply);
+          typingEl.classList.remove("typing");
+          typingEl.querySelector("p").innerHTML = formatMsg(reply);
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
-          renderHistoryList();
+          requestAnimationFrame(function () { typingEl.scrollIntoView({ behavior: "auto", block: "end" }); });
+          requestAnimationFrame(function () { renderHistoryList(); });
         } catch (err) {
-          typingEl.remove();
           var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));
-          addMessage("ai", errMsg);
+          typingEl.classList.remove("typing");
+          typingEl.querySelector("p").innerHTML = formatMsg(errMsg);
+          requestAnimationFrame(function () { typingEl.scrollIntoView({ behavior: "auto", block: "end" }); });
         } finally {
           send.disabled = false;
-          input.focus();
+          setTimeout(function () { if (input) input.focus(); }, 120);
         }
       });
 
