@@ -276,7 +276,12 @@ module.exports = async function handler(req, res) {
     try { opts.news = await fetchNews(q, newsKey); } catch (e) { console.warn("News:", e?.message); }
   }
 
-  const context = buildContext(opts);
+  let context = buildContext(opts);
+
+  // When user says "explain more", "go on", etc. and there's no new file, use the prior reply as context so we elaborate on the document/topic from the last turn
+  const lastA = hist.filter((m) => m.role === "assistant").pop();
+  const isFollowUp = !pdfB64 && !imageB64 && lastA?.content && (q.length <= 40 || /explain more|go on|elaborate|and\?|^why\??\s*$|what about that|expand|tell me more|continue|more detail|clarify|how (so|come)|in what way|go deeper|expand on that/i.test(q));
+  if (isFollowUp) context = "Previous reply (the user wants you to elaborate on or explain more about this):\n\n" + (lastA.content || "").slice(0, 4000);
 
   if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !openaiKey) {
     return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images." });
