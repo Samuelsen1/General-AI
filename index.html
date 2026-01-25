@@ -63,6 +63,7 @@
     .header-row { display: flex; align-items: center; gap: 0.5rem; }
     .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.15rem; color: var(--text); letter-spacing: -0.02em; }
     .logo .logo-icon { width: 1.25em; height: 1.25em; object-fit: contain; display: inline-block; vertical-align: middle; }
+    .logo .logo-icon.logo-fallback { width: auto; height: auto; object-fit: none; font-size: 1.25em; color: var(--accent); }
     .message .creator-photo { max-width: 140px; height: auto; border-radius: 10px; margin-top: 0.6em; display: block; box-shadow: var(--shadow); }
     .tagline { margin: 0.4rem 0 0 1.5rem; font-size: 0.8rem; color: var(--text-dim); font-weight: 400; }
     .chat { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1.1rem; padding: 0.25rem 0; }
@@ -107,7 +108,7 @@
   <div class="app-wrap">
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
-        <div class="logo"><img src="images/g.png" alt="General" class="logo-icon" /><span>General</span></div>
+        <div class="logo"><img src="/images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='/images/g.jpg';return}if(this.dataset.alt==1){this.dataset.alt=2;this.src='/image/g.png';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
       </div>
       <p class="sidebar-title">History</p>
       <ul id="history-list" class="sidebar-list"></ul>
@@ -123,7 +124,7 @@
       <header class="header">
         <div class="header-row">
           <button type="button" class="menu-btn" id="menu-btn" aria-label="Open history">☰</button>
-          <div class="logo"><img src="images/g.png" alt="General" class="logo-icon" /><span>General</span></div>
+          <div class="logo"><img src="/images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='/images/g.jpg';return}if(this.dataset.alt==1){this.dataset.alt=2;this.src='/image/g.png';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
         </div>
         <p class="tagline">Wikipedia, search, and AI. Short answers.</p>
       </header>
@@ -325,7 +326,7 @@
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and DEEPSEEK_API_KEY in Vercel.") : "No reply.";
           typingEl.classList.remove("typing");
           typingEl.querySelector("p").innerHTML = formatMsg(reply);
-          if (data && data.creatorImage) { var ci = document.createElement("img"); ci.src = "images/g.png"; ci.alt = "Opoku Samuel"; ci.className = "creator-photo"; typingEl.appendChild(ci); }
+          if (data && data.creatorImage) { var ci = document.createElement("img"); ci.src = "/images/g.png"; ci.alt = "Opoku Samuel"; ci.className = "creator-photo"; ci.onerror = function(){ ci.style.display = "none"; }; typingEl.appendChild(ci); }
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}

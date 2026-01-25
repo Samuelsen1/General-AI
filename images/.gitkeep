@@ -1,1 +1,1 @@
-Place g.png here as the app logo. If you have g.jpg or g.svg, rename to g.png or update the img src in index.html.
+g.png is the app logo (replace the placeholder with your own). g.jpg is tried if g.png fails. Update img src in index.html if you use a different name.
