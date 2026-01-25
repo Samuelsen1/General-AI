@@ -11,6 +11,7 @@ In the end you get a URL like `https://General-AI-xxx.vercel.app`.
    - **`index.html`**
    - **`api`** folder (with `chat.js` and `status.js` inside — required for /api/chat)
    - **`package.json`** (required for the API)
+   - **`images`** folder with **`g.png`** inside (app logo; see `images/.gitkeep`)
    - `README.md`, `DEPLOY.md`, `.gitignore`
 3. Commit (e.g. “Initial”).
 4. **[vercel.com](https://vercel.com)** → **Add New → Project** → **Import** `General-AI` → **Deploy**.

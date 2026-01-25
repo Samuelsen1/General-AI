@@ -232,6 +232,11 @@ function extractDefineTerm(q) {
   return m ? m[1].trim() : null;
 }
 
+function isAboutCreator(q) {
+  const s = (q || "").toLowerCase();
+  return /\b(who (created|made|built|is (your |the )?owner|is (the )?creator)|creator|(opoku|samuel)\b|who ('s|is) (opoku|samuel)|who made (you|this)|who built (you|this))\b/i.test(s);
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -298,39 +303,40 @@ module.exports = async function handler(req, res) {
   const isFollowUp = !pdfB64 && !imageB64 && lastA?.content && (q.length <= 40 || /explain more|go on|elaborate|and\?|^why\??\s*$|what about that|expand|tell me more|continue|more detail|clarify|how (so|come)|in what way|go deeper|expand on that/i.test(q));
   if (isFollowUp) context = "Previous reply (the user wants you to elaborate on or explain more about this):\n\n" + (lastA.content || "").slice(0, 4000);
 
+  const showCreator = isAboutCreator(q);
+
   if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !openaiKey) {
-    return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images." });
+    return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images.", creatorImage: showCreator });
   }
 
   if (imageB64 && (deepseekKey || openaiKey)) {
     if (deepseekKey) {
       try {
         const reply = await fetchDeepSeekWithImage(context, q, imageB64, deepseekKey, hist);
-        return res.status(200).json({ reply });
+        return res.status(200).json({ reply, creatorImage: showCreator });
       } catch (e) { console.warn("DeepSeek vision:", e?.message); }
     }
     if (openaiKey) {
       try {
         const reply = await fetchOpenAIVision(context, q, imageB64, openaiKey, hist);
-        return res.status(200).json({ reply });
+        return res.status(200).json({ reply, creatorImage: showCreator });
       } catch (e) { console.warn("OpenAI vision:", e?.message); }
     }
-    return res.status(200).json({ reply: "Image analysis needs DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel." });
+    return res.status(200).json({ reply: "Image analysis needs DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel.", creatorImage: showCreator });
   }
 
   if (deepseekKey) {
     try {
       const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
-      return res.status(200).json({ reply });
+      return res.status(200).json({ reply, creatorImage: showCreator });
     } catch (e) { console.warn("DeepSeek:", e?.message); }
   }
   if (openaiKey) {
     try {
       const reply = await fetchOpenAI(context, q, openaiKey, hist);
-      return res.status(200).json({ reply });
+      return res.status(200).json({ reply, creatorImage: showCreator });
     } catch (e) { console.warn("OpenAI:", e?.message); }
   }
 
-
-  return res.status(200).json({ reply: buildFallbackReply(opts) });
+  return res.status(200).json({ reply: buildFallbackReply(opts), creatorImage: showCreator });
 }

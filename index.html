@@ -37,7 +37,7 @@
     .sidebar { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; }
     .sidebar-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
     .sidebar-header .logo { font-weight: 700; font-size: 1.05rem; color: var(--text); display: flex; align-items: center; gap: 0.4rem; }
-    .sidebar-header .logo-icon { color: var(--accent); }
+    .sidebar-header .logo-icon { color: var(--accent); width: 1.25em; height: 1.25em; object-fit: contain; display: inline-block; vertical-align: middle; }
     .sidebar-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin: 1rem 1.25rem 0.5rem; }
     .sidebar-list { flex: 1; overflow-y: auto; padding: 0 0.75rem 0.75rem; }
     .sidebar-list li { list-style: none; margin: 0 0 0.25rem; padding: 0.5rem 0.65rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; color: var(--text-soft); line-height: 1.35; }
@@ -62,7 +62,8 @@
     .header::after { content: ""; position: absolute; bottom: -2px; left: 0; width: 48px; height: 2px; background: var(--accent); border-radius: 1px; }
     .header-row { display: flex; align-items: center; gap: 0.5rem; }
     .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.15rem; color: var(--text); letter-spacing: -0.02em; }
-    .logo-icon { color: var(--accent); font-size: 1rem; }
+    .logo .logo-icon { width: 1.25em; height: 1.25em; object-fit: contain; display: inline-block; vertical-align: middle; }
+    .message .creator-photo { max-width: 140px; height: auto; border-radius: 10px; margin-top: 0.6em; display: block; box-shadow: var(--shadow); }
     .tagline { margin: 0.4rem 0 0 1.5rem; font-size: 0.8rem; color: var(--text-dim); font-weight: 400; }
     .chat { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1.1rem; padding: 0.25rem 0; }
     .message { padding: 1.1rem 1.25rem; border-radius: var(--radius); max-width: 88%; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
@@ -106,7 +107,7 @@
   <div class="app-wrap">
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
-        <div class="logo"><span class="logo-icon">◇</span><span>General</span></div>
+        <div class="logo"><img src="images/g.png" alt="General" class="logo-icon" /><span>General</span></div>
       </div>
       <p class="sidebar-title">History</p>
       <ul id="history-list" class="sidebar-list"></ul>
@@ -122,7 +123,7 @@
       <header class="header">
         <div class="header-row">
           <button type="button" class="menu-btn" id="menu-btn" aria-label="Open history">☰</button>
-          <div class="logo"><span class="logo-icon">◇</span><span>General</span></div>
+          <div class="logo"><img src="images/g.png" alt="General" class="logo-icon" /><span>General</span></div>
         </div>
         <p class="tagline">Wikipedia, search, and AI. Short answers.</p>
       </header>
@@ -142,7 +143,7 @@
           <button type="submit" id="send" aria-label="Send">Send</button>
         </form>
         <p class="file-chosen" id="file-chosen" style="display:none"><span id="file-name"></span></p>
-        <p class="hint">📎 Image & PDF. Wikipedia, weather, dictionary (free). Web: Google CSE, Serper, Brave. News: NewsAPI. LLM: DeepSeek, OpenAI.</p>
+        <p class="hint">Built by Opoku Samuel</p>
       </div>
     </main>
   </div>
@@ -324,6 +325,7 @@
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and DEEPSEEK_API_KEY in Vercel.") : "No reply.";
           typingEl.classList.remove("typing");
           typingEl.querySelector("p").innerHTML = formatMsg(reply);
+          if (data && data.creatorImage) { var ci = document.createElement("img"); ci.src = "images/g.png"; ci.alt = "Opoku Samuel"; ci.className = "creator-photo"; typingEl.appendChild(ci); }
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
