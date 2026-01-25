@@ -285,7 +285,8 @@
       });
       if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
 
-      document.getElementById("clear-chat").addEventListener("click", function () {
+      var clearBtn = document.getElementById("clear-chat");
+      if (clearBtn) clearBtn.addEventListener("click", function () {
         history = [];
         localStorage.removeItem("general_chat_history");
         var msgs = chat.querySelectorAll(".message");

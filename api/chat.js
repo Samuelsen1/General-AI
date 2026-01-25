@@ -318,20 +318,19 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ reply: "Image analysis needs DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel." });
   }
 
-  if (context !== "No search results.") {
-    if (deepseekKey) {
-      try {
-        const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
-        return res.status(200).json({ reply });
-      } catch (e) { console.warn("DeepSeek:", e?.message); }
-    }
-    if (openaiKey) {
-      try {
-        const reply = await fetchOpenAI(context, q, openaiKey, hist);
-        return res.status(200).json({ reply });
-      } catch (e) { console.warn("OpenAI:", e?.message); }
-    }
+  if (deepseekKey) {
+    try {
+      const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
+      return res.status(200).json({ reply });
+    } catch (e) { console.warn("DeepSeek:", e?.message); }
   }
+  if (openaiKey) {
+    try {
+      const reply = await fetchOpenAI(context, q, openaiKey, hist);
+      return res.status(200).json({ reply });
+    } catch (e) { console.warn("OpenAI:", e?.message); }
+  }
+
 
   return res.status(200).json({ reply: buildFallbackReply(opts) });
 }
