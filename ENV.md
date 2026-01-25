@@ -1,28 +1,46 @@
 # Environment variables (Vercel)
 
-Set these in **Vercel → Your project → Settings → Environment Variables**, then redeploy.
+Set in **Vercel → Your project → Settings → Environment Variables**, then **Redeploy**.
 
 ---
 
-## GOOGLE_API_KEY
+## No key (always on)
 
-- **Where:** [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → Create credentials → API key.
-- Enable **Custom Search API** for the project.
-
----
-
-## GOOGLE_CSE_ID
-
-- **Where:** [Programmable Search Engine](https://programmablesearch.google.com/) → Add → create a search engine.
-- Choose **Search the entire web**.
-- Copy the **Search engine ID** (cx).
+- **Wikipedia** — general search
+- **Open-Meteo** — weather (e.g. “weather in Berlin”)
+- **Free Dictionary API** — definitions (e.g. “define photosynthesis”)
 
 ---
 
-## OPENAI_API_KEY
+## Web search (use one)
 
-- **Where:** [OpenAI API keys](https://platform.openai.com/api-keys) → Create new secret key.
+| Variable | Service | Where to get it |
+|----------|---------|------------------|
+| `GOOGLE_API_KEY` | Google Custom Search | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → API key; enable **Custom Search API** |
+| `GOOGLE_CSE_ID` | Google CSE | [Programmable Search](https://programmablesearch.google.com/) → create engine → **Search the entire web** → copy **Search engine ID** |
+| `SERPER_API_KEY` | Serper (Google) | [serper.dev](https://serper.dev) → API key |
+| `BRAVE_API_KEY` | Brave Search | [Brave Search API](https://brave.com/search/api/) → Subscription token |
+
+**Priority:** Google CSE → Serper → Brave (first configured is used).
 
 ---
 
-All keys are optional. General always uses Wikipedia; Google and OpenAI improve answers when set.
+## News
+
+| Variable | Service | Where to get it |
+|----------|---------|------------------|
+| `NEWS_API_KEY` | NewsAPI | [newsapi.org](https://newsapi.org/register) → API key |
+
+Used when the query contains: *news*, *latest*, *headlines*, *current*, *recent*.
+
+---
+
+## LLM (synthesis)
+
+| Variable | Service | Where to get it |
+|----------|---------|------------------|
+| `OPENAI_API_KEY` | OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+
+---
+
+All keys are optional. General always uses Wikipedia, weather, and dictionary when the query fits.
