@@ -138,6 +138,8 @@
         return d;
       }
 
+      let history = [];
+
       const MAX_FILE = 3 * 1024 * 1024; // 3 MB (keeps JSON under Vercel 4.5MB)
       function toBase64(buf) {
         const u = new Uint8Array(buf);
@@ -172,12 +174,15 @@
             const isPdf = (file.type || "").toLowerCase() === "application/pdf";
             if (isPdf) body.pdf = toBase64(buf); else body.image = toBase64(buf);
           }
+          body.history = history.slice(-20);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
           let data;
           try { data = await res.json(); } catch (_) { data = { reply: res.status === 413 ? "File too large. Use under 3 MB." : "Request failed. Set DEEPSEEK_API_KEY in Vercel and try again." }; }
           typingEl.remove();
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : "No reply.";
           addMessage("ai", reply);
+          history.push({ role: "user", content: body.message });
+          history.push({ role: "assistant", content: reply });
         } catch (err) {
           typingEl.remove();
           addMessage("ai", file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));

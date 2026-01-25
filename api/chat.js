@@ -90,25 +90,28 @@ async function fetchNews(q, apiKey) {
   return items.map((a) => ({ title: a.title, snippet: trim(a.description || "", 120) }));
 }
 
-const LLM_SYSTEM = `You are General, a helpful assistant. You have context from search (Wikipedia, web, weather, dictionary, news). Use it to answer.
+const LLM_SYSTEM = `You are General, a helpful assistant. You have context from search (Wikipedia, web, weather, dictionary, news) and sometimes Document (PDF). Use it to answer. Follow the conversation: use prior messages to resolve "that", "it", "explain", etc.
 
 Rules:
-- When the context clearly supports an answer: give a clear, direct answer. Synthesize across sources if needed. 2–4 sentences is fine; be concise but complete.
+- When the context clearly supports an answer: give a clear, direct answer. Synthesize across sources if needed. 2–4 sentences; be concise but complete.
 - For definitions, facts, numbers, dates: state them directly.
-- When the context is partial or ambiguous: say what we can infer, note what's unclear or missing, and suggest rephrasing if helpful.
-- When the context doesn't match the question: briefly say so and what would help (e.g. "That's not in the context; try asking about X").
-- Be natural and helpful. No filler like "According to the context" or "The context suggests." Just answer.
-- If the user asks why/how: use the context to explain cause and effect when possible; otherwise keep it short.`;
+- **Explain**: When asked to explain, be clear and stepwise. Use the context and prior turns.
+- **Analyse**: When analysing documents, search results, or ideas, summarize key points, structure, strengths, and gaps.
+- **Judge**: When asked for your judgment, evaluation, or opinion (e.g. quality, strengths/weaknesses, advice), give a reasoned assessment with clear pros and cons where relevant.
+- When the context is partial or ambiguous: say what we can infer, note what's missing, and suggest rephrasing.
+- When the context doesn't match the question: briefly say so and what would help.
+- Be natural. No filler like "According to the context." Just answer.`;
 
-async function fetchDeepSeek(context, question, apiKey) {
+async function fetchDeepSeek(context, question, apiKey, hist = []) {
   const user = `Context:\n${context}\n\nQ: ${question}`;
+  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({
       model: "deepseek-chat",
-      messages: [{ role: "system", content: LLM_SYSTEM }, { role: "user", content: user }],
-      max_tokens: 420,
+      messages,
+      max_tokens: 520,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(30000),
@@ -118,15 +121,16 @@ async function fetchDeepSeek(context, question, apiKey) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
-async function fetchOpenAI(context, question, apiKey) {
+async function fetchOpenAI(context, question, apiKey, hist = []) {
   const user = `Context:\n${context}\n\nQ: ${question}`;
+  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({
       model: "gpt-4o-mini",
-      messages: [{ role: "system", content: LLM_SYSTEM }, { role: "user", content: user }],
-      max_tokens: 420,
+      messages,
+      max_tokens: 520,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(20000),
@@ -136,20 +140,22 @@ async function fetchOpenAI(context, question, apiKey) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
-const LLM_VISION = "You are General. The user shared an image. Answer based on the image and any text context. Be concise and helpful.";
+const LLM_VISION = `You are General. The user shared an image. Follow the conversation; use prior turns when they say "that", "it", "explain", etc.
+Answer from the image and any text context. **Explain** what you see when asked. **Analyse** layout, content, and quality. When asked for your **judgment** or evaluation, give a reasoned assessment. Be concise and helpful.`;
 
-async function fetchDeepSeekWithImage(context, question, imageB64, apiKey) {
+async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist = []) {
   const user = [
     { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
     { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
   ];
+  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({
       model: "deepseek-chat",
-      messages: [{ role: "system", content: LLM_VISION }, { role: "user", content: user }],
-      max_tokens: 420,
+      messages,
+      max_tokens: 520,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(35000),
@@ -159,18 +165,19 @@ async function fetchDeepSeekWithImage(context, question, imageB64, apiKey) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
-async function fetchOpenAIVision(context, question, imageB64, apiKey) {
+async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = []) {
   const user = [
     { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
     { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
   ];
+  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({
       model: "gpt-4o-mini",
-      messages: [{ role: "system", content: LLM_VISION }, { role: "user", content: user }],
-      max_tokens: 420,
+      messages,
+      max_tokens: 520,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(25000),
@@ -221,6 +228,10 @@ module.exports = async function handler(req, res) {
   const message = body.message;
   const imageB64 = body.image;
   const pdfB64 = body.pdf;
+  const hist = (Array.isArray(body.history) ? body.history : [])
+    .filter((m) => m && (m.role === "user" || m.role === "assistant"))
+    .slice(-20)
+    .map((m) => ({ role: m.role, content: String(m.content || "").slice(0, 800) }));
   let q = (typeof message === "string" ? message.trim() : "") || "";
   if ((imageB64 || pdfB64) && !q) q = "What is in this file?";
   if (!q && !imageB64 && !pdfB64) return res.status(400).json({ error: "message or file required", reply: "Send a message or attach an image or PDF." });
@@ -274,13 +285,13 @@ module.exports = async function handler(req, res) {
   if (imageB64 && (deepseekKey || openaiKey)) {
     if (deepseekKey) {
       try {
-        const reply = await fetchDeepSeekWithImage(context, q, imageB64, deepseekKey);
+        const reply = await fetchDeepSeekWithImage(context, q, imageB64, deepseekKey, hist);
         return res.status(200).json({ reply });
       } catch (e) { console.warn("DeepSeek vision:", e?.message); }
     }
     if (openaiKey) {
       try {
-        const reply = await fetchOpenAIVision(context, q, imageB64, openaiKey);
+        const reply = await fetchOpenAIVision(context, q, imageB64, openaiKey, hist);
         return res.status(200).json({ reply });
       } catch (e) { console.warn("OpenAI vision:", e?.message); }
     }
@@ -290,13 +301,13 @@ module.exports = async function handler(req, res) {
   if (context !== "No search results.") {
     if (deepseekKey) {
       try {
-        const reply = await fetchDeepSeek(context, q, deepseekKey);
+        const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
         return res.status(200).json({ reply });
       } catch (e) { console.warn("DeepSeek:", e?.message); }
     }
     if (openaiKey) {
       try {
-        const reply = await fetchOpenAI(context, q, openaiKey);
+        const reply = await fetchOpenAI(context, q, openaiKey, hist);
         return res.status(200).json({ reply });
       } catch (e) { console.warn("OpenAI:", e?.message); }
     }
