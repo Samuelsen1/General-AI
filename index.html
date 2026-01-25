@@ -111,6 +111,8 @@
       <p class="sidebar-title">History</p>
       <ul id="history-list" class="sidebar-list"></ul>
       <p class="sidebar-empty" id="history-empty">No messages yet.</p>
+      <p class="sidebar-title">Past chats</p>
+      <ul id="past-chats-list" class="sidebar-list"></ul>
       <div class="sidebar-footer">
         <button type="button" id="clear-chat" class="new-chat">+ New chat</button>
       </div>
@@ -177,6 +179,7 @@
       const sidebarOverlay = document.getElementById("sidebar-overlay");
       const historyList = document.getElementById("history-list");
       const historyEmpty = document.getElementById("history-empty");
+      const pastChatsList = document.getElementById("past-chats-list");
       let chosenFile = null;
 
       function closeSidebar() {
@@ -209,8 +212,34 @@
         } catch (e) { /* keep sidebar updates from affecting chat */ }
       }
 
+      function renderPastChats() {
+        try {
+          if (!pastChatsList) return;
+          pastChatsList.innerHTML = "";
+          var archive = [];
+          try { var r = localStorage.getItem("general_chat_archive"); if (r) { var a = JSON.parse(r); if (Array.isArray(a)) archive = a; } } catch (_) {}
+          archive.slice(-5).reverse().forEach(function (entry) {
+            var li = document.createElement("li");
+            li.className = "general";
+            var first = (entry.history && entry.history[0]) ? String(entry.history[0].content || "").trim().slice(0, 28) : "";
+            li.textContent = (first || "Chat") + " · " + (entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : "");
+            li.addEventListener("click", (function (session) { return function () {
+              if (!session || !session.history || !Array.isArray(session.history)) return;
+              history = session.history.slice(0);
+              try { localStorage.setItem("general_chat_history", JSON.stringify(history)); } catch (_) {}
+              var msgs = chat ? chat.querySelectorAll(".message") : [];
+              for (var i = 1; i < msgs.length; i++) { try { msgs[i].remove(); } catch (_) {} }
+              session.history.forEach(function (m) { if (m && (m.role === "user" || m.role === "assistant")) addMessage(m.role === "user" ? "user" : "ai", m.content || ""); });
+              scheduleRenderHistory();
+              closeSidebar();
+            }; })(entry));
+            pastChatsList.appendChild(li);
+          });
+        } catch (e) {}
+      }
+
       function scheduleRenderHistory() {
-        setTimeout(function () { try { renderHistoryList(); } catch (e) {} }, 100);
+        setTimeout(function () { try { renderHistoryList(); renderPastChats(); } catch (e) {} }, 100);
       }
 
       fileInput.addEventListener("change", function() {
@@ -340,6 +369,16 @@
 
       var clearBtn = document.getElementById("clear-chat");
       if (clearBtn) clearBtn.addEventListener("click", function () {
+        if (history.length > 0) {
+          try {
+            var archive = [];
+            var raw = localStorage.getItem("general_chat_archive");
+            if (raw) { var a = JSON.parse(raw); if (Array.isArray(a)) archive = a; }
+            archive.push({ history: history.slice(0), createdAt: Date.now() });
+            archive = archive.slice(-10);
+            localStorage.setItem("general_chat_archive", JSON.stringify(archive));
+          } catch (_) {}
+        }
         history = [];
         try { localStorage.removeItem("general_chat_history"); } catch (_) {}
         var msgs = chat ? chat.querySelectorAll(".message") : [];
