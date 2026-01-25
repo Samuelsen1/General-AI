@@ -1,6 +1,6 @@
 /**
  * General – /api/chat
- * Wikipedia, weather, dictionary (free). Web: Google CSE, Serper, Brave. News: NewsAPI. LLM: OpenAI.
+ * Free: Wikipedia, Open-Meteo (weather), Free Dictionary. Web: Google CSE, Serper, Brave, Tavily. News: NewsAPI. LLM: OpenAI.
  */
 
 const WIKI_URL = "https://en.wikipedia.org/w/api.php";
@@ -44,6 +44,18 @@ async function fetchBrave(q, apiKey) {
   return items.map((i) => ({ title: i.title || "", snippet: trim(i.description || "", SNIPPET_MAX), link: i.url }));
 }
 
+async function fetchTavily(q, apiKey) {
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ query: q, search_depth: "basic" }),
+    signal: AbortSignal.timeout(10000),
+  });
+  const data = await res.json();
+  const items = (data?.results || []).slice(0, 3);
+  return items.map((i) => ({ title: i.title || "", snippet: trim(i.content || "", SNIPPET_MAX), link: i.url }));
+}
+
 async function fetchWeather(place) {
   const geo = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1`;
   const g = await fetch(geo, { signal: AbortSignal.timeout(5000) });
@@ -70,7 +82,8 @@ async function fetchDictionary(term) {
 }
 
 async function fetchNews(q, apiKey) {
-  const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&pageSize=3&sortBy=publishedAt&apiKey=${apiKey}`;
+  const query = q.replace(/\b(news|latest|headlines|about|on)\b/gi, "").trim() || "news";
+  const url = `https://newsapi.org/v2/top-headlines?q=${encodeURIComponent(query)}&pageSize=3&apiKey=${apiKey}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
   const data = await res.json();
   const items = (data?.articles || []).filter((a) => a?.title).slice(0, 3);
@@ -155,6 +168,7 @@ module.exports = async function handler(req, res) {
   if (googleKey && cseId) { try { opts.web = await fetchGoogleSearch(q, googleKey, cseId); } catch (e) { console.warn("Google:", e?.message); } }
   else if (serperKey) { try { opts.web = await fetchSerper(q, serperKey); } catch (e) { console.warn("Serper:", e?.message); } }
   else if (braveKey) { try { opts.web = await fetchBrave(q, braveKey); } catch (e) { console.warn("Brave:", e?.message); } }
+  else if (process.env.TAVILY_API_KEY) { try { opts.web = await fetchTavily(q, process.env.TAVILY_API_KEY); } catch (e) { console.warn("Tavily:", e?.message); } }
 
   if (/\b(weather|forecast|temperature)\b/.test(ql)) {
     const place = extractPlace(q);
@@ -167,7 +181,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (newsKey && /\b(news|latest|headlines|current|recent)\b/.test(ql)) {
-    try { opts.news = await fetchNews(q.replace(/\b(news|latest|headlines|about|on)\b/gi, "").trim() || q, newsKey); } catch (e) { console.warn("News:", e?.message); }
+    try { opts.news = await fetchNews(q, newsKey); } catch (e) { console.warn("News:", e?.message); }
   }
 
   const context = buildContext(opts);

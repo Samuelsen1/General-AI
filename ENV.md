@@ -20,8 +20,9 @@ Set in **Vercel → Your project → Settings → Environment Variables**, then 
 | `GOOGLE_CSE_ID` | Google CSE | [Programmable Search](https://programmablesearch.google.com/) → create engine → **Search the entire web** → copy **Search engine ID** |
 | `SERPER_API_KEY` | Serper (Google) | [serper.dev](https://serper.dev) → API key |
 | `BRAVE_API_KEY` | Brave Search | [Brave Search API](https://brave.com/search/api/) → Subscription token |
+| `TAVILY_API_KEY` | Tavily | [tavily.com](https://tavily.com) → API key |
 
-**Priority:** Google CSE → Serper → Brave (first configured is used).
+**Priority:** Google CSE → Serper → Brave → Tavily (first configured is used).
 
 ---
 
@@ -29,7 +30,7 @@ Set in **Vercel → Your project → Settings → Environment Variables**, then 
 
 | Variable | Service | Where to get it |
 |----------|---------|------------------|
-| `NEWS_API_KEY` | NewsAPI | [newsapi.org](https://newsapi.org/register) → API key |
+| `NEWS_API_KEY` | NewsAPI | [newsapi.org](https://newsapi.org/register) → API key (free: top-headlines) |
 
 Used when the query contains: *news*, *latest*, *headlines*, *current*, *recent*.
 
