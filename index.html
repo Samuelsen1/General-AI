@@ -72,6 +72,8 @@
     .file-chosen { margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-dim); }
     .file-chosen span { color: var(--accent); font-weight: 500; }
     .hint { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); }
+    .clear-btn { margin-left: 0.5rem; padding: 0; background: none; border: none; font: inherit; font-size: 0.75rem; color: var(--text-dim); cursor: pointer; text-decoration: underline; }
+    .clear-btn:hover { color: var(--accent); }
     .typing { opacity: 0.85; }
     .typing .label::after { content: " …"; animation: dots 1s steps(4, end) infinite; }
     @keyframes dots { 0%, 20% { content: " …"; } 40% { content: " ."; } 60% { content: " .."; } 80%, 100% { content: " …"; } }
@@ -81,7 +83,7 @@
   <main class="app">
     <header class="header">
       <div class="logo"><span class="logo-icon">◇</span><span>General</span></div>
-      <p class="tagline">Wikipedia, search, and AI. Short answers.</p>
+      <p class="tagline">Wikipedia, search, and AI. Short answers. <button type="button" id="clear-chat" class="clear-btn">New chat</button></p>
     </header>
     <section class="chat" id="chat">
       <div class="message ai">
@@ -179,6 +181,29 @@
 
       let history = [];
 
+      // Restore chat from previous session
+      try {
+        const raw = localStorage.getItem("general_chat_history");
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr) && arr.length > 0) {
+            history = arr;
+            arr.forEach(function (m) {
+              if (m && (m.role === "user" || m.role === "assistant")) {
+                addMessage(m.role === "user" ? "user" : "ai", m.content || "");
+              }
+            });
+          }
+        }
+      } catch (e) {}
+
+      document.getElementById("clear-chat").addEventListener("click", function () {
+        history = [];
+        localStorage.removeItem("general_chat_history");
+        var msgs = chat.querySelectorAll(".message");
+        for (var i = 1; i < msgs.length; i++) msgs[i].remove();
+      });
+
       const MAX_FILE = 3 * 1024 * 1024; // 3 MB (keeps JSON under Vercel 4.5MB)
       function toBase64(buf) {
         const u = new Uint8Array(buf);
@@ -222,6 +247,7 @@
           addMessage("ai", reply);
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
+          try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
         } catch (err) {
           typingEl.remove();
           addMessage("ai", file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));

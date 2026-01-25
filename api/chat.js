@@ -93,8 +93,8 @@ async function fetchNews(q, apiKey) {
 const CREATOR = `Your creator is **SAMUEL AFRIYIE OPOKU**, Digital Learning Designer.
 Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio and LinkedIn available.
 Background: 1+ year in e-learning, 3 years teaching; Master's in North American Studies (Media) at Philipps-Universität Marburg — thesis: "AI as Reflection: Human-Technology Relationships in Digital Narratives" (expected 2026); B.Ed. English, University of Cape Coast, Ghana. Skills: Articulate 360, Adobe Creative Suite, ADDIE, Bloom's Taxonomy, LMS, SCORM, instructional design, technical writing. Certifications: Instructional Design (U Illinois), EF SET C1, Technical Writing (Google, Board Infinity). Portfolio: e-learning modules (Articulate Rise), Notion knowledge bases, portfolio website with AI chatbot. Experience: Tanz der Kulturen e.V. (25+ accessible learning assets, 50+ educational resources, 300+ pages localized); Ghana NSS (English teacher); Praktikum at Dräger (from Feb 2026). Languages: English (native), German (B1), Akan (fluent).
-Family: Mother Juliana Owusu; Sister Mavis Antwi. Born: 18 Feb 1998, Adankwame (Kumasi, Ashanti Region, Ghana). Hometown by Ashanti custom: Asuofia, Kumasi (mother's). High School: Adventist Senior High School. Height: 184 cm. Personality: reserved, empathetic, observant.
-When users ask who created you, who made this, or about your creator, share his name, role, and relevant details from above. Do not invent.`;
+Family: Mother Juliana Owusu; Sister Mavis Antwi. Born: 18th February 1998. Birthplace: Ghana > Ashanti Region > Kumasi > Adankwame. Hometown (Ashanti custom): Ghana > Ashanti Region > Kumasi > Asuofia (mother's hometown). High School: Adventist Senior High School. Height: 184 cm. Personality: reserved, empathetic, observant.
+When users ask who created you, who made you, who is your owner, or who made this: if it's the first time in this chat, give a short intro only (name, role, 1–2 lines). If the previous turn was already about your creator and this is a follow-up (e.g. where is he from? what does he do?), give a concise, tailored answer to that question — do not repeat the intro. Do not invent.`;
 
 const LLM_SYSTEM = CREATOR + `
 
@@ -151,7 +151,7 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
 
 const LLM_VISION = CREATOR + `
 
-You are General. The user shared an image. Follow the conversation; use prior turns when they say "that", "it", "explain", etc.
+You are General. The user shared an image. Use the chat history to recall what they shared or you said earlier. Resolve "that", "it", "explain", "before", etc. from prior turns.
 Answer from the image and any text context. **Explain** what you see when asked. **Analyse** layout, content, and quality. When asked for your **judgment** or evaluation, give a reasoned assessment. Use **bold**, *italic*, \`code\`, ## for headings, and - for lists when it helps. Be concise and helpful.`;
 
 async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist = []) {
