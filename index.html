@@ -84,7 +84,7 @@
     .message.ai { align-self: flex-start; background: var(--ai-bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); }
     .form-wrap { margin-top: auto; padding-top: 1.25rem; border-top: 1px solid var(--border); }
     .form { display: flex; gap: 0.6rem; align-items: flex-end; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
-    .form textarea { flex: 1; min-height: 48px; max-height: 152px; padding: 0.85rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 0.95rem; resize: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .form textarea { flex: 1; min-height: 48px; max-height: 200px; padding: 0.85rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 0.95rem; resize: none; overflow-y: auto; transition: border-color 0.2s, box-shadow 0.2s; }
     .form textarea::placeholder { color: var(--text-dim); }
     .form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
     .form button { padding: 0.85rem 1.35rem; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.1s; }
@@ -238,8 +238,14 @@
         chat.scrollTop = chat.scrollHeight;
       }
 
-      function resize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 150) + "px"; }
-      input.addEventListener("input", resize);
+      function resize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 200) + "px"; }
+      var resizeScheduled = false;
+      function scheduleResize() {
+        if (resizeScheduled) return;
+        resizeScheduled = true;
+        requestAnimationFrame(function () { resize(); resizeScheduled = false; });
+      }
+      input.addEventListener("input", scheduleResize, { passive: true });
       input.addEventListener("keydown", function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
 
       function addTyping() {
@@ -270,13 +276,14 @@
       } catch (e) {}
       renderHistoryList();
 
-      document.getElementById("menu-btn").addEventListener("click", function () {
+      var menuBtn = document.getElementById("menu-btn");
+      if (menuBtn) menuBtn.addEventListener("click", function () {
         if (sidebar.classList.contains("open")) { closeSidebar(); return; }
         sidebar.classList.add("open");
         sidebarOverlay.classList.add("visible");
         sidebarOverlay.setAttribute("aria-hidden", "false");
       });
-      sidebarOverlay.addEventListener("click", closeSidebar);
+      if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
 
       document.getElementById("clear-chat").addEventListener("click", function () {
         history = [];
@@ -299,7 +306,7 @@
         e.preventDefault();
         const raw = input.value.trim();
         const file = chosenFile;
-        if (!raw && !file) return;
+        if (!raw && !file) { input.focus(); return; }
         const displayMsg = raw || (file ? "[" + file.name + "]" : "");
         if (file && file.size > MAX_FILE) {
           addMessage("user", displayMsg);
@@ -322,7 +329,7 @@
             if (isPdf) body.pdf = toBase64(buf); else body.image = toBase64(buf);
           }
           body.history = history.slice(-20);
-          const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
           try { data = await res.json(); } catch (_) { data = { reply: res.status === 413 ? "File too large. Use under 3 MB." : "Request failed. Set DEEPSEEK_API_KEY in Vercel and try again." }; }
           typingEl.remove();
@@ -334,7 +341,8 @@
           renderHistoryList();
         } catch (err) {
           typingEl.remove();
-          addMessage("ai", file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));
+          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));
+          addMessage("ai", errMsg);
         } finally {
           send.disabled = false;
           input.focus();
