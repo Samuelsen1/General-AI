@@ -84,9 +84,9 @@
     .message.ai { align-self: flex-start; background: var(--ai-bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); }
     .form-wrap { margin-top: auto; padding-top: 1.25rem; border-top: 1px solid var(--border); }
     .form { display: flex; gap: 0.6rem; align-items: flex-end; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
-    .form textarea { flex: 1; min-height: 48px; max-height: 200px; padding: 0.85rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 0.95rem; resize: none; overflow-y: auto; transition: border-color 0.2s, box-shadow 0.2s; }
-    .form textarea::placeholder { color: var(--text-dim); }
-    .form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .form #input { flex: 1; min-height: 48px; padding: 0.85rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 0.95rem; transition: border-color 0.2s, box-shadow 0.2s; }
+    .form #input::placeholder { color: var(--text-dim); }
+    .form #input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
     .form button { padding: 0.85rem 1.35rem; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background 0.2s, transform 0.1s; }
     .form button:hover { background: var(--accent-hover); }
     .form button:active { transform: scale(0.98); }
@@ -136,7 +136,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </label>
           <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
-          <textarea id="input" rows="1" placeholder="Ask anything…" autocomplete="off" enterkeyhint="send"></textarea>
+          <input type="text" id="input" placeholder="Ask anything…" autocomplete="off" enterkeyhint="send" />
           <button type="submit" id="send" aria-label="Send">Send</button>
         </form>
         <p class="file-chosen" id="file-chosen" style="display:none"><span id="file-name"></span></p>
@@ -239,23 +239,7 @@
         requestAnimationFrame(function () { d.scrollIntoView({ behavior: "auto", block: "end" }); });
       }
 
-      function resize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 200) + "px"; }
-      var resizeScheduled = false;
-      function scheduleResize() {
-        if (resizeScheduled) return;
-        resizeScheduled = true;
-        requestAnimationFrame(function () { resize(); resizeScheduled = false; });
-      }
-      input.addEventListener("input", function() {
-        if (input.value.indexOf("\n") >= 0) input.value = input.value.replace(/\n/g, "");
-        scheduleResize();
-      }, { passive: true });
-      input.addEventListener("keydown", function(e) {
-        if (e.key === "Enter" || e.keyCode === 13) {
-          e.preventDefault();
-          if (!e.shiftKey) { if (form && typeof form.requestSubmit === "function") form.requestSubmit(); else if (send) send.click(); }
-        }
-      }, true);
+      /* input is type="text": Enter submits the form by default; no newlines possible */
 
       function addTyping() {
         const d = document.createElement("div");
@@ -289,7 +273,6 @@
         addMessage("user", displayMsg);
         input.value = "";
         if (file) { chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none"; }
-        requestAnimationFrame(function () { resize(); });
         send.disabled = true;
         const typingEl = addTyping();
 
