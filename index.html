@@ -53,12 +53,12 @@
   <main class="app">
     <header class="header">
       <div class="logo"><span class="logo-icon">◇</span><span>General</span></div>
-      <p class="tagline">Wikipedia, Google Search, and AI. Ask me anything.</p>
+      <p class="tagline">Wikipedia, search, and AI. Short answers.</p>
     </header>
     <section class="chat" id="chat">
       <div class="message ai">
         <span class="label">General</span>
-        <p>Hi. I'm General. I use Wikipedia, web search, and AI to answer. Ask me anything. Add GOOGLE_API_KEY, GOOGLE_CSE_ID, and OPENAI_API_KEY in Vercel for full power.</p>
+        <p>Ask anything. I answer from Wikipedia, search, and AI. Add API keys in Vercel for full power.</p>
       </div>
     </section>
     <div class="form-wrap">
@@ -66,29 +66,29 @@
         <textarea id="input" rows="1" placeholder="Ask anything…" autocomplete="off"></textarea>
         <button type="submit" id="send" aria-label="Send">Send</button>
       </form>
-      <p class="hint">Sources: Wikipedia (free), Google Custom Search, OpenAI. Keys in Vercel → Settings → Environment Variables.</p>
+      <p class="hint">Wikipedia (free) + Google CSE + OpenAI. Env vars in Vercel.</p>
     </div>
   </main>
   <script>
     (function () {
       // Fallback when /api/chat fails (offline or not configured)
       const KNOWLEDGE = [
-        { patterns: ["hi","hello","hey"], responses: ["Hi. I'm General. Ask me anything — I use Wikipedia and search when the API is set up."] },
-        { patterns: ["who are you","what are you"], responses: ["I'm General. I'm built on Wikipedia, Google Search, and OpenAI. Ask a question to try the live APIs."] },
-        { patterns: ["help"], responses: ["Ask any question. For full answers: set GOOGLE_API_KEY, GOOGLE_CSE_ID, OPENAI_API_KEY in Vercel."] },
-        { patterns: [], responses: ["I need the API to be set up to answer that. See the hint below, or try: who are you, help."] }
+        { patterns: ["hi","hello","hey"], responses: ["Hi. Ask me anything."] },
+        { patterns: ["who are you","what are you"], responses: ["General. Wikipedia + search + AI. Ask a question."] },
+        { patterns: ["help"], responses: ["Ask a question. Set API keys in Vercel for search and AI."] },
+        { patterns: [], responses: ["API not configured. Try 'help' or set keys in Vercel."] }
       ];
       function normalize(t) { return t.replace(/[^\w\s]/g, "").toLowerCase().trim(); }
       function tokenize(t) { return normalize(t).split(/\s+/).filter(Boolean); }
       function scoreMatch(userSet, patternList) { if (!patternList.length) return 0; let n = 0; for (const t of patternList) if (userSet.has(t)) n++; return n / patternList.length; }
       function thinkFallback(msg) {
         const raw = (msg || "").trim();
-        if (!raw) return "Ask a question.";
+        if (!raw) return "Ask something.";
         const userSet = new Set(tokenize(raw));
         let best = 0, entry = null;
         for (const e of KNOWLEDGE) { if (!e.patterns.length) continue; for (const p of e.patterns) { const s = scoreMatch(userSet, tokenize(p)); if (s > best) { best = s; entry = e; } } }
         if (entry && best >= 0.3) return entry.responses[0];
-        return (KNOWLEDGE.find(e => !e.patterns.length) || {}).responses?.[0] || "Ask something — the API may not be configured yet.";
+        return (KNOWLEDGE.find(e => !e.patterns.length) || {}).responses?.[0] || "No API. Ask 'help'.";
       }
 
       const chat = document.getElementById("chat");
