@@ -1,18 +1,33 @@
-# AI Assistant
+# General
 
-A small conversational AI that runs entirely in the browser. No server, no API keys. Pattern matching + learning via `teach: question -> answer`.
+**General** answers questions using Wikipedia, Google Search, and OpenAI. All legal, documented APIs.
 
-## Try
+## Sources
 
-- [Open on Vercel](https://general-ai.vercel.app) (or your deployment URL)
+| Source | Env vars | Notes |
+|--------|----------|-------|
+| **Wikipedia** | — | Always on, free, no key |
+| **Google Custom Search** | `GOOGLE_API_KEY`, `GOOGLE_CSE_ID` | [Get API key](https://console.cloud.google.com/apis/credentials); [Create CSE](https://programmablesearch.google.com/) (search the entire web) |
+| **OpenAI** (gpt-4o-mini) | `OPENAI_API_KEY` | [API keys](https://platform.openai.com/api-keys) |
+
+Without keys: Wikipedia only. With Google: Wikipedia + web search. With OpenAI: Wikipedia + search + AI synthesis.
+
+## Set env vars on Vercel
+
+1. Open your project on [vercel.com](https://vercel.com) → **Settings** → **Environment Variables**.
+2. Add:
+
+   - `GOOGLE_API_KEY` – Google Cloud API key (Custom Search API enabled)
+   - `GOOGLE_CSE_ID` – Programmable Search Engine ID (create one that searches the whole web)
+   - `OPENAI_API_KEY` – OpenAI API key
+
+3. **Redeploy** (Deployments → … → Redeploy).
+
+## Deploy
+
+See **[DEPLOY.md](DEPLOY.md)**. Deploy on Vercel; the `/api/chat` serverless function runs automatically.
 
 ## Run locally
 
-Open `index.html` in any browser (double‑click or drag into Chrome/Safari).
-
-## Deploy (get a link)
-
-See **[DEPLOY.md](DEPLOY.md)** for:
-
-- **Option A:** Upload `index.html` + `README.md` + `.gitignore` on GitHub, then import the repo in [Vercel](https://vercel.com) → you get a URL like `https://general-ai-xxx.vercel.app`.
-- **Option B:** `git init` → push to GitHub → import in Vercel.
+- **Static only:** open `index.html` (uses fallback; no live search/AI).
+- **With API:** `npx vercel dev` in the project folder, then open the URL it prints.

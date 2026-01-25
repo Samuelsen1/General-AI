@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI Assistant</title>
+  <title>General</title>
   <style>
     :root {
       --bg: #0c0c0e;
@@ -52,64 +52,97 @@
 <body>
   <main class="app">
     <header class="header">
-      <div class="logo"><span class="logo-icon">◇</span><span>AI Assistant</span></div>
-      <p class="tagline">Runs in your browser. Teach me: <code>teach: question -> answer</code></p>
+      <div class="logo"><span class="logo-icon">◇</span><span>General</span></div>
+      <p class="tagline">Wikipedia, Google Search, and AI. Ask me anything.</p>
     </header>
     <section class="chat" id="chat">
       <div class="message ai">
-        <span class="label">AI</span>
-        <p>Hi. Try "hello", "who are you", "help", or teach me: <code>teach: your question -> your answer</code></p>
+        <span class="label">General</span>
+        <p>Hi. I'm General. I use Wikipedia, web search, and AI to answer. Ask me anything. Add GOOGLE_API_KEY, GOOGLE_CSE_ID, and OPENAI_API_KEY in Vercel for full power.</p>
       </div>
     </section>
     <div class="form-wrap">
       <form class="form" id="form">
-        <textarea id="input" rows="1" placeholder="Type a message…" autocomplete="off"></textarea>
+        <textarea id="input" rows="1" placeholder="Ask anything…" autocomplete="off"></textarea>
         <button type="submit" id="send" aria-label="Send">Send</button>
       </form>
-      <p class="hint">Learns in your browser (localStorage). No server, no sign‑in.</p>
+      <p class="hint">Sources: Wikipedia (free), Google Custom Search, OpenAI. Keys in Vercel → Settings → Environment Variables.</p>
     </div>
   </main>
   <script>
     (function () {
+      // Fallback when /api/chat fails (offline or not configured)
       const KNOWLEDGE = [
-        { patterns: ["hi","hello","hey","hola","howdy","greetings"], responses: ["Hello! How can I help you today?","Hi there! What's on your mind?","Hey! Good to meet you."] },
-        { patterns: ["bye","goodbye","see you","later","take care"], responses: ["Goodbye! Take care.","See you later!","Bye! It was nice talking."] },
-        { patterns: ["thanks","thank you","thx"], responses: ["You're welcome!","Happy to help!","Anytime!"] },
-        { patterns: ["who are you","what are you","your name","identify yourself"], responses: ["I'm a small AI running in your browser. I learn from patterns and from you.","I'm an AI you can talk to. I try to understand and respond — and I can learn new things if you teach me."] },
-        { patterns: ["how do you work","how does this work","how are you built"], responses: ["I use pattern matching and simple similarity. You can also teach me: 'teach: your question -> your answer'."] },
-        { patterns: ["how are you","how do you feel"], responses: ["I'm doing well, thanks for asking. How about you?","I can't feel like humans, but I'm here and ready to help!"] },
-        { patterns: ["sad","unhappy","feeling down"], responses: ["I'm sorry you're feeling that way. Sometimes it helps to talk. What's going on?","That sounds tough. I'm here to listen if you want to share."] },
-        { patterns: ["happy","excited","great day"], responses: ["That's wonderful to hear!","I'm glad things are going well!"] },
-        { patterns: ["help","what can you do"], responses: ["I can chat, answer simple questions, and learn. Try: greetings, 'who are you', 'how does this work', or: teach: your question -> the answer"] },
-        { patterns: [], responses: ["I'm not sure how to answer that. Try rephrasing, or: teach: your question -> the answer","I don't have a good response yet. Teach me: teach: [question] -> [answer]","Hmm, I didn't get that. Want to teach me? teach: your question -> your answer"] }
+        { patterns: ["hi","hello","hey"], responses: ["Hi. I'm General. Ask me anything — I use Wikipedia and search when the API is set up."] },
+        { patterns: ["who are you","what are you"], responses: ["I'm General. I'm built on Wikipedia, Google Search, and OpenAI. Ask a question to try the live APIs."] },
+        { patterns: ["help"], responses: ["Ask any question. For full answers: set GOOGLE_API_KEY, GOOGLE_CSE_ID, OPENAI_API_KEY in Vercel."] },
+        { patterns: [], responses: ["I need the API to be set up to answer that. See the hint below, or try: who are you, help."] }
       ];
-      const STORAGE_KEY = "ai_assistant_learned";
       function normalize(t) { return t.replace(/[^\w\s]/g, "").toLowerCase().trim(); }
       function tokenize(t) { return normalize(t).split(/\s+/).filter(Boolean); }
       function scoreMatch(userSet, patternList) { if (!patternList.length) return 0; let n = 0; for (const t of patternList) if (userSet.has(t)) n++; return n / patternList.length; }
-      function parseTeach(text) { const s = text.trim(); for (const p of ["teach:","learn:"]) { if (s.toLowerCase().startsWith(p)) { const rest = s.slice(p.length).trim(); const i = rest.indexOf("->"); if (i !== -1) { const q = rest.slice(0,i).trim(), a = rest.slice(i+2).trim(); if (q && a) return [q, a]; } } } return [null, null]; }
-      function loadLearned() { try { const j = localStorage.getItem(STORAGE_KEY); return j ? JSON.parse(j) : []; } catch { return []; } }
-      function saveLearned(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
-      function think(msg) {
+      function thinkFallback(msg) {
         const raw = (msg || "").trim();
-        if (!raw) return "You didn't say anything. Try a greeting or a question!";
-        const [q, a] = parseTeach(raw);
-        if (q != null && a != null) { const learned = loadLearned(); learned.push({ question: q, answer: a }); saveLearned(learned); return "Got it. I'll remember: \"" + q + "\" -> \"" + a + "\""; }
-        const userNorm = normalize(raw); const userSet = new Set(tokenize(raw)); const learned = loadLearned();
-        let bestScore = 0, bestAns = null;
-        for (const e of learned) { const qn = normalize(e.question); const qt = new Set(tokenize(e.question)); let score = (qn && (userNorm.includes(qn) || qn.includes(userNorm))) ? 0.9 : (userSet.size + qt.size) ? ([...userSet].filter(x=>qt.has(x)).length / new Set([...userSet,...qt]).size) : 0; if (score > bestScore && score >= 0.3) { bestScore = score; bestAns = e.answer; } }
-        if (bestAns) return bestAns;
-        let best = 0, entry = null; for (const e of KNOWLEDGE) { if (!e.patterns.length) continue; for (const p of e.patterns) { const s = scoreMatch(userSet, tokenize(p)); if (s > best) { best = s; entry = e; } } }
-        if (entry && best >= 0.3) return entry.responses[Math.floor(Math.random()*entry.responses.length)];
-        const def = KNOWLEDGE.find(e => !e.patterns.length); return def ? def.responses[Math.floor(Math.random()*def.responses.length)] : "Try 'help' or: teach: question -> answer";
+        if (!raw) return "Ask a question.";
+        const userSet = new Set(tokenize(raw));
+        let best = 0, entry = null;
+        for (const e of KNOWLEDGE) { if (!e.patterns.length) continue; for (const p of e.patterns) { const s = scoreMatch(userSet, tokenize(p)); if (s > best) { best = s; entry = e; } } }
+        if (entry && best >= 0.3) return entry.responses[0];
+        return (KNOWLEDGE.find(e => !e.patterns.length) || {}).responses?.[0] || "Ask something — the API may not be configured yet.";
       }
-      const chat = document.getElementById("chat"); const form = document.getElementById("form"); const input = document.getElementById("input"); const send = document.getElementById("send");
-      function addMessage(role, text) { const d = document.createElement("div"); d.className = "message " + role; d.innerHTML = '<span class="label">' + (role === "user" ? "You" : "AI") + '</span><p></p>'; d.querySelector("p").textContent = text; chat.appendChild(d); chat.scrollTop = chat.scrollHeight; }
+
+      const chat = document.getElementById("chat");
+      const form = document.getElementById("form");
+      const input = document.getElementById("input");
+      const send = document.getElementById("send");
+
+      function addMessage(role, text, label) {
+        const d = document.createElement("div");
+        d.className = "message " + role;
+        d.innerHTML = "<span class=\"label\">" + (label || (role === "user" ? "You" : "General")) + "</span><p></p>";
+        d.querySelector("p").textContent = text;
+        chat.appendChild(d);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
       function resize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 150) + "px"; }
       input.addEventListener("input", resize);
       input.addEventListener("keydown", function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
-      function addTyping() { const d = document.createElement("div"); d.className = "message ai typing"; d.innerHTML = '<span class="label">AI</span><p>Thinking…</p>'; chat.appendChild(d); chat.scrollTop = chat.scrollHeight; return d; }
-      form.addEventListener("submit", function(e) { e.preventDefault(); const raw = input.value.trim(); if (!raw) return; addMessage("user", raw); input.value = ""; resize(); send.disabled = true; const typingEl = addTyping(); setTimeout(function() { typingEl.remove(); addMessage("ai", think(raw)); send.disabled = false; input.focus(); }, 280); });
+
+      function addTyping() {
+        const d = document.createElement("div");
+        d.className = "message ai typing";
+        d.innerHTML = "<span class=\"label\">General</span><p>Searching…</p>";
+        chat.appendChild(d);
+        chat.scrollTop = chat.scrollHeight;
+        return d;
+      }
+
+      form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const raw = input.value.trim();
+        if (!raw) return;
+        addMessage("user", raw);
+        input.value = "";
+        resize();
+        send.disabled = true;
+        const typingEl = addTyping();
+
+        try {
+          const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: raw }) });
+          const data = await res.json();
+          typingEl.remove();
+          const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : "No reply.";
+          addMessage("ai", reply);
+        } catch (err) {
+          typingEl.remove();
+          addMessage("ai", thinkFallback(raw));
+        } finally {
+          send.disabled = false;
+          input.focus();
+        }
+      });
+
       input.focus();
     })();
   </script>
