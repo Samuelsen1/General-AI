@@ -1,6 +1,6 @@
 /**
  * General – /api/chat
- * Free: Wikipedia, Open-Meteo (weather), Free Dictionary. Web: Google CSE, Serper, Brave, Tavily. News: NewsAPI. LLM: OpenAI.
+ * Free: Wikipedia, Open-Meteo (weather), Free Dictionary. Web: Google CSE, Serper, Brave, Tavily. News: NewsAPI. LLM: DeepSeek, OpenAI.
  */
 
 const WIKI_URL = "https://en.wikipedia.org/w/api.php";
@@ -90,21 +90,44 @@ async function fetchNews(q, apiKey) {
   return items.map((a) => ({ title: a.title, snippet: trim(a.description || "", 120) }));
 }
 
+const LLM_SYSTEM = `You are General, a helpful assistant. You have context from search (Wikipedia, web, weather, dictionary, news). Use it to answer.
+
+Rules:
+- When the context clearly supports an answer: give a clear, direct answer. Synthesize across sources if needed. 2–4 sentences is fine; be concise but complete.
+- For definitions, facts, numbers, dates: state them directly.
+- When the context is partial or ambiguous: say what we can infer, note what's unclear or missing, and suggest rephrasing if helpful.
+- When the context doesn't match the question: briefly say so and what would help (e.g. "That's not in the context; try asking about X").
+- Be natural and helpful. No filler like "According to the context" or "The context suggests." Just answer.
+- If the user asks why/how: use the context to explain cause and effect when possible; otherwise keep it short.`;
+
+async function fetchDeepSeek(context, question, apiKey) {
+  const user = `Context:\n${context}\n\nQ: ${question}`;
+  const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [{ role: "system", content: LLM_SYSTEM }, { role: "user", content: user }],
+      max_tokens: 420,
+      temperature: 0.25,
+    }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error(`DeepSeek ${res.status}: ${err}`); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
+}
+
 async function fetchOpenAI(context, question, apiKey) {
-  const sys = `You are General. Answer only from the context. Rules:
-- Be very concise: 1–3 short sentences. No intros, no filler.
-- If the question asks for a definition, fact, date, or number: give it directly.
-- If the context doesn't contain enough: say "Not in the context" or what's missing.
-- No speculation. No "According to…" or "The context suggests…" — just answer.`;
   const user = `Context:\n${context}\n\nQ: ${question}`;
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({
       model: "gpt-4o-mini",
-      messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-      max_tokens: 280,
-      temperature: 0.2,
+      messages: [{ role: "system", content: LLM_SYSTEM }, { role: "user", content: user }],
+      max_tokens: 420,
+      temperature: 0.25,
     }),
     signal: AbortSignal.timeout(20000),
   });
@@ -154,6 +177,7 @@ module.exports = async function handler(req, res) {
   if (!q) return res.status(400).json({ error: "message required", reply: "Ask something." });
 
   const ql = q.toLowerCase();
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
   const googleKey = process.env.GOOGLE_API_KEY;
   const cseId = process.env.GOOGLE_CSE_ID;
@@ -186,11 +210,19 @@ module.exports = async function handler(req, res) {
 
   const context = buildContext(opts);
 
-  if (openaiKey && context !== "No search results.") {
-    try {
-      const reply = await fetchOpenAI(context, q, openaiKey);
-      return res.status(200).json({ reply });
-    } catch (e) { console.warn("OpenAI:", e?.message); }
+  if (context !== "No search results.") {
+    if (deepseekKey) {
+      try {
+        const reply = await fetchDeepSeek(context, q, deepseekKey);
+        return res.status(200).json({ reply });
+      } catch (e) { console.warn("DeepSeek:", e?.message); }
+    }
+    if (openaiKey) {
+      try {
+        const reply = await fetchOpenAI(context, q, openaiKey);
+        return res.status(200).json({ reply });
+      } catch (e) { console.warn("OpenAI:", e?.message); }
+    }
   }
 
   return res.status(200).json({ reply: buildFallbackReply(opts) });

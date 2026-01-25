@@ -40,7 +40,10 @@ Used when the query contains: *news*, *latest*, *headlines*, *current*, *recent*
 
 | Variable | Service | Where to get it |
 |----------|---------|------------------|
+| `DEEPSEEK_API_KEY` | DeepSeek | [platform.deepseek.com](https://platform.deepseek.com) → API keys → Create new |
 | `OPENAI_API_KEY` | OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+
+**Priority:** DeepSeek is used first when configured; otherwise OpenAI.
 
 ---
 
