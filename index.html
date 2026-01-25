@@ -138,12 +138,26 @@
         return d;
       }
 
+      const MAX_FILE = 3 * 1024 * 1024; // 3 MB (keeps JSON under Vercel 4.5MB)
+      function toBase64(buf) {
+        const u = new Uint8Array(buf);
+        let s = "";
+        for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192));
+        return btoa(s);
+      }
+
       form.addEventListener("submit", async function(e) {
         e.preventDefault();
         const raw = input.value.trim();
         const file = chosenFile;
         if (!raw && !file) return;
         const displayMsg = raw || (file ? "[" + file.name + "]" : "");
+        if (file && file.size > MAX_FILE) {
+          addMessage("user", displayMsg);
+          addMessage("ai", "File too large. Use a PDF or image under 3 MB.");
+          chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none";
+          return;
+        }
         addMessage("user", displayMsg);
         input.value = "";
         if (file) { chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none"; }
@@ -155,18 +169,18 @@
           const body = { message: raw || (file ? "What is in this file?" : "") };
           if (file) {
             const buf = await file.arrayBuffer();
-            const b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
             const isPdf = (file.type || "").toLowerCase() === "application/pdf";
-            if (isPdf) body.pdf = b64; else body.image = b64;
+            if (isPdf) body.pdf = toBase64(buf); else body.image = toBase64(buf);
           }
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-          const data = await res.json();
+          let data;
+          try { data = await res.json(); } catch (_) { data = { reply: res.status === 413 ? "File too large. Use under 3 MB." : "Request failed. Set DEEPSEEK_API_KEY in Vercel and try again." }; }
           typingEl.remove();
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : "No reply.";
           addMessage("ai", reply);
         } catch (err) {
           typingEl.remove();
-          addMessage("ai", thinkFallback(displayMsg));
+          addMessage("ai", file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));
         } finally {
           send.disabled = false;
           input.focus();

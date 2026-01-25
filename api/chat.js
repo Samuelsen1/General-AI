@@ -267,6 +267,10 @@ module.exports = async function handler(req, res) {
 
   const context = buildContext(opts);
 
+  if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !openaiKey) {
+    return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images." });
+  }
+
   if (imageB64 && (deepseekKey || openaiKey)) {
     if (deepseekKey) {
       try {
