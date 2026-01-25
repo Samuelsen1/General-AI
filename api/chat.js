@@ -98,7 +98,7 @@ When users ask who created you, who made you, who is your owner, or who made thi
 
 const LLM_SYSTEM = CREATOR + `
 
-You are General, a helpful assistant. You have context from search (Wikipedia, web, weather, dictionary, news) and sometimes Document (PDF). Use it to answer. Follow the conversation: use prior messages to resolve "that", "it", "explain", etc.
+You are General, a helpful assistant. You have context from search (Wikipedia, web, weather, dictionary, news) and sometimes Document (PDF). Use it to answer. Use the chat history to recall prior messages and resolve "that", "it", "explain", etc.
 
 Rules:
 - When the context clearly supports an answer: give a clear, direct answer. Synthesize across sources if needed. 2–4 sentences; be concise but complete.
@@ -106,7 +106,9 @@ Rules:
 - **Explain**: When asked to explain, be clear and stepwise. Use the context and prior turns.
 - **Analyse**: When analysing documents, search results, or ideas, summarize key points, structure, strengths, and gaps.
 - **Judge**: When asked for your judgment, evaluation, or opinion (e.g. quality, strengths/weaknesses, advice), give a reasoned assessment with clear pros and cons where relevant.
-- When the context is partial or ambiguous: say what we can infer, note what's missing, and suggest rephrasing.
+- When the context is partial or ambiguous: say what we can infer, note what's missing, and suggest rephrasing or a different angle.
+- **When the answer is unknown** (context says "No search results" or doesn't support it): answer smartly. Briefly acknowledge what’s unclear; say what might help (rephrasing, different keywords, a more specific or broader question); offer a related angle or a tentative interpretation if it’s reasonable. Avoid dead ends like "I don’t know" alone — be useful.
+- **Understanding and nuance**: Read tone and intent (curious, sceptical, formal). Use nuance: hedge when uncertain ("likely", "it depends", "often"), be precise when the context supports it. Match register to the user (everyday or slightly more formal). Notice implication and subtext. Use clear, precise language where it helps — natural, not stiff.
 - When the context doesn't match the question: briefly say so and what would help.
 - Be natural. No filler like "According to the context." Just answer.
 - Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.`;
@@ -120,7 +122,7 @@ async function fetchDeepSeek(context, question, apiKey, hist = []) {
     body: JSON.stringify({
       model: "deepseek-chat",
       messages,
-      max_tokens: 520,
+      max_tokens: 600,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(30000),
@@ -139,7 +141,7 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages,
-      max_tokens: 520,
+      max_tokens: 600,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(20000),
@@ -152,7 +154,9 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
 const LLM_VISION = CREATOR + `
 
 You are General. The user shared an image. Use the chat history to recall what they shared or you said earlier. Resolve "that", "it", "explain", "before", etc. from prior turns.
-Answer from the image and any text context. **Explain** what you see when asked. **Analyse** layout, content, and quality. When asked for your **judgment** or evaluation, give a reasoned assessment. Use **bold**, *italic*, \`code\`, ## for headings, and - for lists when it helps. Be concise and helpful.`;
+Answer from the image and any text context. **Explain** what you see when asked. **Analyse** layout, content, and quality. When asked for your **judgment** or evaluation, give a reasoned assessment.
+**When something is unclear or you can't answer from the image**: say so briefly; suggest what might help (a clearer crop, more context, or a different question). Offer a related observation if it’s useful — avoid dead ends.
+**Nuance**: Hedge when uncertain; be precise when you can. Match the user’s tone. Use **bold**, *italic*, \`code\`, ## for headings, and - for lists when it helps. Be concise and helpful.`;
 
 async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist = []) {
   const user = [
@@ -166,7 +170,7 @@ async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist 
     body: JSON.stringify({
       model: "deepseek-chat",
       messages,
-      max_tokens: 520,
+      max_tokens: 600,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(35000),
@@ -188,7 +192,7 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages,
-      max_tokens: 520,
+      max_tokens: 600,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(25000),
@@ -215,7 +219,7 @@ function buildFallbackReply(opts) {
   const best = opts.wiki?.[0] || opts.web?.[0];
   if (best) return `${best.title}: ${best.snippet}`;
   if (opts.news?.[0]) return `${opts.news[0].title}: ${opts.news[0].snippet}`;
-  return "Nothing found. Rephrase or add API keys in Vercel.";
+  return "I don’t have anything on that from search. Try rephrasing or different keywords; if you’ve set up web search in Vercel, that can help too.";
 }
 
 function extractPlace(q) {
@@ -314,19 +318,17 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ reply: "Image analysis needs DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel." });
   }
 
-  if (context !== "No search results.") {
-    if (deepseekKey) {
-      try {
-        const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
-        return res.status(200).json({ reply });
-      } catch (e) { console.warn("DeepSeek:", e?.message); }
-    }
-    if (openaiKey) {
-      try {
-        const reply = await fetchOpenAI(context, q, openaiKey, hist);
-        return res.status(200).json({ reply });
-      } catch (e) { console.warn("OpenAI:", e?.message); }
-    }
+  if (deepseekKey) {
+    try {
+      const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
+      return res.status(200).json({ reply });
+    } catch (e) { console.warn("DeepSeek:", e?.message); }
+  }
+  if (openaiKey) {
+    try {
+      const reply = await fetchOpenAI(context, q, openaiKey, hist);
+      return res.status(200).json({ reply });
+    } catch (e) { console.warn("OpenAI:", e?.message); }
   }
 
   return res.status(200).json({ reply: buildFallbackReply(opts) });
