@@ -136,7 +136,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </label>
           <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
-          <textarea id="input" rows="1" placeholder="Ask anything…" autocomplete="off"></textarea>
+          <textarea id="input" rows="1" placeholder="Ask anything…" autocomplete="off" enterkeyhint="send"></textarea>
           <button type="submit" id="send" aria-label="Send">Send</button>
         </form>
         <p class="file-chosen" id="file-chosen" style="display:none"><span id="file-name"></span></p>
@@ -186,6 +186,7 @@
       }
 
       function renderHistoryList() {
+        if (!chat || !historyList) return;
         historyList.innerHTML = "";
         var items = chat.querySelectorAll(".message");
         var count = 0;
@@ -203,8 +204,8 @@
           li.addEventListener("click", (function (elem) { return function () { closeSidebar(); elem.scrollIntoView({ behavior: "smooth", block: "nearest" }); }; })(el));
           historyList.appendChild(li);
         }
-        historyEmpty.style.display = count === 0 ? "block" : "none";
-        historyList.style.display = count === 0 ? "none" : "block";
+        if (historyEmpty) historyEmpty.style.display = count === 0 ? "block" : "none";
+        if (historyList) historyList.style.display = count === 0 ? "none" : "block";
       }
 
       fileInput.addEventListener("change", function() {
@@ -246,7 +247,13 @@
         requestAnimationFrame(function () { resize(); resizeScheduled = false; });
       }
       input.addEventListener("input", scheduleResize, { passive: true });
-      input.addEventListener("keydown", function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+      input.addEventListener("keydown", function(e) {
+        var isEnter = e.key === "Enter" || e.keyCode === 13;
+        if (isEnter && !e.shiftKey) {
+          e.preventDefault();
+          if (form && typeof form.requestSubmit === "function") form.requestSubmit(); else if (send) send.click();
+        }
+      }, true);
 
       function addTyping() {
         const d = document.createElement("div");
@@ -257,44 +264,6 @@
         return d;
       }
 
-      let history = [];
-
-      // Restore chat from previous session
-      try {
-        const raw = localStorage.getItem("general_chat_history");
-        if (raw) {
-          const arr = JSON.parse(raw);
-          if (Array.isArray(arr) && arr.length > 0) {
-            history = arr;
-            arr.forEach(function (m) {
-              if (m && (m.role === "user" || m.role === "assistant")) {
-                addMessage(m.role === "user" ? "user" : "ai", m.content || "");
-              }
-            });
-          }
-        }
-      } catch (e) {}
-      renderHistoryList();
-
-      var menuBtn = document.getElementById("menu-btn");
-      if (menuBtn) menuBtn.addEventListener("click", function () {
-        if (sidebar.classList.contains("open")) { closeSidebar(); return; }
-        sidebar.classList.add("open");
-        sidebarOverlay.classList.add("visible");
-        sidebarOverlay.setAttribute("aria-hidden", "false");
-      });
-      if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
-
-      var clearBtn = document.getElementById("clear-chat");
-      if (clearBtn) clearBtn.addEventListener("click", function () {
-        history = [];
-        localStorage.removeItem("general_chat_history");
-        var msgs = chat.querySelectorAll(".message");
-        for (var i = 1; i < msgs.length; i++) msgs[i].remove();
-        renderHistoryList();
-        closeSidebar();
-      });
-
       const MAX_FILE = 3 * 1024 * 1024; // 3 MB (keeps JSON under Vercel 4.5MB)
       function toBase64(buf) {
         const u = new Uint8Array(buf);
@@ -303,7 +272,7 @@
         return btoa(s);
       }
 
-      form.addEventListener("submit", async function(e) {
+      if (form && input) form.addEventListener("submit", async function(e) {
         e.preventDefault();
         const raw = input.value.trim();
         const file = chosenFile;
@@ -332,9 +301,9 @@
           body.history = history.slice(-20);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
-          try { data = await res.json(); } catch (_) { data = { reply: res.status === 413 ? "File too large. Use under 3 MB." : "Request failed. Set DEEPSEEK_API_KEY in Vercel and try again." }; }
+          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 3 MB." : "Check /api/chat and DEEPSEEK_API_KEY in Vercel.") }; }
           typingEl.remove();
-          const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : "No reply.";
+          const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and DEEPSEEK_API_KEY in Vercel.") : "No reply.";
           addMessage("ai", reply);
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
@@ -350,7 +319,45 @@
         }
       });
 
-      input.focus();
+      let history = [];
+
+      // Restore chat from previous session
+      try {
+        const raw = localStorage.getItem("general_chat_history");
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr) && arr.length > 0) {
+            history = arr;
+            arr.forEach(function (m) {
+              if (m && (m.role === "user" || m.role === "assistant")) {
+                addMessage(m.role === "user" ? "user" : "ai", m.content || "");
+              }
+            });
+          }
+        }
+      } catch (e) {}
+      try { renderHistoryList(); } catch (e) {}
+
+      var menuBtn = document.getElementById("menu-btn");
+      if (menuBtn) menuBtn.addEventListener("click", function () {
+        if (sidebar.classList.contains("open")) { closeSidebar(); return; }
+        sidebar.classList.add("open");
+        sidebarOverlay.classList.add("visible");
+        sidebarOverlay.setAttribute("aria-hidden", "false");
+      });
+      if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
+
+      var clearBtn = document.getElementById("clear-chat");
+      if (clearBtn) clearBtn.addEventListener("click", function () {
+        history = [];
+        localStorage.removeItem("general_chat_history");
+        var msgs = chat.querySelectorAll(".message");
+        for (var i = 1; i < msgs.length; i++) msgs[i].remove();
+        renderHistoryList();
+        closeSidebar();
+      });
+
+      if (input) input.focus();
     })();
   </script>
 </body>

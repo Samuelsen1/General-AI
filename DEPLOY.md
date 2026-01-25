@@ -8,10 +8,11 @@ In the end you get a URL like `https://General-AI-xxx.vercel.app`.
 
 1. **[github.com/new](https://github.com/new)** → name: `General-AI`, Public → **Create repository**. (If you already created it, go to the repo and continue.)
 2. Click **“uploading an existing file”** and drag in from `/Users/macbook/ai-assistant-site/`:
-   - `index.html`
-   - `README.md`
-   - `DEPLOY.md`
-   - `.gitignore`
+   - **`index.html`**
+   - **`api`** folder (with `chat.js` and `status.js` inside — required for /api/chat)
+   - **`package.json`** (required for the API)
+   - **`vercel.json`**
+   - `README.md`, `DEPLOY.md`, `.gitignore`
 3. Commit (e.g. “Initial”).
 4. **[vercel.com](https://vercel.com)** → **Add New → Project** → **Import** `General-AI` → **Deploy**.
 5. Use the Vercel URL as your link.
@@ -46,6 +47,16 @@ git push -u origin main
 3. **Import** your `General-AI` repo.
 4. Click **Deploy** (no settings to change).
 5. Your link: **https://General-AI-xxxx.vercel.app** (or similar). Use that link to open the AI.
+
+---
+
+## If you get "404 This page could not be found"
+
+The **`api`** folder and **`package.json`** must be in the repo. If you only uploaded `index.html` and a few docs, `/api/chat` does not exist.
+
+1. **Add the missing files** to GitHub: the **`api`** folder (with **`chat.js`** and **`status.js`**), **`package.json`**, and **`vercel.json`**.
+2. **Redeploy** on Vercel: Project → **Deployments** → ⋮ on the latest → **Redeploy**, or push a new commit.
+3. In Vercel **Settings → Environment Variables**, add **`DEEPSEEK_API_KEY`** or **`OPENAI_API_KEY`** (see [ENV.md](ENV.md)).
 
 ---
 

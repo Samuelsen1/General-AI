@@ -9,11 +9,12 @@ Vercel (and similar) need at least one commit on `main`. Do **one** of the two o
 1. Open your repo: **https://github.com/YOUR_USERNAME/General-AI**
 2. If you see **"uploading an existing file"** or **"Add file"** → **"Upload files"**, use that.
 3. Open Finder and go to: **`/Users/macbook/ai-assistant-site/`**
-4. Drag these files into the browser window (all at once or one by one):
-   - **index.html** (required — Vercel serves this)
-   - **README.md**
-   - **DEPLOY.md**
-   - **.gitignore** (optional; if hidden, press `Cmd+Shift+.` in Finder to show dotfiles)
+4. Drag these into the browser window (all at once or one by one):
+   - **index.html** (required — main page)
+   - **api** folder (required — contains **chat.js** and **status.js** for /api/chat; 404 happens if this is missing)
+   - **package.json** (required — API needs it for pdf-parse)
+   - **vercel.json**
+   - README.md, DEPLOY.md, .gitignore (optional; for .gitignore, press `Cmd+Shift+.` in Finder to show dotfiles)
 5. In the box at the bottom, type: **Initial commit**
 6. Click **"Commit changes"** (green button).
 
