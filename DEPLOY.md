@@ -11,7 +11,6 @@ In the end you get a URL like `https://General-AI-xxx.vercel.app`.
    - **`index.html`**
    - **`api`** folder (with `chat.js` and `status.js` inside — required for /api/chat)
    - **`package.json`** (required for the API)
-   - **`vercel.json`**
    - `README.md`, `DEPLOY.md`, `.gitignore`
 3. Commit (e.g. “Initial”).
 4. **[vercel.com](https://vercel.com)** → **Add New → Project** → **Import** `General-AI` → **Deploy**.
@@ -54,7 +53,7 @@ git push -u origin main
 
 The **`api`** folder and **`package.json`** must be in the repo. If you only uploaded `index.html` and a few docs, `/api/chat` does not exist.
 
-1. **Add the missing files** to GitHub: the **`api`** folder (with **`chat.js`** and **`status.js`**), **`package.json`**, and **`vercel.json`**.
+1. **Add the missing files** to GitHub: the **`api`** folder (with **`chat.js`** and **`status.js`**) and **`package.json`**.
 2. **Redeploy** on Vercel: Project → **Deployments** → ⋮ on the latest → **Redeploy**, or push a new commit.
 3. In Vercel **Settings → Environment Variables**, add **`DEEPSEEK_API_KEY`** or **`OPENAI_API_KEY`** (see [ENV.md](ENV.md)).
 

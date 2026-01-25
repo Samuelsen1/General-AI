@@ -13,7 +13,6 @@ Vercel (and similar) need at least one commit on `main`. Do **one** of the two o
    - **index.html** (required — main page)
    - **api** folder (required — contains **chat.js** and **status.js** for /api/chat; 404 happens if this is missing)
    - **package.json** (required — API needs it for pdf-parse)
-   - **vercel.json**
    - README.md, DEPLOY.md, .gitignore (optional; for .gitignore, press `Cmd+Shift+.` in Finder to show dotfiles)
 5. In the box at the bottom, type: **Initial commit**
 6. Click **"Commit changes"** (green button).
