@@ -43,6 +43,11 @@
     .form button:hover { filter: brightness(1.12); }
     .form button:active { transform: scale(0.98); }
     .form button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .attach-btn { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-dim); cursor: pointer; transition: color 0.2s, border-color 0.2s; flex-shrink: 0; }
+    .attach-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .attach-btn svg { width: 20px; height: 20px; }
+    .file-chosen { margin-top: 0.35rem; font-size: 0.75rem; color: var(--text-dim); }
+    .file-chosen span { color: var(--accent); }
     .hint { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); }
     .typing { opacity: 0.75; }
     .typing .label::after { content: " …"; animation: dots 1s steps(4, end) infinite; }
@@ -63,10 +68,15 @@
     </section>
     <div class="form-wrap">
       <form class="form" id="form">
+        <label for="file-input" class="attach-btn" aria-label="Attach image or PDF" title="Attach image or PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </label>
+        <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
         <textarea id="input" rows="1" placeholder="Ask anything…" autocomplete="off"></textarea>
         <button type="submit" id="send" aria-label="Send">Send</button>
       </form>
-      <p class="hint">Wikipedia, weather, dictionary (free). Web: Google CSE, Serper, Brave. News: NewsAPI. LLM: DeepSeek, OpenAI. All keys in Vercel env.</p>
+      <p class="file-chosen" id="file-chosen" style="display:none"><span id="file-name"></span></p>
+      <p class="hint">📎 Image & PDF. Wikipedia, weather, dictionary (free). Web: Google CSE, Serper, Brave. News: NewsAPI. LLM: DeepSeek, OpenAI.</p>
     </div>
   </main>
   <script>
@@ -95,6 +105,16 @@
       const form = document.getElementById("form");
       const input = document.getElementById("input");
       const send = document.getElementById("send");
+      const fileInput = document.getElementById("file-input");
+      const fileChosen = document.getElementById("file-chosen");
+      const fileNameEl = document.getElementById("file-name");
+      let chosenFile = null;
+
+      fileInput.addEventListener("change", function() {
+        chosenFile = fileInput.files?.[0] || null;
+        if (chosenFile) { fileNameEl.textContent = chosenFile.name; fileChosen.style.display = ""; }
+        else { fileNameEl.textContent = ""; fileChosen.style.display = "none"; }
+      });
 
       function addMessage(role, text, label) {
         const d = document.createElement("div");
@@ -121,22 +141,32 @@
       form.addEventListener("submit", async function(e) {
         e.preventDefault();
         const raw = input.value.trim();
-        if (!raw) return;
-        addMessage("user", raw);
+        const file = chosenFile;
+        if (!raw && !file) return;
+        const displayMsg = raw || (file ? "[" + file.name + "]" : "");
+        addMessage("user", displayMsg);
         input.value = "";
+        if (file) { chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none"; }
         resize();
         send.disabled = true;
         const typingEl = addTyping();
 
         try {
-          const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: raw }) });
+          const body = { message: raw || (file ? "What is in this file?" : "") };
+          if (file) {
+            const buf = await file.arrayBuffer();
+            const b64 = btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
+            const isPdf = (file.type || "").toLowerCase() === "application/pdf";
+            if (isPdf) body.pdf = b64; else body.image = b64;
+          }
+          const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
           const data = await res.json();
           typingEl.remove();
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : "No reply.";
           addMessage("ai", reply);
         } catch (err) {
           typingEl.remove();
-          addMessage("ai", thinkFallback(raw));
+          addMessage("ai", thinkFallback(displayMsg));
         } finally {
           send.disabled = false;
           input.focus();

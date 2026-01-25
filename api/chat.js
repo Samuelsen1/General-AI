@@ -136,8 +136,53 @@ async function fetchOpenAI(context, question, apiKey) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
+const LLM_VISION = "You are General. The user shared an image. Answer based on the image and any text context. Be concise and helpful.";
+
+async function fetchDeepSeekWithImage(context, question, imageB64, apiKey) {
+  const user = [
+    { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
+    { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
+  ];
+  const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [{ role: "system", content: LLM_VISION }, { role: "user", content: user }],
+      max_tokens: 420,
+      temperature: 0.25,
+    }),
+    signal: AbortSignal.timeout(35000),
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error(`DeepSeek ${res.status}: ${err}`); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
+}
+
+async function fetchOpenAIVision(context, question, imageB64, apiKey) {
+  const user = [
+    { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
+    { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
+  ];
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [{ role: "system", content: LLM_VISION }, { role: "user", content: user }],
+      max_tokens: 420,
+      temperature: 0.25,
+    }),
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error(`OpenAI ${res.status}: ${err}`); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
+}
+
 function buildContext(opts) {
   const parts = [];
+  if (opts.pdfText) parts.push("Document (PDF):\n" + opts.pdfText);
   if (opts.wiki?.length) parts.push("Wikipedia:\n" + opts.wiki.map((w) => `- ${w.title}: ${w.snippet}`).join("\n"));
   if (opts.web?.length) parts.push("Web:\n" + opts.web.map((g) => `- ${g.title}: ${g.snippet}`).join("\n"));
   if (opts.weather) parts.push("Weather: " + opts.weather);
@@ -172,9 +217,13 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { message } = req.body || {};
-  const q = typeof message === "string" ? message.trim() : "";
-  if (!q) return res.status(400).json({ error: "message required", reply: "Ask something." });
+  const body = req.body || {};
+  const message = body.message;
+  const imageB64 = body.image;
+  const pdfB64 = body.pdf;
+  let q = (typeof message === "string" ? message.trim() : "") || "";
+  if ((imageB64 || pdfB64) && !q) q = "What is in this file?";
+  if (!q && !imageB64 && !pdfB64) return res.status(400).json({ error: "message or file required", reply: "Send a message or attach an image or PDF." });
 
   const ql = q.toLowerCase();
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
@@ -185,7 +234,15 @@ module.exports = async function handler(req, res) {
   const braveKey = process.env.BRAVE_API_KEY;
   const newsKey = process.env.NEWS_API_KEY;
 
-  const opts = { wiki: [], web: [], weather: null, definition: null, news: [] };
+  const opts = { wiki: [], web: [], weather: null, definition: null, news: [], pdfText: null };
+  if (pdfB64) {
+    try {
+      const pdfParse = require("pdf-parse");
+      const buf = Buffer.from(pdfB64, "base64");
+      const data = await pdfParse(buf);
+      opts.pdfText = (data.text || "").slice(0, 12000);
+    } catch (e) { console.warn("PDF:", e?.message); }
+  }
 
   try { opts.wiki = await fetchWikipedia(q); } catch (e) { console.warn("Wikipedia:", e?.message); }
 
@@ -209,6 +266,22 @@ module.exports = async function handler(req, res) {
   }
 
   const context = buildContext(opts);
+
+  if (imageB64 && (deepseekKey || openaiKey)) {
+    if (deepseekKey) {
+      try {
+        const reply = await fetchDeepSeekWithImage(context, q, imageB64, deepseekKey);
+        return res.status(200).json({ reply });
+      } catch (e) { console.warn("DeepSeek vision:", e?.message); }
+    }
+    if (openaiKey) {
+      try {
+        const reply = await fetchOpenAIVision(context, q, imageB64, openaiKey);
+        return res.status(200).json({ reply });
+      } catch (e) { console.warn("OpenAI vision:", e?.message); }
+    }
+    return res.status(200).json({ reply: "Image analysis needs DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel." });
+  }
 
   if (context !== "No search results.") {
     if (deepseekKey) {
