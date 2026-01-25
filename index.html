@@ -32,35 +32,36 @@
       --mono: "JetBrains Mono", "SF Mono", "Consolas", monospace;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg); background-image: var(--bg-gradient); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; font-weight: 500; overflow-x: hidden; }
-    .app-wrap { display: flex; flex-direction: row; min-height: 100vh; }
-    .sidebar { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; }
-    .sidebar-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+    html, body { margin: 0; padding: 0; height: 100%; min-height: 100%; background: var(--bg); background-image: var(--bg-gradient); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; font-weight: 500; overflow: hidden; }
+    .app-wrap { display: flex; flex-direction: row; height: 100vh; min-height: 100vh; overflow: hidden; }
+    .history-rail { width: 48px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 1rem; background: var(--surface); border-right: 1px solid var(--border); position: relative; z-index: 60; }
+    .sidebar { position: fixed; left: 48px; top: 0; bottom: 0; width: 280px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; transform: translateX(-100%); transition: transform 0.2s; box-shadow: 4px 0 20px rgba(0,0,0,0.08); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-header { flex-shrink: 0; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
     .sidebar-header .logo { font-weight: 700; font-size: 1.05rem; color: var(--text); display: flex; align-items: center; gap: 0.4rem; }
     .sidebar-header .logo-icon { color: var(--accent); width: 1.25em; height: 1.25em; object-fit: contain; display: inline-block; vertical-align: middle; }
-    .sidebar-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin: 1rem 1.25rem 0.5rem; }
-    .sidebar-list { flex: 1; overflow-y: auto; padding: 0 0.75rem 0.75rem; }
+    .sidebar-title { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin: 1rem 1.25rem 0.5rem; }
+    .sidebar-list { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 0.75rem 0.75rem; }
     .sidebar-list li { list-style: none; margin: 0 0 0.25rem; padding: 0.5rem 0.65rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; color: var(--text-soft); line-height: 1.35; }
     .sidebar-list li:hover { background: var(--accent-soft-2); color: var(--accent); }
     .sidebar-list li.you { border-left: 2px solid transparent; }
     .sidebar-list li.general { border-left: 2px solid var(--accent-soft); padding-left: 0.5rem; }
     .sidebar-empty { padding: 1rem 1.25rem; font-size: 0.8rem; color: var(--text-dim); }
-    .sidebar-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+    .sidebar-footer { flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
     .sidebar-footer .new-chat { width: 100%; padding: 0.6rem 1rem; min-height: 44px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit; font-size: 0.85rem; font-weight: 500; color: var(--text-soft); cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; touch-action: manipulation; }
     .sidebar-footer .new-chat:hover { background: var(--accent-soft-2); color: var(--accent); border-color: var(--accent); }
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 40; }
     .sidebar-overlay.visible { display: block; }
-    .menu-btn { display: none; width: 40px; height: 40px; padding: 0; background: none; border: none; border-radius: var(--radius-sm); color: var(--text-dim); cursor: pointer; align-items: center; justify-content: center; touch-action: manipulation; }
-    .menu-btn:hover { background: var(--accent-soft-2); color: var(--accent); }
+    .history-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; background: none; border: none; border-radius: var(--radius-sm); color: var(--text-dim); cursor: pointer; touch-action: manipulation; flex-shrink: 0; }
+    .history-btn:hover { background: var(--accent-soft-2); color: var(--accent); }
+    .history-btn svg { width: 22px; height: 22px; }
     @media (max-width: 767px) {
-      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 280px; max-width: 85vw; transform: translateX(-100%); transition: transform 0.2s; box-shadow: 4px 0 20px rgba(0,0,0,0.08); padding-left: env(safe-area-inset-left, 0); }
-      .sidebar.open { transform: translateX(0); }
-      .menu-btn { display: flex; width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+      .history-rail { width: 44px; padding-top: 0.75rem; }
+      .sidebar { left: 44px; max-width: 85vw; padding-left: env(safe-area-inset-left, 0); }
       .app { padding: 1rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) 1rem; }
       .header { margin-bottom: 1rem; padding-bottom: 0.75rem; }
       .tagline { margin: 0.35rem 0 0 0; font-size: 0.8rem; }
       .message { padding: 0.9rem 1rem; max-width: 95%; }
-      .message .creator-photo { max-width: 120px; }
       .message pre, .message code { font-size: 0.82em; }
       .form { padding: 0.4rem; gap: 0.5rem; }
       .form #input { font-size: 1rem; padding: 0.75rem 0.85rem; min-height: 48px; }
@@ -76,14 +77,13 @@
       .form #input { padding: 0.7rem 0.75rem; }
       .form button { padding: 0.7rem 0.9rem; font-size: 0.85rem; }
     }
-    .app { flex: 1; max-width: 600px; margin: 0 auto; min-height: 100vh; width: 100%; display: flex; flex-direction: column; padding: 1.5rem 1.25rem 1.75rem; }
-    .header { margin-bottom: 1.5rem; padding-bottom: 1.1rem; border-bottom: 2px solid var(--border); position: relative; }
+    .app { flex: 1; max-width: 600px; margin: 0 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; padding: 1.5rem 1.25rem 1.75rem; overflow: hidden; }
+    .header { flex-shrink: 0; margin-bottom: 1.5rem; padding-bottom: 1.1rem; border-bottom: 2px solid var(--border); position: relative; }
     .header::after { content: ""; position: absolute; bottom: -2px; left: 0; width: 48px; height: 2px; background: var(--accent); border-radius: 1px; }
     .header-row { display: flex; align-items: center; gap: 0.5rem; }
     .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.15rem; color: var(--text); letter-spacing: -0.02em; }
     .logo .logo-icon { width: 1.25em; height: 1.25em; object-fit: contain; display: inline-block; vertical-align: middle; }
     .logo .logo-icon.logo-fallback { width: auto; height: auto; object-fit: none; font-size: 1.25em; color: var(--accent); }
-    .message .creator-photo { max-width: 140px; height: auto; border-radius: 10px; margin-top: 0.6em; display: block; box-shadow: var(--shadow); }
     .tagline { margin: 0.4rem 0 0 1.5rem; font-size: 0.8rem; color: var(--text-dim); font-weight: 400; }
     .chat { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 1.1rem; padding: 0.25rem 0; }
     .message { padding: 1.1rem 1.25rem; border-radius: var(--radius); max-width: 88%; box-shadow: var(--shadow); transition: box-shadow 0.2s; }
@@ -103,7 +103,7 @@
     .message.user { align-self: flex-end; background: var(--user-bg); border: 1px solid var(--user-border); }
     .message.user .label { color: var(--accent); }
     .message.ai { align-self: flex-start; background: var(--ai-bg); border: 1px solid var(--border); border-left: 3px solid var(--accent); }
-    .form-wrap { margin-top: auto; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+    .form-wrap { flex-shrink: 0; margin-top: auto; padding-top: 1.25rem; border-top: 1px solid var(--border); }
     .form { display: flex; gap: 0.6rem; align-items: flex-end; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
     .form #input { flex: 1; min-width: 0; min-height: 48px; padding: 0.85rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 0.95rem; transition: border-color 0.2s, box-shadow 0.2s; }
     .form #input::placeholder { color: var(--text-dim); }
@@ -125,13 +125,15 @@
 </head>
 <body>
   <div class="app-wrap">
+    <div class="history-rail">
+      <button type="button" class="history-btn" id="history-btn" aria-label="Open history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18M3 8h18M3 12h12M3 16h10"/></svg>
+      </button>
+    </div>
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
-        <div class="logo"><img src="images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='images/g.jpg';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
+        <div class="logo"><img src="/images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='images/g.png';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
       </div>
-      <p class="sidebar-title">History</p>
-      <ul id="history-list" class="sidebar-list"></ul>
-      <p class="sidebar-empty" id="history-empty">No messages yet.</p>
       <p class="sidebar-title">Past chats</p>
       <ul id="past-chats-list" class="sidebar-list"></ul>
       <div class="sidebar-footer">
@@ -142,8 +144,7 @@
     <main class="app">
       <header class="header">
         <div class="header-row">
-          <button type="button" class="menu-btn" id="menu-btn" aria-label="Open history">☰</button>
-          <div class="logo"><img src="images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='images/g.jpg';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
+          <div class="logo"><img src="/images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='images/g.png';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
         </div>
         <p class="tagline">Wikipedia, search, and AI. Short answers.</p>
       </header>
@@ -198,39 +199,12 @@
       const fileNameEl = document.getElementById("file-name");
       const sidebar = document.getElementById("sidebar");
       const sidebarOverlay = document.getElementById("sidebar-overlay");
-      const historyList = document.getElementById("history-list");
-      const historyEmpty = document.getElementById("history-empty");
       const pastChatsList = document.getElementById("past-chats-list");
       let chosenFile = null;
 
       function closeSidebar() {
         if (sidebar) sidebar.classList.remove("open");
         if (sidebarOverlay) { sidebarOverlay.classList.remove("visible"); sidebarOverlay.setAttribute("aria-hidden", "true"); }
-      }
-
-      function renderHistoryList() {
-        try {
-          if (!chat || !historyList) return;
-          historyList.innerHTML = "";
-          var items = chat.querySelectorAll(".message");
-          var count = 0;
-          for (var i = 1; i < items.length; i++) {
-            var el = items[i];
-            if (el.classList.contains("typing")) continue;
-            count++;
-            var isUser = el.classList.contains("user");
-            var label = isUser ? "You" : "General";
-            var p = el.querySelector("p");
-            var text = (p ? (p.textContent || "").trim() : "").replace(/\s+/g, " ").slice(0, 42);
-            var li = document.createElement("li");
-            li.className = isUser ? "you" : "general";
-            li.textContent = label + ": " + (text || "[file]") + (text.length >= 42 ? "…" : "");
-            li.addEventListener("click", (function (elem) { return function () { closeSidebar(); if (elem && elem.scrollIntoView) elem.scrollIntoView({ behavior: "smooth", block: "nearest" }); }; })(el));
-            historyList.appendChild(li);
-          }
-          if (historyEmpty) historyEmpty.style.display = count === 0 ? "block" : "none";
-          if (historyList) historyList.style.display = count === 0 ? "none" : "block";
-        } catch (e) { /* keep sidebar updates from affecting chat */ }
       }
 
       function renderPastChats() {
@@ -260,7 +234,7 @@
       }
 
       function scheduleRenderHistory() {
-        setTimeout(function () { try { renderHistoryList(); renderPastChats(); } catch (e) {} }, 100);
+        setTimeout(function () { try { renderPastChats(); } catch (e) {} }, 100);
       }
 
       fileInput.addEventListener("change", function() {
@@ -345,7 +319,6 @@
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and DEEPSEEK_API_KEY in Vercel.") : "No reply.";
           typingEl.classList.remove("typing");
           typingEl.querySelector("p").innerHTML = formatMsg(reply);
-          if (data && data.creatorImage) { var ci = document.createElement("img"); ci.src = "images/me.png"; ci.alt = "Opoku Samuel"; ci.className = "creator-photo"; ci.onerror = function(){ ci.style.display = "none"; }; typingEl.appendChild(ci); }
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
@@ -381,8 +354,8 @@
       } catch (e) {}
       scheduleRenderHistory();
 
-      var menuBtn = document.getElementById("menu-btn");
-      if (menuBtn && sidebar) menuBtn.addEventListener("click", function () {
+      var historyBtn = document.getElementById("history-btn");
+      if (historyBtn && sidebar) historyBtn.addEventListener("click", function () {
         if (sidebar.classList.contains("open")) { closeSidebar(); return; }
         sidebar.classList.add("open");
         if (sidebarOverlay) { sidebarOverlay.classList.add("visible"); sidebarOverlay.setAttribute("aria-hidden", "false"); }
