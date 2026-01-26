@@ -232,6 +232,16 @@
     return table;
   }
 
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      // Show feedback
+      const event = new CustomEvent('copyFeedback', { detail: 'Copied!' });
+      document.dispatchEvent(event);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+    });
+  }
+
   function addMessage(role, text, pushHistory = true) {
     if (pushHistory) {
       history.push({ role, content: text });
@@ -255,8 +265,30 @@
       div.appendChild(p);
     }
     
+    // Add copy button
+    const actions = document.createElement("div");
+    actions.className = "message-actions";
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "Copy";
+    copyBtn.title = "Copy message to clipboard";
+    copyBtn.onclick = () => {
+      copyToClipboard(text);
+      copyBtn.textContent = "Copied!";
+      copyBtn.classList.add("copied");
+      setTimeout(() => {
+        copyBtn.textContent = "Copy";
+        copyBtn.classList.remove("copied");
+      }, 2000);
+    };
+    actions.appendChild(copyBtn);
+    div.appendChild(actions);
+    
     chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+    // Smooth scroll
+    setTimeout(() => {
+      chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    }, 100);
     return div;
   }
 
@@ -291,6 +323,15 @@
       e.preventDefault();
       form.requestSubmit();
     }
+    // Keyboard shortcuts
+    if (e.key === "Escape") {
+      input.blur();
+    }
+    // Cmd/Ctrl + K to focus input
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      input.focus();
+    }
   });
 
   form.addEventListener("submit", async function (e) {
@@ -322,6 +363,38 @@
       input.focus();
     }
   });
+
+  // Export chat history
+  function exportChat() {
+    const chatData = {
+      timestamp: new Date().toISOString(),
+      messages: Array.from(chat.querySelectorAll('.message')).map(msg => {
+        const role = msg.classList.contains('user') ? 'user' : 'ai';
+        const content = msg.querySelector('p')?.textContent || 
+                       Array.from(msg.querySelectorAll('p, td, th')).map(el => el.textContent).join(' ');
+        return { role, content };
+      })
+    };
+    const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Add export button to header (optional)
+  const header = document.querySelector('.header');
+  if (header) {
+    const exportBtn = document.createElement('button');
+    exportBtn.textContent = 'Export Chat';
+    exportBtn.className = 'copy-btn';
+    exportBtn.style.marginLeft = 'auto';
+    exportBtn.style.marginTop = '0.5rem';
+    exportBtn.onclick = exportChat;
+    header.appendChild(exportBtn);
+  }
 
   input.focus();
 })();
