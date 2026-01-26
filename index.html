@@ -422,6 +422,16 @@
             if (isPdf) body.pdf = toBase64(buf); else body.image = toBase64(buf);
           }
           body.history = history.slice(-20);
+          // Scroll to bottom and ensure form is visible after sending
+          setTimeout(function() {
+            if (chat) {
+              chat.scrollTop = chat.scrollHeight;
+            }
+            const formWrap = document.querySelector('.form-wrap');
+            if (formWrap) {
+              formWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+          }, 100);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
           try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 3 MB." : "Check /api/chat and DEEPSEEK_API_KEY in Vercel.") }; }
@@ -431,7 +441,16 @@
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
-          requestAnimationFrame(function () { typingEl.scrollIntoView({ behavior: "auto", block: "end" }); });
+          requestAnimationFrame(function () { 
+            typingEl.scrollIntoView({ behavior: "auto", block: "end" }); 
+            // Ensure form stays visible
+            setTimeout(function() {
+              const formWrap = document.querySelector('.form-wrap');
+              if (formWrap) {
+                formWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }
+            }, 100);
+          });
           scheduleRenderHistory();
         } catch (err) {
           var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));
@@ -440,7 +459,18 @@
           requestAnimationFrame(function () { typingEl.scrollIntoView({ behavior: "auto", block: "end" }); });
         } finally {
           send.disabled = false;
-          setTimeout(function () { if (input) input.focus(); }, 120);
+          setTimeout(function () { 
+            if (input) {
+              input.focus(); 
+              // Ensure form is visible when input is focused
+              setTimeout(function() {
+                const formWrap = document.querySelector('.form-wrap');
+                if (formWrap) {
+                  formWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+              }, 300);
+            }
+          }, 120);
         }
       });
 
