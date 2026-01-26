@@ -81,7 +81,10 @@
     .app { flex: 1; max-width: 600px; margin: 0 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; padding: 1.5rem 1.25rem 1.75rem; overflow: hidden; }
     .header { flex-shrink: 0; margin-bottom: 1.5rem; padding-bottom: 1.1rem; border-bottom: 2px solid var(--border); position: relative; }
     .header::after { content: ""; position: absolute; bottom: -2px; left: 0; width: 48px; height: 2px; background: var(--accent); border-radius: 1px; }
-    .header-row { display: flex; align-items: center; gap: 0.5rem; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .lang-toggle { display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-soft); cursor: pointer; transition: all 0.2s; }
+    .lang-toggle:hover { background: var(--accent-soft-2); color: var(--accent); border-color: var(--accent); }
+    .lang-toggle svg { width: 16px; height: 16px; }
     .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.15rem; color: var(--text); letter-spacing: -0.02em; }
     .logo .logo-icon { width: 1.25em; height: 1.25em; object-fit: contain; display: inline-block; vertical-align: middle; }
     .logo .logo-icon.logo-fallback { width: auto; height: auto; object-fit: none; font-size: 1.25em; color: var(--accent); }
@@ -135,10 +138,10 @@
       <div class="sidebar-header">
         <div class="logo"><img src="/images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='images/g.png';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
       </div>
-      <p class="sidebar-title">Past chats</p>
+        <p class="sidebar-title" data-i18n="pastChats">Past chats</p>
       <ul id="past-chats-list" class="sidebar-list"></ul>
       <div class="sidebar-footer">
-        <button type="button" id="clear-chat" class="new-chat">+ New chat</button>
+        <button type="button" id="clear-chat" class="new-chat" data-i18n="newChat">+ New chat</button>
       </div>
     </aside>
     <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
@@ -146,22 +149,26 @@
       <header class="header">
         <div class="header-row">
           <div class="logo"><img src="/images/g.png" alt="General" class="logo-icon" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='images/g.png';return}this.outerHTML='<span class=\'logo-icon logo-fallback\'>◇</span>'" /><span>General</span></div>
+          <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span id="lang-text">EN</span>
+          </button>
         </div>
       </header>
       <section class="chat" id="chat">
         <div class="message ai">
           <span class="label">General</span>
-          <p>Hi! How can I help you today? 😊</p>
+          <p id="greeting-message">Hi! How can I help you today? 😊</p>
         </div>
       </section>
       <div class="form-wrap">
         <form class="form" id="form">
-          <label for="file-input" class="attach-btn" aria-label="Attach image or PDF" title="Attach image or PDF">
+          <label for="file-input" class="attach-btn" aria-label="Attach image or PDF" data-i18n-title="attachFile" title="Attach image or PDF">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </label>
           <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
-          <input type="text" id="input" placeholder="Ask anything…" autocomplete="off" enterkeyhint="send" />
-          <button type="submit" id="send" aria-label="Send">Send</button>
+          <input type="text" id="input" placeholder="Ask anything…" data-i18n-placeholder="askAnything" autocomplete="off" enterkeyhint="send" />
+          <button type="submit" id="send" aria-label="Send" data-i18n="send">Send</button>
         </form>
         <p class="file-chosen" id="file-chosen" style="display:none"><span id="file-name"></span></p>
         <p class="hint">Built by Opoku Samuel</p>
@@ -170,6 +177,77 @@
   </div>
   <script>
     (function () {
+      // Language translations
+      const translations = {
+        en: {
+          newChat: "+ New chat",
+          pastChats: "Past chats",
+          askAnything: "Ask anything…",
+          send: "Send",
+          attachFile: "Attach image or PDF",
+          greeting: "Hi! How can I help you today? 😊",
+          you: "You",
+          general: "General",
+          searching: "Searching…",
+          langCode: "EN"
+        },
+        de: {
+          newChat: "+ Neuer Chat",
+          pastChats: "Vergangene Chats",
+          askAnything: "Fragen Sie alles…",
+          send: "Senden",
+          attachFile: "Bild oder PDF anhängen",
+          greeting: "Hallo! Wie kann ich Ihnen heute helfen? 😊",
+          you: "Sie",
+          general: "General",
+          searching: "Suche…",
+          langCode: "DE"
+        }
+      };
+
+      // Get language from localStorage or default to 'en'
+      let currentLang = localStorage.getItem('general_lang') || 'en';
+      if (currentLang !== 'en' && currentLang !== 'de') currentLang = 'en';
+
+      // Translation function
+      function t(key) {
+        return translations[currentLang][key] || translations.en[key] || key;
+      }
+
+      // Update UI with translations
+      function updateUI() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          if (key) el.textContent = t(key);
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+          const key = el.getAttribute('data-i18n-placeholder');
+          if (key) el.placeholder = t(key);
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+          const key = el.getAttribute('data-i18n-title');
+          if (key) el.title = t(key);
+        });
+        const greetingEl = document.getElementById('greeting-message');
+        if (greetingEl) greetingEl.textContent = t('greeting');
+        const langText = document.getElementById('lang-text');
+        if (langText) langText.textContent = t('langCode');
+        document.documentElement.lang = currentLang;
+      }
+
+      // Language toggle
+      const langToggle = document.getElementById('lang-toggle');
+      if (langToggle) {
+        langToggle.addEventListener('click', function() {
+          currentLang = currentLang === 'en' ? 'de' : 'en';
+          localStorage.setItem('general_lang', currentLang);
+          updateUI();
+        });
+      }
+
+      // Initialize UI
+      updateUI();
+
       // Fallback when /api/chat fails (offline or not configured)
       const KNOWLEDGE = [
         { patterns: ["hi","hello","hey"], responses: ["Hi! How can I help you today? 😊"] },
@@ -262,7 +340,7 @@
       function addMessage(role, text, label) {
         const d = document.createElement("div");
         d.className = "message " + role;
-        d.innerHTML = "<span class=\"label\">" + (label || (role === "user" ? "You" : "General")) + "</span><p></p>";
+        d.innerHTML = "<span class=\"label\">" + (label || (role === "user" ? t("you") : t("general"))) + "</span><p></p>";
         d.querySelector("p").innerHTML = formatMsg(text);
         chat.appendChild(d);
         requestAnimationFrame(function () { d.scrollIntoView({ behavior: "auto", block: "end" }); });
@@ -273,7 +351,7 @@
       function addTyping() {
         const d = document.createElement("div");
         d.className = "message ai typing";
-        d.innerHTML = "<span class=\"label\">General</span><p>Searching…</p>";
+        d.innerHTML = "<span class=\"label\">" + t("general") + "</span><p>" + t("searching") + "</p>";
         chat.appendChild(d);
         requestAnimationFrame(function () { d.scrollIntoView({ behavior: "auto", block: "end" }); });
         return d;
@@ -306,7 +384,7 @@
         const typingEl = addTyping();
 
         try {
-          const body = { message: raw || (file ? "What is in this file?" : "") };
+          const body = { message: raw || (file ? (currentLang === 'de' ? "Was ist in dieser Datei?" : "What is in this file?") : "") };
           if (file) {
             const buf = await file.arrayBuffer();
             const isPdf = (file.type || "").toLowerCase() === "application/pdf";
