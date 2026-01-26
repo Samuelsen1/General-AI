@@ -105,7 +105,7 @@ function createTable(rows, headers) {
   const lines = [];
   const headerCells = headers.map((h, i) => String(h).padEnd(colWidths[i]));
   lines.push("| " + headerCells.join(" | ") + " |");
-  lines.push("| " + colWidths.map(w => "-".repeat(w)).join(" | ") + " |");
+  lines.push("| " + colWidths.map(w => "-".repeat(Math.max(3, w))).join(" | ") + " |");
   
   rows.forEach(row => {
     const cells = headers.map((_, i) => (row[i] ? String(row[i]) : "").padEnd(colWidths[i]));
