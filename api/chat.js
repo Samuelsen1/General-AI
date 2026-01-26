@@ -90,6 +90,136 @@ async function fetchNews(q, apiKey) {
   return items.map((a) => ({ title: a.title, snippet: trim(a.description || "", 120) }));
 }
 
+function createTable(rows, headers) {
+  if (!rows || rows.length === 0) return "Empty table.";
+  if (!headers || headers.length === 0) return "No headers provided.";
+
+  const colWidths = headers.map((h, i) => {
+    let max = String(h).length;
+    rows.forEach(row => {
+      if (row[i] && String(row[i]).length > max) max = String(row[i]).length;
+    });
+    return max;
+  });
+
+  const lines = [];
+  const headerCells = headers.map((h, i) => String(h).padEnd(colWidths[i]));
+  lines.push("| " + headerCells.join(" | ") + " |");
+  lines.push("| " + colWidths.map(w => "-".repeat(w)).join(" | ") + " |");
+  
+  rows.forEach(row => {
+    const cells = headers.map((_, i) => (row[i] ? String(row[i]) : "").padEnd(colWidths[i]));
+    lines.push("| " + cells.join(" | ") + " |");
+  });
+
+  return lines.join("\n");
+}
+
+function parseTableRequest(text) {
+  const textLower = text.toLowerCase().trim();
+  
+  // Pattern 1: "create table:" or "table:" followed by pipe-separated values
+  if (textLower.includes("create table:") || textLower.startsWith("table:")) {
+    let tableDef;
+    if (textLower.includes("create table:")) {
+      tableDef = text.substring(textLower.indexOf("create table:") + "create table:".length).trim();
+    } else {
+      tableDef = text.substring(6).trim(); // Skip "table:"
+    }
+    
+    const parts = tableDef.split(/\|\|/).map(p => p.trim());
+    if (parts.length < 2) {
+      const singleParts = tableDef.split("|").map(p => p.trim());
+      if (singleParts.length >= 2) {
+        const headers = singleParts[0].split(",").map(h => h.trim());
+        const rows = singleParts.slice(1).map(r => r.split(",").map(c => c.trim()));
+        if (headers.length > 0 && rows.length > 0) {
+          return createTable(rows, headers);
+        }
+      }
+    } else {
+      const headers = parts[0].split(",").map(h => h.trim());
+      const rows = parts.slice(1).map(r => r.split(",").map(c => c.trim()));
+      if (headers.length > 0 && rows.length > 0) {
+        return createTable(rows, headers);
+      }
+    }
+  }
+  
+  // Pattern 2: "make a table" with columns and rows
+  if (textLower.includes("make a table") || textLower.includes("create a table")) {
+    if (textLower.includes("columns:") && textLower.includes("rows:")) {
+      const colsStart = textLower.indexOf("columns:") + "columns:".length;
+      const rowsStart = textLower.indexOf("rows:");
+      const colsPart = text.substring(textLower.indexOf("columns:") + "columns:".length, textLower.indexOf("rows:")).trim();
+      const rowsPart = text.substring(textLower.indexOf("rows:") + "rows:".length).trim();
+      const headers = colsPart.split(",").map(h => h.trim());
+      const rowStrings = rowsPart.split(";").map(r => r.trim());
+      const rows = rowStrings.map(r => r.split(",").map(c => c.trim()));
+      if (headers.length > 0 && rows.length > 0) {
+        return createTable(rows, headers);
+      }
+    }
+  }
+  
+  return null;
+}
+
+function extractUrl(text) {
+  // Pattern to match full URLs
+  const urlPattern = /https?:\/\/[^\s<>"{}|\\^`\[\]]+(?:[^\s<>"{}|\\^`\[\].,;:!?]|\/)?/;
+  const match = text.match(urlPattern);
+  if (match) {
+    return match[0].replace(/[.,;:!?]+$/, "");
+  }
+  
+  // Check for visit commands
+  const visitPattern = /(?:visit|fetch|open|read|check|go to|look at)[\s:]+(?:this\s+)?(?:link|url|site|page|website)?[\s:]*\s*(https?:\/\/[^\s<>"{}|\\^`\[\]]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}[^\s]*)/i;
+  const visitMatch = text.match(visitPattern);
+  if (visitMatch) {
+    let url = visitMatch[1].replace(/[.,;:!?]+$/, "");
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+    return url;
+  }
+  
+  return null;
+}
+
+async function fetchWebpage(url) {
+  try {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+    
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+      signal: AbortSignal.timeout(10000),
+    });
+    
+    if (!res.ok) {
+      return `Error fetching URL: HTTP ${res.status} ${res.statusText}. The website may be down or the URL may be incorrect.`;
+    }
+    
+    const html = await res.text();
+    // Simple text extraction - remove HTML tags
+    const text = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    
+    return trim(text, 2000);
+  } catch (e) {
+    if (e.message.includes("nodename") || e.message.includes("servname")) {
+      return "Error fetching URL: Unable to resolve the domain name. The URL may be invalid or the domain may not exist. Please check the URL and try again.";
+    }
+    return `Error fetching URL: ${e.message}. Please check the URL and try again.`;
+  }
+}
+
 const CREATOR = `Your creator is **SAMUEL AFRIYIE OPOKU**, Digital Learning Designer.
 Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio and LinkedIn available.
 Background: 1+ year in e-learning, 3 years teaching; Master's in North American Studies (Media) at Philipps-Universität Marburg — thesis: "AI as Reflection: Human-Technology Relationships in Digital Narratives" (expected 2026); B.Ed. English, University of Cape Coast, Ghana. Skills: Articulate 360, Adobe Creative Suite, ADDIE, Bloom's Taxonomy, LMS, SCORM, instructional design, technical writing. Certifications: Instructional Design (U Illinois), EF SET C1, Technical Writing (Google, Board Infinity). Portfolio: e-learning modules (Articulate Rise), Notion knowledge bases, portfolio website with AI chatbot. Experience: Tanz der Kulturen e.V. (25+ accessible learning assets, 50+ educational resources, 300+ pages localized); Ghana NSS (English teacher); Praktikum at Dräger (from Feb 2026). Languages: English (native), German (B1), Akan (fluent).
@@ -250,6 +380,27 @@ module.exports = async function handler(req, res) {
   let q = (typeof message === "string" ? message.trim() : "") || "";
   if ((imageB64 || pdfB64) && !q) q = "What is in this file?";
   if (!q && !imageB64 && !pdfB64) return res.status(400).json({ error: "message or file required", reply: "Send a message or attach an image or PDF." });
+
+  // Check for table creation requests first
+  const tableResult = parseTableRequest(q);
+  if (tableResult) {
+    return res.status(200).json({ reply: tableResult });
+  }
+
+  // Check for link visiting requests
+  const url = extractUrl(q);
+  if (url) {
+    try {
+      const linkContent = await fetchWebpage(url);
+      if (linkContent && !linkContent.startsWith("Error")) {
+        return res.status(200).json({ reply: `Content from ${url}:\n\n${linkContent}` });
+      } else if (linkContent) {
+        return res.status(200).json({ reply: linkContent });
+      }
+    } catch (e) {
+      console.warn("Link visiting:", e?.message);
+    }
+  }
 
   const ql = q.toLowerCase();
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
