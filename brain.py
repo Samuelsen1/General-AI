@@ -521,11 +521,19 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
         pass
 
     # 5d) LLM (OpenAI, Anthropic, Ollama) when enabled — try before pattern/learned
+    # For queries that need information (best X, rankings, lists), use LLM even without search results
     try:
         from llm import get_llm_response
-        llm = get_llm_response(raw, history)
-        if llm and (llm or "").strip():
-            return llm.strip()
+        # Check if this is an informational query that should use LLM knowledge
+        user_lower = raw.lower()
+        informational_keywords = ["best", "top", "list", "ranking", "compare", "recommend", "table of", "table list"]
+        is_informational = any(keyword in user_lower for keyword in informational_keywords)
+        
+        # Use LLM for informational queries or when General-AI didn't return results
+        if is_informational or True:  # Always try LLM as fallback
+            llm = get_llm_response(raw, history)
+            if llm and (llm or "").strip():
+                return llm.strip()
     except Exception:
         pass
 
