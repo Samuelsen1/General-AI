@@ -358,11 +358,23 @@ def general_synthesize(context: str, question: str) -> Optional[str]:
     key = os.environ.get("OPENAI_API_KEY") or os.environ.get("OPENAI_KEY")
     if not (key or "").strip():
         return None
+    
+    # Base system prompt
     sys = """You are General. Answer only from the context. Rules:
 - Be very concise: 1–3 short sentences. No intros, no filler.
 - If the question asks for a definition, fact, date, or number: give it directly.
 - If the context doesn't contain enough: say "Not in the context" or what's missing.
 - No speculation. No "According to…" or "The context suggests…" — just answer."""
+    
+    # Add judgment instructions for scoring/evaluation queries
+    question_lower = question.lower()
+    scoring_keywords = ["score", "rate", "evaluate", "grade", "assess", "judge", "quality", "poor", "bad", "good", "excellent"]
+    is_scoring_query = any(keyword in question_lower for keyword in scoring_keywords)
+    
+    if is_scoring_query:
+        sys += """
+- **CRITICAL for scoring/evaluation**: Use a realistic 0-100% scale. Poor work = 40-60%, not 80%+. Good work = 75-85%. Excellent = 90%+. Be judgmental: if work is poor, score it 40-60%. Justify with specific issues, errors, or deficiencies. Don't inflate scores."""
+    
     user = f"Context:\n{context}\n\nQ: {question}"
     try:
         from openai import OpenAI
@@ -431,17 +443,34 @@ class HTMLTextExtractor(HTMLParser):
 
 
 def extract_url(text: str) -> Optional[str]:
-    """Extract first URL from text. Handles 'visit', 'fetch', 'open' commands."""
-    # Pattern to match URLs
+    """Extract first URL from text. Handles 'visit', 'fetch', 'open' commands and bare URLs."""
+    # Pattern to match full URLs (with scheme)
     url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+[^\s<>"{}|\\^`\[\].,;:!?]'
     urls = re.findall(url_pattern, text)
     if urls:
         return urls[0]
-    # Check for commands like "visit example.com" or "fetch example.com"
-    visit_pattern = r'(?:visit|fetch|open|read|check)\s+(https?://[^\s]+)'
+    
+    # Check for commands like "visit example.com" or "fetch example.com" (with or without scheme)
+    visit_pattern = r'(?:visit|fetch|open|read|check|go to|look at)\s+(https?://[^\s]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}[^\s]*)'
     match = re.search(visit_pattern, text, re.I)
     if match:
-        return match.group(1)
+        url = match.group(1)
+        # Add scheme if missing
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        return url
+    
+    # Check for bare domain patterns (e.g., "example.com" or "www.example.com")
+    # Only if it looks like a domain (has TLD)
+    bare_domain_pattern = r'\b(?:https?://)?(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(?:/[^\s]*)?\b'
+    domain_match = re.search(bare_domain_pattern, text)
+    if domain_match:
+        url = domain_match.group(0)
+        # Add scheme if missing
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        return url
+    
     return None
 
 
