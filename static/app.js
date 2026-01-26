@@ -149,10 +149,13 @@
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       // Check if it's a separator: starts with |, ends with |, contains mostly dashes/colons/spaces
-      if (line.startsWith('|') && line.endsWith('|') && 
-          line.match(/^\|[\s\-:]+\|$/) && line.includes('-')) {
-        separatorIndex = i;
-        break;
+      if (line.startsWith('|') && line.endsWith('|')) {
+        // More lenient separator check - just needs dashes
+        const cellContent = line.split('|').slice(1, -1).join('');
+        if (cellContent.match(/^[\s\-:]+$/) && cellContent.includes('-')) {
+          separatorIndex = i;
+          break;
+        }
       }
     }
     
@@ -167,6 +170,8 @@
     table.style.borderCollapse = "collapse";
     table.style.margin = "0.75rem 0";
     table.style.fontSize = "0.9em";
+    table.style.display = "block";
+    table.style.overflowX = "auto";
     
     // Parse header
     const headerRow = document.createElement("thead");
@@ -183,6 +188,7 @@
       th.style.backgroundColor = "var(--surface)";
       th.style.textAlign = "left";
       th.style.fontWeight = "600";
+      th.style.whiteSpace = "nowrap";
       headerTr.appendChild(th);
     });
     headerRow.appendChild(headerTr);
@@ -208,6 +214,7 @@
         td.style.padding = "0.6rem 0.75rem";
         td.style.border = "1px solid var(--border)";
         td.style.verticalAlign = "top";
+        td.style.wordBreak = "break-word";
         tr.appendChild(td);
       });
       

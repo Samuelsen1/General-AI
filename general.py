@@ -373,7 +373,7 @@ def general_synthesize(context: str, question: str) -> Optional[str]:
     
     if is_scoring_query:
         sys += """
-- **CRITICAL for scoring/evaluation**: Use a realistic 0-100% scale. Poor work = 40-60%, not 80%+. Good work = 75-85%. Excellent = 90%+. Be judgmental: if work is poor, score it 40-60%. Justify with specific issues, errors, or deficiencies. Don't inflate scores."""
+- **CRITICAL for scoring/evaluation - STRICT**: Use realistic 0-100% scale. If user says work is "poor" or "bad", score it 40-60% immediately, NOT 80%+. Good work = 70-80%. Excellent = 90%+. Be harsh but fair. List specific errors, missing elements, problems. Count issues quantitatively. Don't inflate scores - most work should be 60-80%, not 85%+."""
     
     user = f"Context:\n{context}\n\nQ: {question}"
     try:
@@ -445,12 +445,15 @@ class HTMLTextExtractor(HTMLParser):
 def extract_url(text: str) -> Optional[str]:
     """Extract first URL from text. Handles 'visit', 'fetch', 'open' commands and bare URLs."""
     # First, try to find any URL in the text (most reliable)
-    # Pattern to match full URLs (with scheme) - more lenient
-    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+(?:[^\s<>"{}|\\^`\[\].,;:!?]|[/])'
+    # Pattern to match full URLs (with scheme) - more lenient, handles trailing slashes
+    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+(?:[^\s<>"{}|\\^`\[\].,;:!?]|[/])?'
     urls = re.findall(url_pattern, text)
     if urls:
-        # Clean up the URL (remove trailing punctuation that might have been captured)
+        # Clean up the URL (remove trailing punctuation that might have been captured, but keep trailing slash)
         url = urls[0].rstrip('.,;:!?')
+        # Ensure trailing slash is preserved if it was there
+        if urls[0].endswith('/') and not url.endswith('/'):
+            url += '/'
         return url
     
     # Check for commands like "visit this link: URL" or "visit example.com" (with or without scheme)

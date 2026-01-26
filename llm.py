@@ -61,20 +61,25 @@ Rules:
     if is_scoring_query:
         judgment_instructions = """
 
-**CRITICAL: Quantitative Judgment and Scoring**
-When asked to score, rate, grade, or evaluate work quality:
-- Use a **realistic, calibrated scale**: 0-100% where:
-  * 90-100%: Exceptional, outstanding work with minimal flaws
-  * 80-89%: Good work, solid quality with minor issues
-  * 70-79%: Acceptable work, adequate but with noticeable problems
-  * 60-69%: Below average, significant issues present
-  * 50-59%: Poor work, major problems throughout
-  * Below 50%: Very poor, fundamentally flawed work
-- **Be judgmental and critical**: Poor work should receive poor scores (40-60%), not inflated scores (80%+). If work is genuinely poor, score it accordingly.
-- **Justify scores quantitatively**: Explain specific issues, count errors, identify missing elements, note quality problems. Base scores on objective criteria.
-- **Don't inflate scores**: Avoid giving 85% to clearly poor work. If it's poor, score it 40-60%. If it's mediocre, score it 60-70%. Reserve 80%+ for genuinely good work.
-- **Be specific**: List concrete problems, errors, or deficiencies that justify the score.
-- **Use the full scale**: Don't cluster scores in the 80-90% range. Distinguish between excellent (90%+), good (75-85%), acceptable (65-75%), poor (50-65%), and very poor (<50%)."""
+**CRITICAL: Quantitative Judgment and Scoring - STRICT ENFORCEMENT**
+When asked to score, rate, grade, or evaluate work quality, you MUST follow these rules strictly:
+
+**SCORING SCALE (NON-NEGOTIABLE):**
+- 90-100%: EXCEPTIONAL work. Near-perfect execution, minimal to no flaws, exceeds expectations significantly.
+- 80-89%: GOOD work. Solid quality, minor issues only, meets expectations well.
+- 70-79%: ACCEPTABLE work. Adequate but has noticeable problems, meets basic expectations.
+- 60-69%: BELOW AVERAGE work. Significant issues present, barely meets minimum standards.
+- 50-59%: POOR work. Major problems throughout, fails to meet basic standards.
+- Below 50%: VERY POOR work. Fundamentally flawed, unacceptable quality.
+
+**MANDATORY RULES:**
+1. **NO SCORE INFLATION**: If work is described as "poor", "bad", "terrible", or has major issues, you MUST score it 40-60%, NEVER 80%+. If user says work is poor, score it 40-60% immediately.
+2. **BE HARSH BUT FAIR**: Don't be lenient. If there are errors, missing elements, or quality issues, deduct points accordingly. A single major error can drop a score from 90% to 70%.
+3. **QUANTITATIVE JUSTIFICATION REQUIRED**: Always explain WHY the score is what it is. Count errors, list missing elements, identify specific problems. Example: "Score: 45%. Missing: introduction (10%), conclusion (10%), references (10%). Errors: 15 grammar mistakes (15%), poor structure (10%)."
+4. **USE THE FULL SCALE**: Don't cluster everything in 80-90%. Most work should be 60-80%. Only truly excellent work gets 90%+. Most "good" work is 70-80%, not 85%+.
+5. **IF USER SAYS WORK IS POOR**: Score it 40-60% immediately. Don't second-guess. Trust the user's assessment and score accordingly.
+6. **BE SPECIFIC**: List exact problems: "5 spelling errors", "missing 3 required sections", "poor formatting", "incomplete analysis", etc.
+7. **NO DEFAULTING TO 85%**: 85% is for genuinely good work with only minor issues. If there are significant problems, score lower."""
         return base_prompt + judgment_instructions
     
     return base_prompt
