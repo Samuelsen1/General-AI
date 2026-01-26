@@ -141,7 +141,8 @@
   }
   
   function parseMarkdownTable(text) {
-    const lines = text.trim().split('\n').map(line => line.trim()).filter(line => line);
+    // Clean up the text - remove extra whitespace but preserve structure
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
     if (lines.length < 2) return null;
     
     // Find separator line (contains --- or :---: etc, must start and end with |)
@@ -150,9 +151,13 @@
       const line = lines[i];
       // Check if it's a separator: starts with |, ends with |, contains mostly dashes/colons/spaces
       if (line.startsWith('|') && line.endsWith('|')) {
-        // More lenient separator check - just needs dashes
-        const cellContent = line.split('|').slice(1, -1).join('');
-        if (cellContent.match(/^[\s\-:]+$/) && cellContent.includes('-')) {
+        // More lenient separator check - just needs dashes in cells
+        const cells = line.split('|').slice(1, -1);
+        const allCellsAreSeparators = cells.every(cell => {
+          const trimmed = cell.trim();
+          return trimmed.match(/^[\s\-:]+$/) && trimmed.includes('-');
+        });
+        if (allCellsAreSeparators && cells.length > 0) {
           separatorIndex = i;
           break;
         }
@@ -170,8 +175,7 @@
     table.style.borderCollapse = "collapse";
     table.style.margin = "0.75rem 0";
     table.style.fontSize = "0.9em";
-    table.style.display = "block";
-    table.style.overflowX = "auto";
+    table.style.display = "table"; // Changed from block to table for better rendering
     
     // Parse header
     const headerRow = document.createElement("thead");
@@ -188,7 +192,6 @@
       th.style.backgroundColor = "var(--surface)";
       th.style.textAlign = "left";
       th.style.fontWeight = "600";
-      th.style.whiteSpace = "nowrap";
       headerTr.appendChild(th);
     });
     headerRow.appendChild(headerTr);
@@ -208,13 +211,17 @@
         cells.push('');
       }
       
-      cells.slice(0, headerCells.length).forEach(cellText => {
+      cells.slice(0, headerCells.length).forEach((cellText, idx) => {
         const td = document.createElement("td");
         td.textContent = cellText;
         td.style.padding = "0.6rem 0.75rem";
         td.style.border = "1px solid var(--border)";
         td.style.verticalAlign = "top";
         td.style.wordBreak = "break-word";
+        // Allow first column to be narrower if needed
+        if (idx === 0) {
+          td.style.maxWidth = "200px";
+        }
         tr.appendChild(td);
       });
       

@@ -491,14 +491,29 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
     # This should take priority when URLs are detected
     try:
         from general import visit_link, extract_url
-        # Check if there's a URL in the message
+        # Check if there's a URL in the message - be more aggressive in detection
         url = extract_url(raw)
+        # Also check for common visit commands even if URL extraction failed
+        visit_commands = ["visit", "fetch", "open", "read", "check", "go to", "look at"]
+        has_visit_command = any(cmd in raw.lower() for cmd in visit_commands)
+        
         if url:
             link_result = visit_link(raw)
             if link_result:
                 # Return the result (whether success or error)
                 # Errors will be prefixed with "Error fetching URL:"
                 return link_result
+        elif has_visit_command:
+            # Try to extract URL again with the raw message
+            # Sometimes URLs might be on a new line or formatted differently
+            import re
+            url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+(?:[^\s<>"{}|\\^`\[\].,;:!?]|[/])?'
+            urls = re.findall(url_pattern, raw)
+            if urls:
+                url = urls[0].rstrip('.,;:!?')
+                link_result = visit_link(f"visit {url}")
+                if link_result:
+                    return link_result
     except Exception as e:
         # If link visiting fails completely, continue to other methods
         # But log the error for debugging

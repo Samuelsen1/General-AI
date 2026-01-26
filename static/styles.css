@@ -104,24 +104,34 @@ html, body {
 .message table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
   font-size: 0.9em;
+  display: table;
+  table-layout: auto;
 }
 
 .message table th,
 .message table td {
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid var(--border);
   text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .message table th {
   background: var(--surface);
   font-weight: 600;
+  position: sticky;
+  top: 0;
 }
 
 .message table tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.02);
+}
+
+.message table tr:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .message a {
