@@ -444,17 +444,21 @@ class HTMLTextExtractor(HTMLParser):
 
 def extract_url(text: str) -> Optional[str]:
     """Extract first URL from text. Handles 'visit', 'fetch', 'open' commands and bare URLs."""
-    # Pattern to match full URLs (with scheme)
-    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+[^\s<>"{}|\\^`\[\].,;:!?]'
+    # First, try to find any URL in the text (most reliable)
+    # Pattern to match full URLs (with scheme) - more lenient
+    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+(?:[^\s<>"{}|\\^`\[\].,;:!?]|[/])'
     urls = re.findall(url_pattern, text)
     if urls:
-        return urls[0]
+        # Clean up the URL (remove trailing punctuation that might have been captured)
+        url = urls[0].rstrip('.,;:!?')
+        return url
     
-    # Check for commands like "visit example.com" or "fetch example.com" (with or without scheme)
-    visit_pattern = r'(?:visit|fetch|open|read|check|go to|look at)\s+(https?://[^\s]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}[^\s]*)'
+    # Check for commands like "visit this link: URL" or "visit example.com" (with or without scheme)
+    # More flexible: allows text between command and URL
+    visit_pattern = r'(?:visit|fetch|open|read|check|go to|look at|see|browse)[\s:]+(?:this\s+)?(?:link|url|site|page|website)?[\s:]*\s*(https?://[^\s<>"{}|\\^`\[\]]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}[^\s]*)'
     match = re.search(visit_pattern, text, re.I)
     if match:
-        url = match.group(1)
+        url = match.group(1).rstrip('.,;:!?')
         # Add scheme if missing
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
@@ -462,10 +466,10 @@ def extract_url(text: str) -> Optional[str]:
     
     # Check for bare domain patterns (e.g., "example.com" or "www.example.com")
     # Only if it looks like a domain (has TLD)
-    bare_domain_pattern = r'\b(?:https?://)?(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(?:/[^\s]*)?\b'
+    bare_domain_pattern = r'\b(?:https?://)?(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(?:/[^\s<>"{}|\\^`\[\]]*)?\b'
     domain_match = re.search(bare_domain_pattern, text)
     if domain_match:
-        url = domain_match.group(0)
+        url = domain_match.group(0).rstrip('.,;:!?')
         # Add scheme if missing
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url

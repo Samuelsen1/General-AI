@@ -488,12 +488,20 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
         return f"Today is {_get_date_response()}."
 
     # 5a) Link visiting - check for URLs or visit/fetch commands
+    # This should take priority when URLs are detected
     try:
-        from general import visit_link
-        link_result = visit_link(raw)
-        if link_result:
-            return link_result
-    except Exception:
+        from general import visit_link, extract_url
+        # Check if there's a URL in the message
+        url = extract_url(raw)
+        if url:
+            link_result = visit_link(raw)
+            if link_result and not link_result.startswith("Error"):
+                return link_result
+            # If there was an error, still try to return something useful
+            if link_result and link_result.startswith("Error"):
+                return link_result
+    except Exception as e:
+        # If link visiting fails, continue to other methods
         pass
 
     # 5b) Table creation - check for table creation requests
