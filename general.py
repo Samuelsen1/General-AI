@@ -479,7 +479,7 @@ def extract_url(text: str) -> Optional[str]:
 
 
 def fetch_webpage(url: str) -> Optional[str]:
-    """Fetch and extract text content from a webpage."""
+    """Fetch and extract text content from a webpage. Returns content or error string starting with 'Error'."""
     try:
         # Ensure URL has a scheme
         if not url.startswith(('http://', 'https://')):
@@ -503,11 +503,14 @@ def fetch_webpage(url: str) -> Optional[str]:
             text = parser.get_text()
             return _trim(text, 2000) if text else None
     except urllib.error.HTTPError as e:
-        return f"Error fetching URL: HTTP {e.code} {e.reason}"
+        return f"Error fetching URL: HTTP {e.code} {e.reason}. The website may be down or the URL may be incorrect."
     except urllib.error.URLError as e:
-        return f"Error fetching URL: {e.reason}"
+        error_msg = str(e.reason) if hasattr(e, 'reason') else str(e)
+        if 'nodename' in error_msg.lower() or 'servname' in error_msg.lower():
+            return f"Error fetching URL: Unable to resolve the domain name. The URL may be invalid or the domain may not exist. Please check the URL and try again."
+        return f"Error fetching URL: {error_msg}. The website may be unreachable or the URL may be incorrect."
     except Exception as e:
-        return f"Error fetching URL: {str(e)}"
+        return f"Error fetching URL: {str(e)}. Please check the URL and try again."
 
 
 def visit_link(query: str) -> Optional[str]:
@@ -518,6 +521,9 @@ def visit_link(query: str) -> Optional[str]:
     
     content = fetch_webpage(url)
     if content:
+        # Check if the content is actually an error message
+        if content.startswith("Error fetching URL:"):
+            return content  # Return error directly
         return f"Content from {url}:\n\n{content}"
     return None
 

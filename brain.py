@@ -495,13 +495,15 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
         url = extract_url(raw)
         if url:
             link_result = visit_link(raw)
-            if link_result and not link_result.startswith("Error"):
-                return link_result
-            # If there was an error, still try to return something useful
-            if link_result and link_result.startswith("Error"):
+            if link_result:
+                # Return the result (whether success or error)
+                # Errors will be prefixed with "Error fetching URL:"
                 return link_result
     except Exception as e:
-        # If link visiting fails, continue to other methods
+        # If link visiting fails completely, continue to other methods
+        # But log the error for debugging
+        import sys
+        print(f"Link visiting exception: {e}", file=sys.stderr)
         pass
 
     # 5b) Table creation - check for table creation requests
