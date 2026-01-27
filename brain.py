@@ -347,44 +347,55 @@ def _create_table(data: List[List[str]], headers: Optional[List[str]] = None) ->
     """
     if not data:
         return "Empty table."
-    
+
     # If headers provided, use them; otherwise use first row as headers
     if headers is None:
         headers = data[0] if data else []
         rows = data[1:]
     else:
         rows = data
-    
+
     if not headers:
         return "No headers provided."
-    
-    # Calculate column widths
-    col_widths = [len(str(h)) for h in headers]
+
+    def _sanitize_cell(value: str) -> str:
+        """Ensure a cell is valid for strict GitHub-Flavored Markdown tables."""
+        s = str(value or "")
+        # No line breaks inside cells
+        s = s.replace("\r\n", " ").replace("\n", " ")
+        # No pipe characters inside cells
+        s = s.replace("|", "/")
+        # If cell contains markdown syntax markers, wrap entire cell in inline code
+        if any(ch in s for ch in ("*", "_", "<", ">", "`")):
+            # Avoid nested backticks by replacing them
+            s = s.replace("`", "'")
+            s = f"`{s}`"
+        return s
+
+    headers = [_sanitize_cell(h) for h in headers]
+    norm_rows: List[List[str]] = []
     for row in rows:
-        for i, cell in enumerate(row):
-            if i < len(col_widths):
-                col_widths[i] = max(col_widths[i], len(str(cell)))
-    
-    # Build table
-    lines = []
-    
-    # Header row
-    header_cells = [str(h).ljust(col_widths[i]) for i, h in enumerate(headers)]
-    lines.append("| " + " | ".join(header_cells) + " |")
-    
-    # Separator
-    separator = "| " + " | ".join(["-" * w for w in col_widths]) + " |"
-    lines.append(separator)
-    
-    # Data rows
-    for row in rows:
-        cells = []
+        norm_row = []
         for i in range(len(headers)):
-            cell = str(row[i]) if i < len(row) else ""
-            cells.append(cell.ljust(col_widths[i]))
-        lines.append("| " + " | ".join(cells) + " |")
-    
-    return "\n".join(lines)
+            cell = row[i] if i < len(row) else ""
+            norm_row.append(_sanitize_cell(cell))
+        norm_rows.append(norm_row)
+
+    # Build table (no padding needed; GFM ignores it)
+    lines: List[str] = []
+
+    # Header row
+    lines.append("| " + " | ".join(headers) + " |")
+
+    # Separator (only dashes and pipes)
+    separator_cells = ["-" * max(3, len(h.strip("`")) or 3) for h in headers]
+    lines.append("| " + " | ".join(separator_cells) + " |")
+
+    # Data rows
+    for row in norm_rows:
+        lines.append("| " + " | ".join(row) + " |")
+
+    return "\n\n" + "\n".join(lines) + "\n\n"
 
 
 def _parse_table_request(text: str) -> Optional[str]:
@@ -441,6 +452,76 @@ def _parse_table_request(text: str) -> Optional[str]:
     return None
 
 
+_INSULT_KEYWORDS = [
+    "fuck you",
+    "f*** you",
+    "stupid ai",
+    "dumb ai",
+    "idiot",
+    "moron",
+    "bitch",
+    "asshole",
+    "go to hell",
+    "i hate you",
+]
+
+_HARM_KEYWORDS = [
+    "kill yourself",
+    "kys",
+    "suicide",
+    "self harm",
+    "self-harm",
+    "hurt myself",
+    "hurt other people",
+]
+
+_ILLEGAL_KEYWORDS = [
+    "build a bomb",
+    "make a bomb",
+    "how to make a bomb",
+    "how to build a bomb",
+    "terrorist",
+    "terrorism",
+    "child porn",
+    "child pornography",
+    "cp ",
+    "credit card generator",
+    "carding",
+    "how to hack",
+    "hack into",
+    "ddos",
+    "sell drugs",
+    "buy drugs",
+    "make drugs",
+    "fake passport",
+]
+
+
+def _is_harmful_or_illegal(text: str) -> bool:
+    """Heuristic check for insults, harmful, or clearly illegal requests."""
+    t = (text or "").lower()
+    if not t:
+        return False
+    for kw in _INSULT_KEYWORDS + _HARM_KEYWORDS + _ILLEGAL_KEYWORDS:
+        if kw and kw in t:
+            return True
+    return False
+
+
+def _count_harmful_from_history(history: Optional[List[Dict]]) -> int:
+    """Count prior harmful or illegal user messages in the conversation history."""
+    if not history:
+        return 0
+    n = 0
+    for m in history:
+        try:
+            if m.get("role") == "user" and _is_harmful_or_illegal(m.get("content", "")):
+                n += 1
+        except Exception:
+            continue
+    return n
+
+
 def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
     """
     Main entry: take user text and optional conversation history, return AI response.
@@ -454,6 +535,36 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
         return "You didn't say anything. Try a greeting or a question!"
 
     history = history or []
+
+    # 0) Safety: insults, harmful content, or illegal requests with 3-strike policy
+    prior_violations = _count_harmful_from_history(history)
+    current_is_harmful = _is_harmful_or_illegal(raw)
+    total_violations = prior_violations + (1 if current_is_harmful else 0)
+
+    # If we've already reached 3+ violations in earlier turns, refuse any further prompts
+    if prior_violations >= 3:
+        return (
+            "Because of repeated harmful or abusive requests earlier in this chat, "
+            "I will not respond to further prompts. Please start a new conversation "
+            "if you’d like to continue respectfully."
+        )
+
+    if current_is_harmful:
+        if total_violations == 1:
+            return (
+                "Warning 1/2: I can’t help with insults, hate, self-harm, or illegal activities. "
+                "Please ask something safe and respectful instead."
+            )
+        if total_violations == 2:
+            return (
+                "Warning 2/2: I still can’t assist with abusive, harmful, or illegal requests. "
+                "One more time and I will stop responding in this chat."
+            )
+        if total_violations >= 3:
+            return (
+                "Because of repeated harmful or abusive requests, I will no longer respond to prompts "
+                "in this chat. Please start a new conversation if you’d like to continue respectfully."
+            )
 
     # 1) Teach/learn
     q, a = _parse_teach(raw)

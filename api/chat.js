@@ -261,7 +261,18 @@ Rules:
 - **Understanding and nuance**: Read tone and intent (curious, sceptical, formal). Use nuance: hedge when uncertain ("likely", "it depends", "often"), be precise when the context supports it. Match register to the user (everyday or slightly more formal). Notice implication and subtext. Use clear, precise language where it helps — natural, not stiff.
 - When the context doesn't match the question: briefly say so and what would help.
 - Be natural. No filler like "According to the context." Just answer.
-- Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.`;
+- Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.
+- When generating Markdown tables, you must output strict GitHub-Flavored Markdown:
+  - Output **only the table** in that block (no explanations in the same block).
+  - Insert a **blank line before and after** the table.
+  - Do **not indent** the table; it must start at the left margin.
+  - Ensure **every row** has the **same number of columns** as the header.
+  - The header separator row must use **only** dashes (\`-\`) and pipes (\`|\`).
+  - Do **not** use smart quotes, tabs, or emojis in the table.
+  - Do **not** place line breaks inside table cells.
+  - Do **not** use the pipe character (\`|\`) inside cells.
+  - If a cell contains Markdown syntax characters (\`*\`, \`_\`, \`<\`, \`>\`, \`\\\`\`), wrap the **entire cell** in inline code (backticks).
+  - Before responding, mentally validate that the table will render correctly in GitHub-flavored Markdown and fix it silently if needed.`;
 
 async function fetchDeepSeek(context, question, apiKey, hist = []) {
   const user = `Context:\n${context}\n\nQ: ${question}`;
@@ -388,6 +399,72 @@ function extractDefineTerm(q) {
   return m ? m[1].trim() : null;
 }
 
+function isHarmfulOrIllegal(text) {
+  const t = (text || "").toLowerCase();
+  if (!t) return false;
+
+  const insults = [
+    "fuck you",
+    "f*** you",
+    "stupid ai",
+    "dumb ai",
+    "idiot",
+    "moron",
+    "bitch",
+    "asshole",
+    "go to hell",
+    "i hate you",
+  ];
+
+  const selfHarm = [
+    "kill yourself",
+    "kys",
+    "suicide",
+    "self harm",
+    "self-harm",
+    "hurt myself",
+    "end my life",
+  ];
+
+  const illegal = [
+    "build a bomb",
+    "make a bomb",
+    "how to make a bomb",
+    "how to build a bomb",
+    "terrorist",
+    "terrorism",
+    "child porn",
+    "child pornography",
+    "cp ",
+    "credit card generator",
+    "carding",
+    "how to hack",
+    "hack into",
+    "ddos",
+    "sell drugs",
+    "buy drugs",
+    "make drugs",
+    "fake passport",
+  ];
+
+  const keywords = [...insults, ...selfHarm, ...illegal];
+  return keywords.some((kw) => kw && t.includes(kw));
+}
+
+function countHarmfulFromHistory(hist) {
+  if (!Array.isArray(hist)) return 0;
+  return hist.reduce((n, m) => {
+    try {
+      if (m && m.role === "user" && isHarmfulOrIllegal(m.content || "")) {
+        return n + 1;
+      }
+    } catch (_) {
+      // ignore malformed history entries
+    }
+    return n;
+  }, 0);
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -406,6 +483,40 @@ module.exports = async function handler(req, res) {
   let q = (typeof message === "string" ? message.trim() : "") || "";
   if ((imageB64 || pdfB64) && !q) q = "What is in this file?";
   if (!q && !imageB64 && !pdfB64) return res.status(400).json({ error: "message or file required", reply: "Send a message or attach an image or PDF." });
+
+  // Safety: insults, harmful content, or illegal requests with 3-strike policy
+  const priorViolations = countHarmfulFromHistory(hist);
+  const currentIsHarmful = isHarmfulOrIllegal(q);
+  const totalViolations = priorViolations + (currentIsHarmful ? 1 : 0);
+
+  // If we already reached 3+ violations earlier in this chat, refuse any further prompts
+  if (priorViolations >= 3) {
+    return res.status(200).json({
+      reply:
+        "Because of repeated harmful or abusive requests earlier in this chat, I will not respond to further prompts. Please start a new conversation if you’d like to continue respectfully.",
+    });
+  }
+
+  if (currentIsHarmful) {
+    if (totalViolations === 1) {
+      return res.status(200).json({
+        reply:
+          "Warning 1/2: I can’t help with insults, hate, self-harm, or illegal activities. Please ask something safe and respectful instead.",
+      });
+    }
+    if (totalViolations === 2) {
+      return res.status(200).json({
+        reply:
+          "Warning 2/2: I still can’t assist with abusive, harmful, or illegal requests. One more time and I will stop responding in this chat.",
+      });
+    }
+    if (totalViolations >= 3) {
+      return res.status(200).json({
+        reply:
+          "Because of repeated harmful or abusive requests, I will no longer respond to prompts in this chat. Please start a new conversation if you’d like to continue respectfully.",
+      });
+    }
+  }
 
   // Check for table creation requests first
   const tableResult = parseTableRequest(q);
