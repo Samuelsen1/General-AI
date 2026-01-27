@@ -747,10 +747,12 @@
               : (currentLang === 'de'
                     ? "Es konnte kein Bild erzeugt werden."
                     : "No image could be generated.");
-            typingEl.classList.remove("typing");
-            typingEl.querySelector("p").innerHTML = formatMsg(imgReply);
             history.push({ role: "user", content: raw });
             history.push({ role: "assistant", content: imgReply });
+            if (typingEl && typingEl.parentNode) {
+              typingEl.parentNode.removeChild(typingEl);
+            }
+            addMessage("ai", imgReply);
             try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
             requestAnimationFrame(function () {
               typingEl.scrollIntoView({ behavior: "auto", block: "end" });
@@ -780,10 +782,13 @@
           let data;
           try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 3 MB." : "Check /api/chat and DEEPSEEK_API_KEY in Vercel.") }; }
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and DEEPSEEK_API_KEY in Vercel.") : "No reply.";
-          typingEl.classList.remove("typing");
-          typingEl.querySelector("p").innerHTML = formatMsg(reply);
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
+          // Remove typing element and add proper message with copy button
+          if (typingEl && typingEl.parentNode) {
+            typingEl.parentNode.removeChild(typingEl);
+          }
+          addMessage("ai", reply);
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
           requestAnimationFrame(function () { 
             typingEl.scrollIntoView({ behavior: "auto", block: "end" }); 
@@ -798,9 +803,10 @@
           scheduleRenderHistory();
         } catch (err) {
           var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));
-          typingEl.classList.remove("typing");
-          typingEl.querySelector("p").innerHTML = formatMsg(errMsg);
-          requestAnimationFrame(function () { typingEl.scrollIntoView({ behavior: "auto", block: "end" }); });
+          if (typingEl && typingEl.parentNode) {
+            typingEl.parentNode.removeChild(typingEl);
+          }
+          addMessage("ai", errMsg);
         } finally {
           send.disabled = false;
           setTimeout(function () { 
@@ -832,6 +838,24 @@
                 addMessage(m.role === "user" ? "user" : "ai", m.content || "");
               }
             });
+            // Ensure last message pointers are set correctly after restore
+            const allMessages = chat ? chat.querySelectorAll(".message") : [];
+            if (allMessages.length > 0) {
+              for (let i = allMessages.length - 1; i >= 0; i--) {
+                const msg = allMessages[i];
+                if (msg.classList.contains("user")) {
+                  lastUserMessageEl = msg;
+                  break;
+                }
+              }
+              for (let i = allMessages.length - 1; i >= 0; i--) {
+                const msg = allMessages[i];
+                if (msg.classList.contains("ai")) {
+                  lastAiMessageEl = msg;
+                  break;
+                }
+              }
+            }
           }
         }
       } catch (e) {}
