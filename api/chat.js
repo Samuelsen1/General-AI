@@ -372,11 +372,27 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
 function buildContext(opts) {
   const parts = [];
   if (opts.pdfText) parts.push("Document (PDF):\n" + opts.pdfText);
-  if (opts.wiki?.length) parts.push("Wikipedia:\n" + opts.wiki.map((w) => `- ${w.title}: ${w.snippet}`).join("\n"));
-  if (opts.web?.length) parts.push("Web:\n" + opts.web.map((g) => `- ${g.title}: ${g.snippet}`).join("\n"));
+  if (opts.wiki?.length) {
+    parts.push(
+      "Wikipedia:\n" +
+        opts.wiki.map((w) => `- ${w.title}: ${w.snippet}`).join("\n")
+    );
+  }
+  if (opts.web?.length) {
+    parts.push(
+      "Web results (title – snippet – URL):\n" +
+        opts.web
+          .map((g) => `- ${g.title}: ${g.snippet}${g.link ? " – " + g.link : ""}`)
+          .join("\n")
+    );
+  }
   if (opts.weather) parts.push("Weather: " + opts.weather);
   if (opts.definition) parts.push("Definition: " + opts.definition);
-  if (opts.news?.length) parts.push("News:\n" + opts.news.map((n) => `- ${n.title}: ${n.snippet}`).join("\n"));
+  if (opts.news?.length) {
+    parts.push(
+      "News:\n" + opts.news.map((n) => `- ${n.title}: ${n.snippet}`).join("\n")
+    );
+  }
   return parts.join("\n\n") || "No search results.";
 }
 
@@ -384,8 +400,14 @@ function buildFallbackReply(opts) {
   if (opts.weather) return opts.weather;
   if (opts.definition) return opts.definition;
   const best = opts.wiki?.[0] || opts.web?.[0];
-  if (best) return `${best.title}: ${best.snippet}`;
-  if (opts.news?.[0]) return `${opts.news[0].title}: ${opts.news[0].snippet}`;
+  if (best) {
+    const link = best.link ? `\n\nSource: ${best.link}` : "";
+    return `${best.title}: ${best.snippet}${link}`;
+  }
+  if (opts.news?.[0]) {
+    const first = opts.news[0];
+    return `${first.title}: ${first.snippet}`;
+  }
   return "I don’t have anything on that from search. Try rephrasing or different keywords; if you’ve set up web search in Vercel, that can help too.";
 }
 

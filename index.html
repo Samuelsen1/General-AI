@@ -379,14 +379,102 @@
 
       function formatMsg(t) {
         if (!t) return "";
-        let s = String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        let raw = String(t);
+
+        // Escape HTML first
+        let s = raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        // Detect and convert Markdown tables to HTML tables before other inline formatting
+        // We look for blocks that start with a header row and a separator row
+        const lines = s.split(/\r?\n/);
+        const out = [];
+        let i = 0;
+
+        function isTableSeparator(line) {
+          return /^\|\s*-[-\s|]*\|\s*$/.test(line);
+        }
+
+        function parseTableBlock(start) {
+          const headerLine = lines[start];
+          const sepLine = lines[start + 1];
+          if (!headerLine || !sepLine) return null;
+          if (!headerLine.trim().startsWith("|") || !headerLine.trim().endsWith("|")) return null;
+          if (!isTableSeparator(sepLine.trim())) return null;
+
+          const tableLines = [headerLine];
+          let idx = start + 1;
+          while (idx < lines.length) {
+            const ln = lines[idx];
+            if (!ln.trim()) break;
+            if (!ln.trim().startsWith("|") || !ln.trim().endsWith("|")) break;
+            tableLines.push(ln);
+            idx++;
+          }
+          if (tableLines.length < 2) return null;
+
+          const headerCells = headerLine.split("|").slice(1, -1).map(c => c.trim());
+          const bodyLines = tableLines.slice(2);
+
+          let html = "<table><thead><tr>";
+          headerCells.forEach(c => {
+            html += "<th>" + c + "</th>";
+          });
+          html += "</tr></thead><tbody>";
+
+          bodyLines.forEach(rowLine => {
+            const cells = rowLine.split("|").slice(1, -1).map(c => c.trim());
+            if (cells.length === 0) return;
+            html += "<tr>";
+            headerCells.forEach((_, idx) => {
+              const cell = idx < cells.length ? cells[idx] : "";
+              html += "<td>" + cell + "</td>";
+            });
+            html += "</tr>";
+          });
+
+          html += "</tbody></table>";
+          return { html, nextIndex: idx };
+        }
+
+        while (i < lines.length) {
+          const line = lines[i];
+          const maybeHeader = line.trim();
+          const maybeSep = lines[i + 1] ? lines[i + 1].trim() : "";
+
+          if (
+            maybeHeader.startsWith("|") &&
+            maybeHeader.endsWith("|") &&
+            maybeSep &&
+            isTableSeparator(maybeSep)
+          ) {
+            const tbl = parseTableBlock(i);
+            if (tbl) {
+              out.push(tbl.html);
+              i = tbl.nextIndex;
+              continue;
+            }
+          }
+
+          out.push(line);
+          i++;
+        }
+
+        s = out.join("\n");
+
+        // Code blocks and inline code
         s = s.replace(/```\n?([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
         s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+        // Bold / italic
         s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
         s = s.replace(/__([^_]+)__/g, "<strong>$1</strong>");
         s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
         s = s.replace(/_([^_]+)_/g, "<em>$1</em>");
-        s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, txt, url) { var u = /^https?:\/\//i.test(url) ? url.replace(/&/g,"&amp;").replace(/"/g,"&quot;") : "#"; return "<a href=\"" + u + "\" target=\"_blank\" rel=\"noopener\">" + txt + "</a>"; });
+        // Links
+        s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, txt, url) {
+          var u = /^https?:\/\//i.test(url) ? url.replace(/&/g, "&amp;").replace(/"/g, "&quot;") : "#";
+          return "<a href=\"" + u + "\" target=\"_blank\" rel=\"noopener\">" + txt + "</a>";
+        });
+        // Headings and bullet lists
         s = s.replace(/^## (.+)$/gm, "<span class=\"msg-heading\">$1</span>");
         s = s.replace(/^\s*[-*]\s+(.+)$/gm, "<li>$1</li>");
         s = s.replace(/((?:<li>[\s\S]*?<\/li>\n?)+)/g, "<ul>$1</ul>");
