@@ -135,11 +135,11 @@
     .typing .label::after { content: " …"; animation: dots 1s steps(4, end) infinite; }
     @keyframes dots { 0%, 20% { content: " …"; } 40% { content: " ."; } 60% { content: " .."; } 80%, 100% { content: " …"; } }
 
-    /* Widen and slightly shift chat area on larger screens */
+    /* Widen and shift chat area to the right on larger screens (away from history rail) */
     @media (min-width: 960px) {
       .app {
         max-width: 840px;
-        margin: 0 auto 0 10%;
+        margin: 0 10% 0 auto;
       }
     }
   </style>
