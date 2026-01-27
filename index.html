@@ -858,6 +858,8 @@
           } catch (_) {}
         }
         history = [];
+        lastUserMessageEl = null;
+        lastAiMessageEl = null;
         try { localStorage.removeItem("general_chat_history"); } catch (_) {}
         var msgs = chat ? chat.querySelectorAll(".message") : [];
         for (var i = 1; i < msgs.length; i++) { try { msgs[i].remove(); } catch (_) {} }
