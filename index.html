@@ -102,9 +102,9 @@
     .chat::-webkit-scrollbar { width: 8px; }
     .chat::-webkit-scrollbar-track { background: transparent; }
     .chat::-webkit-scrollbar-thumb { background: rgba(30, 64, 175, 0.4); border-radius: 999px; }
-    .message { padding: 0.4rem 0; border-radius: var(--radius); max-width: 100%; box-shadow: none; border: none; background: transparent; transition: none; position: relative; }
+    .message { padding: 0.2rem 0.1rem 0.5rem; max-width: 100%; background: transparent; box-shadow: none; border: none; transition: none; position: relative; }
     .message:hover { box-shadow: none; transform: none; border-color: transparent; }
-    .message .label { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; color: var(--text-dim); }
+    .message .label { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; color: var(--text-dim); }
     .message p { margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--text-soft); }
     .message strong { font-weight: 700; color: var(--text); }
     .message em { font-style: italic; font-weight: 500; }
@@ -116,10 +116,13 @@
     .message .msg-heading { display: block; font-weight: 700; font-size: 1.05em; margin: 0.6em 0 0.25em; color: var(--text); }
     .message .msg-heading:first-child { margin-top: 0; }
     .message ul { margin: 0.4em 0; padding-left: 1.35em; }
-    .message.user { align-self: flex-end; background: #dbeafe; border-radius: var(--radius); padding: 0.85rem 1rem; border: 1px solid #bfdbfe; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12); max-width: 88%; }
+    .message-body { border-radius: var(--radius); padding: 0.85rem 1rem; max-width: 88%; }
+    .message.user { align-self: flex-end; }
+    .message.user .message-body { background: #dbeafe; border-radius: var(--radius); border: 1px solid #bfdbfe; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12); margin-left: auto; }
     .message.user .label { color: var(--accent); }
-    .message.ai { align-self: flex-start; background: transparent; border: none; padding: 0.25rem 0; max-width: 100%; }
-    .message-actions { display: flex; gap: 0.4rem; margin-top: 0.25rem; opacity: 0; transition: opacity 0.2s; }
+    .message.ai { align-self: flex-start; max-width: 100%; }
+    .message.ai .message-body { background: transparent; padding: 0.4rem 0; max-width: 100%; }
+    .message-actions { display: flex; gap: 0.4rem; margin-top: 0.2rem; opacity: 0; transition: opacity 0.2s; }
     .message.user .message-actions { justify-content: flex-end; }
     .message.ai .message-actions { justify-content: flex-start; }
     .message:hover .message-actions { opacity: 1; }
@@ -513,16 +516,21 @@
         const d = document.createElement("div");
         d.className = "message " + role;
 
+        const body = document.createElement("div");
+        body.className = "message-body";
+
         const lbl = document.createElement("span");
         lbl.className = "label";
         lbl.textContent = label || (role === "user" ? t("you") : t("general"));
-        d.appendChild(lbl);
+        body.appendChild(lbl);
 
         const p = document.createElement("p");
         p.innerHTML = formatMsg(text);
-        d.appendChild(p);
+        body.appendChild(p);
 
-        // Add actions for messages
+        d.appendChild(body);
+
+        // Add actions for messages, rendered under the bubble
         if (role === "ai") {
           const actions = document.createElement("div");
           actions.className = "message-actions";
