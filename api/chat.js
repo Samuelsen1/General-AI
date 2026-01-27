@@ -172,12 +172,23 @@ function extractUrl(text) {
   if (match) {
     return match[0].replace(/[.,;:!?]+$/, "");
   }
-  
-  // Check for visit commands
+
+  // Check for visit-style commands with an explicit domain or URL
   const visitPattern = /(?:visit|fetch|open|read|check|go to|look at)[\s:]+(?:this\s+)?(?:link|url|site|page|website)?[\s:]*\s*(https?:\/\/[^\s<>"{}|\\^`\[\]]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}[^\s]*)/i;
   const visitMatch = text.match(visitPattern);
   if (visitMatch) {
     let url = visitMatch[1].replace(/[.,;:!?]+$/, "");
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+    return url;
+  }
+
+  // Fallback: detect bare domain-like patterns anywhere in the text
+  const domainPattern = /\b([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(?:\/[^\s<>"{}|\\^`\[\]]*)?)/;
+  const domainMatch = text.match(domainPattern);
+  if (domainMatch) {
+    let url = domainMatch[1].replace(/[.,;:!?]+$/, "");
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
       url = "https://" + url;
     }
