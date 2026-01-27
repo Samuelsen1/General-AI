@@ -385,9 +385,56 @@
         else { fileNameEl.textContent = ""; fileChosen.style.display = "none"; }
       });
 
+      function convertTsvBlocksToTables(text) {
+        const lines = text.split(/\r?\n/);
+        const out = [];
+        let i = 0;
+
+        while (i < lines.length) {
+          const line = lines[i];
+          if (line && line.indexOf("\t") !== -1) {
+            const headerCells = line.split("\t").map(c => c.trim()).filter(Boolean);
+            if (headerCells.length >= 2) {
+              const block = [line];
+              let j = i + 1;
+              while (j < lines.length && lines[j] && lines[j].indexOf("\t") !== -1) {
+                block.push(lines[j]);
+                j++;
+              }
+              if (block.length >= 2) {
+                const rows = block.map(l => l.split("\t").map(c => c.trim()));
+                const colCount = headerCells.length;
+                const headerRow = "| " + headerCells.join(" | ") + " |";
+                const sepRow = "| " + headerCells.map(() => "---").join(" | ") + " |";
+                const dataRows = rows.slice(1).map(r => {
+                  const cells = [];
+                  for (let k = 0; k < colCount; k++) {
+                    cells.push(r[k] || "");
+                  }
+                  return "| " + cells.join(" | ") + " |";
+                });
+                out.push("");
+                out.push(headerRow);
+                out.push(sepRow);
+                dataRows.forEach(r => out.push(r));
+                out.push("");
+                i = j;
+                continue;
+              }
+            }
+          }
+          out.push(line);
+          i++;
+        }
+        return out.join("\n");
+      }
+
       function formatMsg(t) {
         if (!t) return "";
         let raw = String(t);
+
+        // First, convert simple tab-separated blocks into proper Markdown tables
+        raw = convertTsvBlocksToTables(raw);
 
         // Escape HTML first
         let s = raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
