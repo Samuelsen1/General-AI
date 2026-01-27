@@ -554,10 +554,31 @@ module.exports = async function handler(req, res) {
   if (url) {
     try {
       const linkContent = await fetchWebpage(url);
-      if (linkContent && !linkContent.startsWith("Error")) {
-        return res.status(200).json({ reply: `Content from ${url}:\n\n${linkContent}` });
-      } else if (linkContent) {
-        return res.status(200).json({ reply: linkContent });
+      if (linkContent && !linkContent.startsWith("Error") && (deepseekKey || openaiKey)) {
+        const linkContext = `Webpage (${url}):\n${linkContent}`;
+        try {
+          if (deepseekKey) {
+            const reply = await fetchDeepSeek(linkContext, q, deepseekKey, hist);
+            if (reply && reply.trim()) {
+              return res.status(200).json({ reply });
+            }
+          }
+          if (openaiKey) {
+            const reply = await fetchOpenAI(linkContext, q, openaiKey, hist);
+            if (reply && reply.trim()) {
+              return res.status(200).json({ reply });
+            }
+          }
+        } catch (e) {
+          console.warn("LLM summarizing link failed:", e?.message);
+        }
+      }
+      if (linkContent) {
+        return res.status(200).json({
+          reply: linkContent.startsWith("Error")
+            ? linkContent
+            : `Content from ${url}:\n\n${linkContent}`,
+        });
       }
     } catch (e) {
       console.warn("Link visiting:", e?.message);
