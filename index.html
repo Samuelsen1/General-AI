@@ -10,44 +10,30 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #020617;
-      --bg-gradient: radial-gradient(circle at top left, #1e293b 0%, #020617 45%, #020617 100%);
-      --surface: rgba(15, 23, 42, 0.96);
-      --border: rgba(148, 163, 184, 0.4);
-      --border-soft: rgba(15, 23, 42, 0.9);
-      --text: #e5e7eb;
-      --text-soft: #cbd5f5;
-      --text-dim: #9ca3af;
-      --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --accent-soft: rgba(99, 102, 241, 0.18);
-      --accent-soft-2: rgba(129, 140, 248, 0.12);
-      --user-bg: rgba(15, 118, 110, 0.14);
-      --user-border: rgba(45, 212, 191, 0.7);
-      --ai-bg: rgba(30, 64, 175, 0.14);
+      --bg: #f8fafc;
+      --bg-gradient: linear-gradient(180deg, #fafbff 0%, #eef2ff 32%, #e0f2fe 100%);
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --border-soft: #f1f5f9;
+      --text: #0f172a;
+      --text-soft: #1f2937;
+      --text-dim: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --accent-soft-2: rgba(37, 99, 235, 0.06);
+      --user-bg: #ffffff;
+      --user-border: rgba(59, 130, 246, 0.35);
+      --ai-bg: #ffffff;
       --radius: 16px;
       --radius-sm: 12px;
-      --shadow: 0 18px 45px rgba(15, 23, 42, 0.55);
-      --shadow-md: 0 26px 70px rgba(15, 23, 42, 0.85);
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 20px 55px rgba(15, 23, 42, 0.14);
       --font: "DM Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       --mono: "JetBrains Mono", "SF Mono", "Consolas", monospace;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; height: 100%; min-height: 100%; background: var(--bg); background-image: var(--bg-gradient); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; font-weight: 500; overflow: hidden; }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: -40%;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.18), transparent 55%),
-        radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.16), transparent 55%),
-        radial-gradient(circle at 50% 110%, rgba(129, 140, 248, 0.22), transparent 60%);
-      opacity: 0.75;
-      mix-blend-mode: screen;
-      z-index: 0;
-    }
     .app-wrap { display: flex; flex-direction: row; height: 100vh; min-height: 100vh; overflow: hidden; }
     @supports (height: 100dvh) {
       @media (max-width: 767px) {

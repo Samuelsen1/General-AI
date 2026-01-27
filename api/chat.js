@@ -262,6 +262,7 @@ Rules:
 - When the context doesn't match the question: briefly say so and what would help.
 - Be natural. No filler like "According to the context." Just answer.
 - Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.
+- **Common-knowledge tables**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order", "common programming languages and paradigms"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge and, when a table is requested, produce the table immediately.
 - When generating Markdown tables, you must output strict GitHub-Flavored Markdown:
   - Output **only the table** in that block (no explanations in the same block).
   - Insert a **blank line before and after** the table.
