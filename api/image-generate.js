@@ -1,4 +1,6 @@
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
+// Local image generation using a Stable Diffusion–compatible server (e.g. AUTOMATIC1111)
+// Configure the URL in SD_API_URL, default: http://127.0.0.1:7860
+const SD_API_URL = process.env.SD_API_URL || "http://127.0.0.1:7860";
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -13,31 +15,39 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!OPENAI_API_KEY) {
-    return res.status(500).json({ error: "OPENAI_API_KEY is not configured" });
-  }
-
   try {
     const body = req.body || {};
     const prompt = (body.prompt || "").trim();
-    const size = body.size || "1024x1024";
-    const n = body.n || 1;
+    const size = body.size || "1024x1024"; // mapped to width/height
 
     if (!prompt) {
       return res.status(400).json({ error: "prompt is required" });
     }
 
-    const resp = await fetch("https://api.openai.com/v1/images/generations", {
+    // Map size string to width/height
+    let width = 1024;
+    let height = 1024;
+    const [wStr, hStr] = String(size).split("x");
+    const wNum = parseInt(wStr, 10);
+    const hNum = parseInt(hStr, 10);
+    if (Number.isFinite(wNum) && Number.isFinite(hNum)) {
+      width = wNum;
+      height = hNum;
+    }
+
+    // Call local Stable Diffusion txt2img API (AUTOMATIC1111 style)
+    const resp = await fetch(`${SD_API_URL}/sdapi/v1/txt2img`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-image-1",
         prompt,
-        n,
-        size,
+        width,
+        height,
+        steps: body.steps || 25,
+        cfg_scale: body.cfg_scale || 7,
+        sampler_name: body.sampler_name || "Euler a",
       }),
     });
 
@@ -54,10 +64,11 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await resp.json();
-    const images = (data.data || []).map((img, idx) => ({
+    const imgList = Array.isArray(data.images) ? data.images : [];
+    const images = imgList.map((b64, idx) => ({
       index: idx,
-      url: img.url,
-      b64_json: img.b64_json || null,
+      // Frontend can render this directly as <img src="data:image/png;base64,..." />
+      dataUrl: `data:image/png;base64,${b64}`,
     }));
 
     if (!images.length) {

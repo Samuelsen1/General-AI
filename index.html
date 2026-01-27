@@ -430,8 +430,8 @@
             try { imgData = await imgRes.json(); } catch (_) { imgData = { error: "Image request failed." }; }
             const imgReply = imgData && imgData.success && Array.isArray(imgData.images) && imgData.images.length > 0
               ? ((currentLang === 'de'
-                    ? "Bild erzeugt: "
-                    : "Image generated: ") + (imgData.images[0].url || ""))
+                    ? "Bild erzeugt:"
+                    : "Image generated:") + "\\n\\n![](" + (imgData.images[0].dataUrl || "") + ")")
               : (imgData && imgData.error) ? imgData.error
               : (currentLang === 'de'
                     ? "Es konnte kein Bild erzeugt werden."
