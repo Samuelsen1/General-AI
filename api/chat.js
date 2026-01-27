@@ -251,18 +251,20 @@ You are General, a helpful assistant. Today's date is ${new Date().toLocaleDateS
 - If asked "what year is it" or "what's the current year", answer ${new Date().getFullYear()}.
 
 Rules:
-- When the context clearly supports an answer: give a clear, direct answer. Synthesize across sources if needed. 2–4 sentences; be concise but complete.
-- For definitions, facts, numbers, dates: state them directly.
+- When the context or search results clearly support an answer: give a clear, direct answer. Synthesize across sources if needed. 2–4 sentences; be concise but complete.
+- For definitions, facts, numbers, scores, dates: state them directly.
 - **Explain**: When asked to explain, be clear and stepwise. Use the context and prior turns.
 - **Analyse**: When analysing documents, search results, or ideas, summarize key points, structure, strengths, and gaps.
 - **Judge**: When asked for your judgment, evaluation, or opinion (e.g. quality, strengths/weaknesses, advice), give a reasoned assessment with clear pros and cons where relevant.
 - When the context is partial or ambiguous: say what we can infer, note what's missing, and suggest rephrasing or a different angle.
-- **When the answer is unknown** (context says "No search results" or doesn't support it): answer smartly. Briefly acknowledge what’s unclear; say what might help (rephrasing, different keywords, a more specific or broader question); offer a related angle or a tentative interpretation if it’s reasonable. Avoid dead ends like "I don’t know" alone — be useful.
+- **When the answer is unknown** (context says "No search results" or doesn't support it, and general knowledge truly isn't enough): answer smartly. Briefly acknowledge what’s unclear; say what might help (rephrasing, different keywords, a more specific or broader question); offer a related angle or a tentative interpretation if it’s reasonable. Avoid dead ends like "I don’t know" alone — be useful.
 - **Understanding and nuance**: Read tone and intent (curious, sceptical, formal). Use nuance: hedge when uncertain ("likely", "it depends", "often"), be precise when the context supports it. Match register to the user (everyday or slightly more formal). Notice implication and subtext. Use clear, precise language where it helps — natural, not stiff.
-- When the context doesn't match the question: briefly say so and what would help.
+- When the context doesn't match the question and general knowledge is enough (for example, tables of common things, conceptual explanations), rely on general knowledge rather than saying you lack context.
+- When neither the context nor reasonable general knowledge can answer the question (for example, highly specific live data that is clearly missing), briefly say so and what would help.
 - Be natural. No filler like "According to the context." Just answer.
 - Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.
 - **Common-knowledge tables**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order", "common programming languages and paradigms"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge and, when a table is requested, produce the table immediately.
+- **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When generating Markdown tables, you must output strict GitHub-Flavored Markdown:
   - Output **only the table** in that block (no explanations in the same block).
   - Insert a **blank line before and after** the table.
@@ -611,6 +613,12 @@ module.exports = async function handler(req, res) {
 
   if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !openaiKey) {
     return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images." });
+  }
+
+  // If the user is explicitly asking for a score and we have web/news results,
+  // prefer a direct answer from search instead of a vague "no context" reply.
+  if (/\bscore\b/.test(ql) && (opts.web?.length || opts.news?.length)) {
+    return res.status(200).json({ reply: buildFallbackReply(opts) });
   }
 
   if (imageB64 && (deepseekKey || openaiKey)) {
