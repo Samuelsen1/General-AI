@@ -102,7 +102,7 @@
     .chat::-webkit-scrollbar { width: 8px; }
     .chat::-webkit-scrollbar-track { background: transparent; }
     .chat::-webkit-scrollbar-thumb { background: rgba(30, 64, 175, 0.4); border-radius: 999px; }
-    .message { padding: 0.4rem 0; border-radius: var(--radius); max-width: 100%; box-shadow: none; border: none; background: transparent; transition: none; }
+    .message { padding: 0.4rem 0; border-radius: var(--radius); max-width: 100%; box-shadow: none; border: none; background: transparent; transition: none; position: relative; }
     .message:hover { box-shadow: none; transform: none; border-color: transparent; }
     .message .label { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; color: var(--text-dim); }
     .message p { margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--text-soft); }
@@ -119,6 +119,12 @@
     .message.user { align-self: flex-end; background: #dbeafe; border-radius: var(--radius); padding: 0.85rem 1rem; border: 1px solid #bfdbfe; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12); max-width: 88%; }
     .message.user .label { color: var(--accent); }
     .message.ai { align-self: flex-start; background: transparent; border: none; padding: 0.25rem 0; max-width: 100%; }
+    .message-actions { display: flex; gap: 0.5rem; margin-top: 0.35rem; opacity: 0; transition: opacity 0.2s; }
+    .message:hover .message-actions { opacity: 1; }
+    .copy-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); padding: 0.25rem 0.55rem; border-radius: 999px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: var(--border-soft); color: var(--text); }
+    .copy-btn:active { transform: scale(0.95); }
+    .copy-btn.copied { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
     .form-wrap { flex-shrink: 0; margin-top: auto; padding-top: 1.25rem; border-top: 1px solid var(--border); position: relative; z-index: 10; }
     .form { display: flex; gap: 0.6rem; align-items: flex-end; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
     .form #input { flex: 1; min-width: 0; min-height: 48px; padding: 0.85rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s; -webkit-text-size-adjust: 100%; }
@@ -467,11 +473,57 @@
         return s;
       }
 
+      function copyToClipboard(text) {
+        if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+          try {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+          } catch (_) {}
+          return;
+        }
+        navigator.clipboard.writeText(text).catch(function () {});
+      }
+
       function addMessage(role, text, label) {
         const d = document.createElement("div");
         d.className = "message " + role;
-        d.innerHTML = "<span class=\"label\">" + (label || (role === "user" ? t("you") : t("general"))) + "</span><p></p>";
-        d.querySelector("p").innerHTML = formatMsg(text);
+
+        const lbl = document.createElement("span");
+        lbl.className = "label";
+        lbl.textContent = label || (role === "user" ? t("you") : t("general"));
+        d.appendChild(lbl);
+
+        const p = document.createElement("p");
+        p.innerHTML = formatMsg(text);
+        d.appendChild(p);
+
+        // Add copy button for AI messages
+        if (role === "ai") {
+          const actions = document.createElement("div");
+          actions.className = "message-actions";
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.className = "copy-btn";
+          copyBtn.textContent = "Copy";
+          copyBtn.addEventListener("click", function () {
+            copyToClipboard(p.innerText || "");
+            copyBtn.textContent = "Copied";
+            copyBtn.classList.add("copied");
+            setTimeout(function () {
+              copyBtn.textContent = "Copy";
+              copyBtn.classList.remove("copied");
+            }, 2000);
+          });
+          actions.appendChild(copyBtn);
+          d.appendChild(actions);
+        }
+
         chat.appendChild(d);
         requestAnimationFrame(function () { d.scrollIntoView({ behavior: "auto", block: "end" }); });
       }
