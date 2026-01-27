@@ -415,6 +415,39 @@
         const typingEl = addTyping();
 
         try {
+          // Image generation command: start message with "image:" (no file attached)
+          if (!file && raw && raw.toLowerCase().startsWith("image:")) {
+            const prompt = raw.slice(raw.indexOf(":") + 1).trim() || (currentLang === 'de'
+              ? "Erzeuge ein illustratives Bild zur Anfrage."
+              : "Generate an illustrative image for this request.");
+            const imgRes = await fetch("/api/image-generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ prompt, size: "1024x1024", n: 1 }),
+              signal: AbortSignal.timeout(60000)
+            });
+            let imgData;
+            try { imgData = await imgRes.json(); } catch (_) { imgData = { error: "Image request failed." }; }
+            const imgReply = imgData && imgData.success && Array.isArray(imgData.images) && imgData.images.length > 0
+              ? ((currentLang === 'de'
+                    ? "Bild erzeugt: "
+                    : "Image generated: ") + (imgData.images[0].url || ""))
+              : (imgData && imgData.error) ? imgData.error
+              : (currentLang === 'de'
+                    ? "Es konnte kein Bild erzeugt werden."
+                    : "No image could be generated.");
+            typingEl.classList.remove("typing");
+            typingEl.querySelector("p").innerHTML = formatMsg(imgReply);
+            history.push({ role: "user", content: raw });
+            history.push({ role: "assistant", content: imgReply });
+            try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+            requestAnimationFrame(function () {
+              typingEl.scrollIntoView({ behavior: "auto", block: "end" });
+            });
+            scheduleRenderHistory();
+            return;
+          }
+
           const body = { message: raw || (file ? (currentLang === 'de' ? "Was ist in dieser Datei?" : "What is in this file?") : "") };
           if (file) {
             const buf = await file.arrayBuffer();
