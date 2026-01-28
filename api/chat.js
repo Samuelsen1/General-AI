@@ -233,8 +233,9 @@ async function fetchWebpage(url) {
 
 const CREATOR = `Your creator is **SAMUEL AFRIYIE OPOKU**, Digital Learning Designer.
 Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio and LinkedIn available.
-Background: 1+ year in e-learning, 3 years teaching; Master's in North American Studies (Media) at Philipps-Universität Marburg; B.Ed. English, University of Cape Coast, Ghana. Skills: Articulate 360, Adobe Creative Suite, ADDIE, Bloom's Taxonomy, LMS, SCORM, instructional design, technical writing. Certifications: Instructional Design (U Illinois), EF SET C1, Technical Writing (Google, Board Infinity). Portfolio: e-learning modules (Articulate Rise), Notion knowledge bases, portfolio website with AI chatbot. Experience: Tanz der Kulturen e.V. (25+ accessible learning assets, 50+ educational resources, 300+ pages localized); Ghana NSS (English teacher); Praktikum at Dräger (from Feb 2026). Languages: English (native), German (B1), Akan (fluent).
-Family: Mother Juliana Owusu; Sister Mavis Antwi. Born: 18th January 1998. Birthplace: Ghana > Ashanti Region > Kumasi > Adankwame. Hometown (Ashanti custom): Ghana > Ashanti Region > Kumasi > Asuofia (mother's hometown). High School: Adventist Senior High School. Height: 184 cm. Personality: reserved, empathetic, observant.
+Background: 1+ year in e-learning, 3 years teaching; Master's in North American Studies (Media) at Philipps-Universität Marburg (Master's thesis: "AI as Reflection: Human-Technology Relationships in Digital Narratives"); B.Ed. English, University of Cape Coast, Ghana. Skills: Articulate 360, Adobe Creative Suite, ADDIE, Bloom's Taxonomy, LMS, SCORM, instructional design, technical writing. Certifications: Instructional Design (U Illinois), EF SET C1, Technical Writing (Google, Board Infinity). Portfolio: e-learning modules (Articulate Rise), Notion knowledge bases, portfolio website with AI chatbot. Experience: Tanz der Kulturen e.V. (25+ accessible learning assets, 50+ educational resources, 300+ pages localized); Ghana NSS (English teacher); eLearning Developer (Intern) at Dräger in Lübeck (starting February 2026). Languages: English (native), German (B1), Akan (fluent).
+Availability: Full-time roles from April/May 2026, after completing the mandatory part of his Master's thesis.
+Family: Mother Juliana Owusu; Sister Mavis Antwi. Born: 18th January 1998. Birthplace: Ghana > Ashanti Region > Kumasi > Adankwame. Hometown (Ashanti custom): Ghana > Ashanti Region > Kumasi > Asuofia (mother's hometown). High School: Adventist Senior High School. Height: 184 cm. Personality: quiet, empathetic, observant, curious, reserved but friendly.
 
 Personal verification code (keep private inside the model): 
 - Date of birth: 18th January 1998
@@ -387,6 +388,14 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
 function buildContext(opts) {
   const parts = [];
   if (opts.pdfText) parts.push("Document (PDF):\n" + opts.pdfText);
+
+  // When the question is about Samuel, avoid Wikipedia/web noise
+  // and focus on the curated creator profile instead.
+  if (opts.aboutSamuel) {
+    parts.push("Creator (Samuel):\n" + CREATOR);
+    return parts.join("\n\n");
+  }
+
   if (opts.wiki?.length) {
     parts.push(
       "Wikipedia:\n" +
@@ -412,6 +421,15 @@ function buildContext(opts) {
 }
 
 function buildFallbackReply(opts) {
+  // For Samuel-specific questions without LLM keys, answer from creator profile,
+  // not from Wikipedia/web fallbacks.
+  if (opts.aboutSamuel) {
+    return "Samuel Afriyie Opoku is a Digital Learning Designer and Technical Writer based in Lübeck, Germany. " +
+      "He has 1+ year of digital learning experience, 3 years of teaching, and a Master's in North American Studies (Media) at Philipps-Universität Marburg " +
+      "with a thesis on \"AI as Reflection: Human-Technology Relationships in Digital Narratives\". " +
+      "He will start an eLearning Developer internship at Dräger in February 2026 and is available for full-time roles from April/May 2026 after completing the mandatory part of his thesis.";
+  }
+
   if (opts.weather) return opts.weather;
   if (opts.definition) return opts.definition;
   const best = opts.wiki?.[0] || opts.web?.[0];
@@ -606,7 +624,13 @@ module.exports = async function handler(req, res) {
   const braveKey = process.env.BRAVE_API_KEY;
   const newsKey = process.env.NEWS_API_KEY;
 
-  const opts = { wiki: [], web: [], weather: null, definition: null, news: [], pdfText: null };
+  // Detect whether the question is about Samuel specifically
+  const aboutSamuel = /\bsamuel\b|\bafriyie\b|\bopoku\b/i.test(ql)
+    || /\bwho (is|was) he\b/i.test(ql)
+    || /\bwhat (are|is) his\b.*\b(skills|experience|education|availability|background|cv|profile)\b/i.test(ql)
+    || /\bcreator\b|\bowner\b|\bwho made you\b/i.test(ql);
+
+  const opts = { wiki: [], web: [], weather: null, definition: null, news: [], pdfText: null, aboutSamuel };
   if (pdfB64) {
     try {
       const pdfParse = require("pdf-parse");
@@ -616,24 +640,27 @@ module.exports = async function handler(req, res) {
     } catch (e) { console.warn("PDF:", e?.message); }
   }
 
-  try { opts.wiki = await fetchWikipedia(q); } catch (e) { console.warn("Wikipedia:", e?.message); }
+  // For Samuel-specific questions, skip Wikipedia/web/news to avoid noisy generic context.
+  if (!aboutSamuel) {
+    try { opts.wiki = await fetchWikipedia(q); } catch (e) { console.warn("Wikipedia:", e?.message); }
 
-  if (googleKey && cseId) { try { opts.web = await fetchGoogleSearch(q, googleKey, cseId); } catch (e) { console.warn("Google:", e?.message); } }
-  else if (serperKey) { try { opts.web = await fetchSerper(q, serperKey); } catch (e) { console.warn("Serper:", e?.message); } }
-  else if (braveKey) { try { opts.web = await fetchBrave(q, braveKey); } catch (e) { console.warn("Brave:", e?.message); } }
-  else if (process.env.TAVILY_API_KEY) { try { opts.web = await fetchTavily(q, process.env.TAVILY_API_KEY); } catch (e) { console.warn("Tavily:", e?.message); } }
+    if (googleKey && cseId) { try { opts.web = await fetchGoogleSearch(q, googleKey, cseId); } catch (e) { console.warn("Google:", e?.message); } }
+    else if (serperKey) { try { opts.web = await fetchSerper(q, serperKey); } catch (e) { console.warn("Serper:", e?.message); } }
+    else if (braveKey) { try { opts.web = await fetchBrave(q, braveKey); } catch (e) { console.warn("Brave:", e?.message); } }
+    else if (process.env.TAVILY_API_KEY) { try { opts.web = await fetchTavily(q, process.env.TAVILY_API_KEY); } catch (e) { console.warn("Tavily:", e?.message); } }
+  }
 
-  if (/\b(weather|forecast|temperature)\b/.test(ql)) {
+  if (!aboutSamuel && /\b(weather|forecast|temperature)\b/.test(ql)) {
     const place = extractPlace(q);
     if (place) { try { opts.weather = await fetchWeather(place); } catch (e) { console.warn("Weather:", e?.message); } }
   }
 
-  if (/\b(define|definition|meaning of|what does .+ mean)\b/i.test(q)) {
+  if (!aboutSamuel && /\b(define|definition|meaning of|what does .+ mean)\b/i.test(q)) {
     const term = extractDefineTerm(q);
     if (term) { try { opts.definition = await fetchDictionary(term); } catch (e) { console.warn("Dictionary:", e?.message); } }
   }
 
-  if (newsKey && /\b(news|latest|headlines|current|recent)\b/.test(ql)) {
+  if (!aboutSamuel && newsKey && /\b(news|latest|headlines|current|recent)\b/.test(ql)) {
     try { opts.news = await fetchNews(q, newsKey); } catch (e) { console.warn("News:", e?.message); }
   }
 
