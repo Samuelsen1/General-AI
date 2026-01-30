@@ -119,7 +119,7 @@
     .message { padding: 0.2rem 0.1rem 0.5rem; max-width: 100%; background: transparent; box-shadow: none; border: none; transition: none; position: relative; }
     .message:hover { box-shadow: none; transform: none; border-color: transparent; }
     .message .label { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; color: var(--text-dim); }
-    .message p { margin: 0; word-break: break-word; color: var(--text-soft); }
+    .message p { margin: 0; word-break: normal; overflow-wrap: break-word; color: var(--text-soft); }
     .message.user .message-body p { white-space: pre-wrap; }
     .message strong { font-weight: 700; color: var(--text); }
     .message em { font-style: italic; font-weight: 500; }
@@ -138,7 +138,7 @@
     .message.ai { align-self: flex-start; max-width: 100%; }
     .message.ai .message-body { background: transparent; padding: 0.4rem 0; max-width: 100%; }
     .message-actions { display: flex; gap: 0.4rem; margin-top: 0.2rem; opacity: 1; }
-    .message.user .message-actions { justify-content: flex-end; }
+    .message.user .message-actions { justify-content: flex-end; margin-top: 0; }
     .message.ai .message-actions { justify-content: flex-start; }
     .copy-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); padding: 0.2rem 0.4rem; border-radius: 999px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
     .copy-btn:hover { background: var(--border-soft); color: var(--text); }
@@ -151,8 +151,9 @@
     .ai-snippet-copy:hover { background: var(--border-soft); color: var(--text); }
     .ai-snippet-copy:active { transform: scale(0.95); }
     .ai-snippet-copy.copied { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-    .attachment-badge-wrap { margin-top: 0.35rem; max-width: 88%; }
-    .message.user .attachment-badge-wrap { margin-left: auto; }
+    .message-user-footer { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.3rem; flex-wrap: wrap; justify-content: flex-end; }
+    .attachment-badge-wrap { max-width: 88%; }
+    .message.user .attachment-badge-wrap { margin-left: 0; }
     .attachment-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.5rem; max-width: 200px; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-soft); box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
     .attachment-badge svg { flex-shrink: 0; width: 18px; height: 18px; min-width: 18px; min-height: 18px; color: #dc2626; }
     .attachment-badge .attachment-name { font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -653,18 +654,6 @@
 
         d.appendChild(body);
 
-        if (role === "user" && opts && opts.attachment && opts.attachment.name) {
-          const badgeWrap = document.createElement("div");
-          badgeWrap.className = "attachment-badge-wrap";
-          const badge = document.createElement("div");
-          badge.className = "attachment-badge";
-          const isPdf = (opts.attachment.type || "").toLowerCase() === "pdf";
-          badge.innerHTML = (isPdf ? PDF_ICON_SVG + '<span class="attachment-name">PDF</span>' : '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>' + '<span class="attachment-name">' + (opts.attachment.name || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + '</span>');
-          badgeWrap.appendChild(badge);
-          d.appendChild(badgeWrap);
-        }
-
-        // Add actions for messages, rendered under the bubble
         if (role === "ai") {
           const actions = document.createElement("div");
           actions.className = "message-actions";
@@ -688,6 +677,18 @@
         }
 
         if (role === "user") {
+          const footer = document.createElement("div");
+          footer.className = "message-user-footer";
+          if (opts && opts.attachment && opts.attachment.name) {
+            const badgeWrap = document.createElement("div");
+            badgeWrap.className = "attachment-badge-wrap";
+            const badge = document.createElement("div");
+            badge.className = "attachment-badge";
+            const isPdf = (opts.attachment.type || "").toLowerCase() === "pdf";
+            badge.innerHTML = (isPdf ? PDF_ICON_SVG + '<span class="attachment-name">PDF</span>' : '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>' + '<span class="attachment-name">' + (opts.attachment.name || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + '</span>');
+            badgeWrap.appendChild(badge);
+            footer.appendChild(badgeWrap);
+          }
           const actions = document.createElement("div");
           actions.className = "message-actions";
           // Copy button for user message
@@ -738,7 +739,8 @@
             lastAiMessageEl = null;
           });
           actions.appendChild(editBtn);
-          d.appendChild(actions);
+          footer.appendChild(actions);
+          d.appendChild(footer);
           // Remove edit button from older user messages (keep copy button)
           if (lastUserMessageEl && lastUserMessageEl !== d) {
             const oldEdit = lastUserMessageEl.querySelector(".edit-btn");
