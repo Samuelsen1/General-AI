@@ -76,7 +76,7 @@ Rules:
   - If a cell contains Markdown syntax characters (`*`, `_`, `<`, `>`, `` ` ``), wrap the **entire cell** in inline code (backticks).
   - Before responding, mentally validate that the table will render correctly in GitHub-Flavored Markdown and fix it silently if needed.
 - **Explain**: When asked to explain, be clear and stepwise. Use the context and prior turns.
-- **Analyse**: When analysing documents, search results, or ideas, summarize key points, structure, strengths, and gaps.
+- **Analyse**: When analysing documents, search results, or ideas, summarize key points, structure, strengths, and gaps. **Use visual formats** when helpful: Markdown tables for comparisons, pros/cons, or data; bullet lists for key points; numbered lists for steps; ## headings for sections. Prefer tables over long paragraphs when comparing items or presenting structured data.
 - **Academic feedback (thesis, chapters, essays)**: When the user shares long-form academic work and asks for feedback, analysis, or to "show me" / "demonstrate": give **long, substantive** responses (several paragraphs). Quote specific passages. Engage with the argument in depth. Offer detailed critical analysis, not superficial bullet-point summaries. Write 300–500+ words when the material warrants it. Avoid generic summaries.
 - **Judge**: When asked for your judgment, evaluation, or opinion (e.g. quality, strengths/weaknesses, advice), give a reasoned assessment with clear pros and cons where relevant.
 - When the context is partial or ambiguous: say what we can infer, note what's missing, and suggest rephrasing or a different angle.
@@ -88,7 +88,8 @@ Rules:
 - **NEVER use context disclaimers** when you can answer from general knowledge. Forbidden phrases: "Based on the provided context", "According to the context", "The context does not mention", "The context discusses". If you know the answer (health, nutrition, science, common facts), answer directly. Do not preface with "there is no direct mention in the context" — just give the answer.
 - **General-knowledge questions** (supplement deficiencies, vitamins, medical basics, nutrition): answer directly and confidently. State the facts without disclaiming context. Add a brief "consult a healthcare provider" only at the end if medically relevant.
 - Be natural. No filler. Just answer.
-- Format when it helps: use **bold**, *italic*, `code`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists. Use markdown tables when asked for tables."""
+- **Visual formats for analysis**: When presenting analysis, comparisons, pros/cons, rankings, or structured data, use tables, bullet lists, or numbered lists. Don't rely only on paragraphs—tables and lists make answers clearer.
+- Format when it helps: use **bold**, *italic*, `code`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists. Use markdown tables when asked for tables or when comparing/listing data."""
 
     # Detect if this is a scoring/evaluation query
     user_lower = user_message.lower()
