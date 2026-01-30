@@ -659,7 +659,7 @@
           const badge = document.createElement("div");
           badge.className = "attachment-badge";
           const isPdf = (opts.attachment.type || "").toLowerCase() === "pdf";
-          badge.innerHTML = (isPdf ? PDF_ICON_SVG : '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>') + '<span class="attachment-name">' + (opts.attachment.name || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + '</span>';
+          badge.innerHTML = (isPdf ? PDF_ICON_SVG + '<span class="attachment-name">PDF</span>' : '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>' + '<span class="attachment-name">' + (opts.attachment.name || "").replace(/</g, "&lt;").replace(/>/g, "&gt;") + '</span>');
           badgeWrap.appendChild(badge);
           d.appendChild(badgeWrap);
         }
@@ -783,7 +783,7 @@
         return d;
       }
 
-      const MAX_FILE = 5 * 1024 * 1024; // 5 MB (Vercel body limit ~4.5MB; base64 adds ~33%; very large files may fail)
+      const MAX_FILE = 15 * 1024 * 1024; // 15 MB (10–15 range; Vercel ~4.5MB body limit may reject; self-hosted can handle larger)
       function toBase64(buf) {
         const u = new Uint8Array(buf);
         let s = "";
@@ -813,7 +813,7 @@
         const attachmentOpts = file ? { attachment: { type: (file.type || "").toLowerCase() === "application/pdf" ? "pdf" : "image", name: file.name } } : undefined;
         if (file && file.size > MAX_FILE) {
           addMessage("user", displayMsg, undefined, attachmentOpts);
-          addMessage("ai", "File too large. Use a PDF or image under 5 MB.");
+          addMessage("ai", "File too large. Use a PDF or image under 15 MB.");
           chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none";
           return;
         }
@@ -843,7 +843,7 @@
           }, 100);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
-          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 5 MB." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
+          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 15 MB." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") : "No reply.";
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
@@ -855,7 +855,7 @@
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
           scheduleRenderHistory();
         } catch (err) {
-          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 5 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
+          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 15 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
           if (typingEl && typingEl.parentNode) {
             typingEl.parentNode.removeChild(typingEl);
           }
