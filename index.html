@@ -143,7 +143,7 @@
     .attachment-badge svg { flex-shrink: 0; color: #dc2626; }
     .attachment-badge .attachment-name { font-weight: 500; color: var(--text); }
     .form-wrap { flex-shrink: 0; margin-top: auto; padding-top: 1.25rem; border-top: 1px solid var(--border); position: relative; z-index: 10; }
-    .form { display: flex; gap: 0.6rem; align-items: flex-end; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .form { display: flex; gap: 0.6rem; align-items: flex-end; padding: 0.5rem; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
     .form #input { flex: 1; min-width: 0; min-height: 48px; padding: 0.85rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s; -webkit-text-size-adjust: 100%; }
     .form #input::placeholder { color: var(--text-dim); }
     .form #input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -151,15 +151,16 @@
     .form button:hover { background: var(--accent-hover); }
     .form button:active { transform: scale(0.98); }
     .form button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .attach-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-dim); cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s; flex-shrink: 0; touch-action: manipulation; }
-    .attach-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
+    .attach-create-container { display: flex; align-items: center; gap: 0; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-sm); flex-shrink: 0; overflow: hidden; }
+    .attach-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: transparent; border: none; border-radius: 0; color: var(--text-dim); cursor: pointer; transition: color 0.2s, background 0.2s; flex-shrink: 0; touch-action: manipulation; }
+    .attach-btn:hover { color: var(--accent); background: var(--accent-soft-2); }
     .attach-btn svg { width: 20px; height: 20px; }
     .create-gen-wrap { position: relative; flex-shrink: 0; }
-    .create-gen-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; touch-action: manipulation; }
-    .create-gen-btn:hover { border-color: var(--accent); background: var(--accent-soft-2); box-shadow: 0 2px 10px rgba(37, 99, 235, 0.12); }
+    .create-gen-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: #ffffff; border: none; border-left: 1px solid var(--border); border-radius: 0; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; touch-action: manipulation; }
+    .create-gen-btn:hover { background: var(--accent-soft-2); box-shadow: none; }
     .create-gen-btn:active { transform: scale(0.98); }
     .create-gen-btn svg { width: 30px; height: 30px; flex-shrink: 0; }
-    .create-gen-dropdown { position: absolute; bottom: 100%; left: 0; margin-bottom: 0.35rem; min-width: 200px; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; display: none; }
+    .create-gen-dropdown { position: absolute; bottom: 100%; left: 0; margin-bottom: 0.35rem; min-width: 200px; padding: 0.5rem; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; display: none; }
     .create-gen-dropdown.open { display: block; }
     .create-gen-dropdown .create-opt { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.65rem; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text-soft); font: inherit; font-size: 0.85rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-align: left; }
     .create-gen-dropdown .create-opt:hover { background: var(--accent-soft-2); color: var(--accent); }
@@ -167,6 +168,24 @@
     .create-gen-dropdown .create-opt.disabled { opacity: 0.7; cursor: not-allowed; }
     .create-gen-dropdown .create-opt.disabled:hover { background: transparent; color: var(--text-dim); }
     .create-gen-dropdown .create-footer { margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--text-dim); }
+    .media-wrap-mobile { display: none; position: relative; flex-shrink: 0; }
+    .media-trigger-mobile { display: none; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: #ffffff; border: none; border-radius: 0; color: var(--text-dim); cursor: pointer; touch-action: manipulation; }
+    .media-trigger-mobile svg { width: 22px; height: 22px; }
+    .media-dropdown-mobile { display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 0.35rem; min-width: 200px; padding: 0.5rem; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; }
+    .media-dropdown-mobile.open { display: block; }
+    .media-dropdown-mobile .create-opt { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.65rem; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text-soft); font: inherit; font-size: 0.85rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-align: left; }
+    .media-dropdown-mobile .create-opt:hover { background: var(--accent-soft-2); color: var(--accent); }
+    .media-dropdown-mobile .create-opt svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .media-dropdown-mobile .create-opt.disabled { opacity: 0.7; cursor: not-allowed; }
+    .media-dropdown-mobile .create-opt.disabled:hover { background: transparent; color: var(--text-dim); }
+    .media-dropdown-mobile .create-footer { margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--text-dim); }
+    @media (max-width: 767px) {
+      .attach-create-container .attach-btn { display: none; }
+      .attach-create-container .create-gen-wrap { display: none; }
+      .media-wrap-mobile { display: flex; align-items: center; }
+      .media-wrap-mobile .media-trigger-mobile { display: flex; }
+      .attach-create-container { padding: 0; border-radius: var(--radius-sm); background: #ffffff; }
+    }
     .file-chosen { margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-dim); }
     .file-chosen span { color: var(--accent); font-weight: 500; }
     .hint { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); }
@@ -219,27 +238,49 @@
       </section>
       <div class="form-wrap">
         <form class="form" id="form">
-          <label for="file-input" class="attach-btn" aria-label="Attach image or PDF" data-i18n-title="attachFile" title="Attach image or PDF">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          </label>
-          <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
-          <div class="create-gen-wrap">
-            <button type="button" class="create-gen-btn" id="create-gen-btn" aria-label="Create image or video" title="Create image or video">
-              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                <defs><linearGradient id="createBtnGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="50%" stop-color="#6366f1"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs>
-                <path stroke="url(#createBtnGrad)" d="M9.5 2L11 7l5.5 1.5L11 10l-1.5 5.5L8 10 2.5 8.5 8 7 9.5 2z"/><path stroke="url(#createBtnGrad)" d="M15 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/>
-              </svg>
-            </button>
-            <div class="create-gen-dropdown" id="create-gen-dropdown" role="menu" aria-hidden="true">
-              <button type="button" class="create-opt disabled" id="create-opt-image" data-mode="image" role="menuitem">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                <span data-i18n="createImage">Generate image</span>
+          <div class="attach-create-container">
+            <label for="file-input" class="attach-btn" aria-label="Attach image or PDF" data-i18n-title="attachFile" title="Attach image or PDF">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </label>
+            <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
+            <div class="create-gen-wrap">
+              <button type="button" class="create-gen-btn" id="create-gen-btn" aria-label="Create image or video" title="Create image or video">
+                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                  <defs><linearGradient id="createBtnGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="50%" stop-color="#6366f1"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs>
+                  <path stroke="url(#createBtnGrad)" d="M9.5 2L11 7l5.5 1.5L11 10l-1.5 5.5L8 10 2.5 8.5 8 7 9.5 2z"/><path stroke="url(#createBtnGrad)" d="M15 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/>
+                </svg>
               </button>
-              <button type="button" class="create-opt disabled" id="create-opt-video" data-mode="video" role="menuitem">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                <span data-i18n="createVideo">Generate video</span>
+              <div class="create-gen-dropdown" id="create-gen-dropdown" role="menu" aria-hidden="true">
+                <button type="button" class="create-opt disabled" id="create-opt-image" data-mode="image" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                  <span data-i18n="createImage">Generate image</span>
+                </button>
+                <button type="button" class="create-opt disabled" id="create-opt-video" data-mode="video" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  <span data-i18n="createVideo">Generate video</span>
+                </button>
+                <div class="create-footer" data-i18n="createRequiresKey">Requires PIXAZO_API_KEY in Vercel to enable.</div>
+              </div>
+            </div>
+            <div class="media-wrap-mobile" id="media-wrap-mobile">
+              <button type="button" class="media-trigger-mobile" id="media-trigger-mobile" aria-label="Attach or create" aria-haspopup="true" aria-expanded="false" data-i18n-title="attachOrCreate" title="Upload PDF or create image/video">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
               </button>
-              <div class="create-footer" data-i18n="createRequiresKey">Requires PIXAZO_API_KEY in Vercel to enable.</div>
+              <div class="media-dropdown-mobile" id="media-dropdown-mobile" role="menu" aria-hidden="true">
+                <button type="button" class="create-opt" id="mobile-opt-pdf" data-action="pdf" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h2"/><path d="M9 17h2"/><path d="M15 13h2"/><path d="M15 17h2"/></svg>
+                  <span data-i18n="attachFile">Attach image or PDF</span>
+                </button>
+                <button type="button" class="create-opt disabled" id="mobile-opt-image" data-action="image" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                  <span data-i18n="createImage">Generate image</span>
+                </button>
+                <button type="button" class="create-opt disabled" id="mobile-opt-video" data-action="video" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  <span data-i18n="createVideo">Generate video</span>
+                </button>
+                <div class="create-footer" data-i18n="createRequiresKey">Requires PIXAZO_API_KEY in Vercel to enable.</div>
+              </div>
             </div>
           </div>
           <input type="text" id="input" placeholder="Ask anything…" data-i18n-placeholder="askAnything" autocomplete="off" enterkeyhint="send" />
@@ -260,6 +301,7 @@
           askAnything: "Ask anything…",
           send: "Send",
           attachFile: "Attach image or PDF",
+          attachOrCreate: "Upload PDF or create image/video",
           createImage: "Generate image",
           createVideo: "Generate video",
           createRequiresKey: "Requires PIXAZO_API_KEY in Vercel to enable.",
@@ -276,6 +318,7 @@
           askAnything: "Fragen Sie alles…",
           send: "Senden",
           attachFile: "Bild oder PDF anhängen",
+          attachOrCreate: "PDF hochladen oder Bild/Video erstellen",
           createImage: "Bild erzeugen",
           createVideo: "Video erzeugen",
           createRequiresKey: "PIXAZO_API_KEY in Vercel erforderlich.",
@@ -395,11 +438,24 @@
       var createOptImage = document.getElementById("create-opt-image");
       var createOptVideo = document.getElementById("create-opt-video");
       var createGenWrap = document.querySelector(".create-gen-wrap");
+      var mediaTriggerMobile = document.getElementById("media-trigger-mobile");
+      var mediaDropdownMobile = document.getElementById("media-dropdown-mobile");
+      var mediaWrapMobile = document.getElementById("media-wrap-mobile");
+      var mobileOptPdf = document.getElementById("mobile-opt-pdf");
+      var mobileOptImage = document.getElementById("mobile-opt-image");
+      var mobileOptVideo = document.getElementById("mobile-opt-video");
 
       function closeCreateDropdown() {
         if (createGenDropdown) {
           createGenDropdown.classList.remove("open");
           createGenDropdown.setAttribute("aria-hidden", "true");
+        }
+      }
+      function closeMediaDropdownMobile() {
+        if (mediaDropdownMobile) {
+          mediaDropdownMobile.classList.remove("open");
+          mediaDropdownMobile.setAttribute("aria-hidden", "true");
+          if (mediaTriggerMobile) mediaTriggerMobile.setAttribute("aria-expanded", "false");
         }
       }
 
@@ -410,8 +466,44 @@
           createGenDropdown.setAttribute("aria-hidden", isOpen ? "false" : "true");
         });
       }
-      document.addEventListener("click", function () { closeCreateDropdown(); });
+      document.addEventListener("click", function () {
+        closeCreateDropdown();
+        closeMediaDropdownMobile();
+      });
       if (createGenWrap) createGenWrap.addEventListener("click", function (e) { e.stopPropagation(); });
+      if (mediaTriggerMobile && mediaDropdownMobile) {
+        mediaTriggerMobile.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var isOpen = mediaDropdownMobile.classList.toggle("open");
+          mediaDropdownMobile.setAttribute("aria-hidden", isOpen ? "false" : "true");
+          mediaTriggerMobile.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+      }
+      if (mediaWrapMobile) mediaWrapMobile.addEventListener("click", function (e) { e.stopPropagation(); });
+      if (mobileOptPdf) {
+        mobileOptPdf.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeMediaDropdownMobile();
+          if (fileInput) fileInput.click();
+        });
+      }
+      if (mobileOptImage) {
+        mobileOptImage.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeMediaDropdownMobile();
+          showCreateDisabledMessage();
+        });
+      }
+      if (mobileOptVideo) {
+        mobileOptVideo.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeMediaDropdownMobile();
+          showCreateDisabledMessage();
+        });
+      }
 
       function showCreateDisabledMessage() {
         var msg = t("createDisabled");
