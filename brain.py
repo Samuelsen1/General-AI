@@ -468,11 +468,10 @@ _INSULT_KEYWORDS = [
 _HARM_KEYWORDS = [
     "kill yourself",
     "kys",
-    "suicide",
-    "self harm",
-    "self-harm",
-    "hurt myself",
-    "hurt other people",
+    "i want to kill myself",
+    "i want to die",
+    "help me end my life",
+    "how to commit suicide",
 ]
 
 _ILLEGAL_KEYWORDS = [
@@ -497,10 +496,25 @@ _ILLEGAL_KEYWORDS = [
 ]
 
 
+def _is_academic_or_analytical(text: str) -> bool:
+    """Skip safety check for long academic/analytical content (thesis, chapters, articles)."""
+    if not text or len(text) < 400:
+        return False
+    t = text.lower()
+    academic_terms = [
+        "chapter", "section", "thesis", "methodology", "narrative", "analysis",
+        "framework", "braidotti", "asimov", "forster", "ethics", "regulation",
+        "posthuman", "humanism", "introduction", "theoretical",
+    ]
+    return any(term in t for term in academic_terms)
+
+
 def _is_harmful_or_illegal(text: str) -> bool:
     """Heuristic check for insults, harmful, or clearly illegal requests."""
     t = (text or "").lower()
     if not t:
+        return False
+    if _is_academic_or_analytical(text):
         return False
     for kw in _INSULT_KEYWORDS + _HARM_KEYWORDS + _ILLEGAL_KEYWORDS:
         if kw and kw in t:
