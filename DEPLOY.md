@@ -56,7 +56,7 @@ The **`api`** folder and **`package.json`** must be in the repo. If you only upl
 
 1. **Add the missing files** to GitHub: the **`api`** folder (with **`chat.js`** and **`status.js`**) and **`package.json`**.
 2. **Redeploy** on Vercel: Project → **Deployments** → ⋮ on the latest → **Redeploy**, or push a new commit.
-3. In Vercel **Settings → Environment Variables**, add **`DEEPSEEK_API_KEY`** or **`OPENAI_API_KEY`** (see [ENV.md](ENV.md)).
+3. In Vercel **Settings → Environment Variables**, add **`DEEPSEEK_API_KEY`** or **`OPENAI_API_KEY`** for chat, and optionally **`PIXAZO_API_KEY`** for image/video (see [ENV.md](ENV.md)).
 
 ---
 

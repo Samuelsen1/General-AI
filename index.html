@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes, interactive-widget=resizes-content" />
   <meta name="format-detection" content="telephone=no" />
+  <meta name="description" content="General – AI assistant with Wikipedia, web search, weather, definitions, news, and LLM. Chat, attach PDFs, generate images and video." />
   <title>General</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -188,6 +189,8 @@
     }
     .file-chosen { margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-dim); }
     .file-chosen span { color: var(--accent); font-weight: 500; }
+    .skip-link { position: absolute; top: -100px; left: 0.5rem; padding: 0.5rem 0.75rem; background: var(--accent); color: #fff; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500; z-index: 9999; transition: top 0.2s; }
+    .skip-link:focus { top: 0.5rem; outline: 2px solid var(--accent-hover); outline-offset: 2px; }
     .hint { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); }
     .typing { opacity: 0.85; }
     .typing .label::after { content: " …"; animation: dots 1s steps(4, end) infinite; }
@@ -203,6 +206,7 @@
   </style>
 </head>
 <body>
+  <a href="#chat" class="skip-link">Skip to main content</a>
   <div class="app-wrap">
     <div class="history-rail">
       <button type="button" class="history-btn" id="history-btn" aria-label="Open history">
@@ -444,6 +448,7 @@
       var mobileOptPdf = document.getElementById("mobile-opt-pdf");
       var mobileOptImage = document.getElementById("mobile-opt-image");
       var mobileOptVideo = document.getElementById("mobile-opt-video");
+      var pixazoEnabled = false;
 
       function closeCreateDropdown() {
         if (createGenDropdown) {
@@ -493,7 +498,7 @@
           e.preventDefault();
           e.stopPropagation();
           closeMediaDropdownMobile();
-          showCreateDisabledMessage();
+          if (pixazoEnabled) triggerImagePrompt(); else showCreateDisabledMessage();
         });
       }
       if (mobileOptVideo) {
@@ -501,9 +506,17 @@
           e.preventDefault();
           e.stopPropagation();
           closeMediaDropdownMobile();
-          showCreateDisabledMessage();
+          if (pixazoEnabled) triggerVideoPrompt(); else showCreateDisabledMessage();
         });
       }
+      (function initStatus() {
+        fetch("/api/status", { signal: AbortSignal.timeout(5000) }).then(function (r) { return r.json(); }).then(function (data) {
+          if (data && data.pixazo) {
+            pixazoEnabled = true;
+            [createOptImage, createOptVideo, mobileOptImage, mobileOptVideo].forEach(function (el) { if (el) el.classList.remove("disabled"); });
+          }
+        }).catch(function () {});
+      })();
 
       function showCreateDisabledMessage() {
         var msg = t("createDisabled");
@@ -514,12 +527,18 @@
         }
       }
 
+      function triggerImagePrompt() {
+        if (input) { input.value = "image: "; input.focus(); }
+      }
+      function triggerVideoPrompt() {
+        if (input) { input.value = "video: "; input.focus(); }
+      }
       if (createOptImage) {
         createOptImage.addEventListener("click", function (e) {
           e.preventDefault();
           e.stopPropagation();
           closeCreateDropdown();
-          showCreateDisabledMessage();
+          if (pixazoEnabled) triggerImagePrompt(); else showCreateDisabledMessage();
         });
       }
       if (createOptVideo) {
@@ -527,7 +546,7 @@
           e.preventDefault();
           e.stopPropagation();
           closeCreateDropdown();
-          showCreateDisabledMessage();
+          if (pixazoEnabled) triggerVideoPrompt(); else showCreateDisabledMessage();
         });
       }
 
@@ -1008,8 +1027,8 @@
           }, 100);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
-          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 3 MB." : "Check /api/chat and DEEPSEEK_API_KEY in Vercel.") }; }
-          const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and DEEPSEEK_API_KEY in Vercel.") : "No reply.";
+          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 3 MB." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
+          const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") : "No reply.";
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           // Remove typing element and add proper message with copy button
@@ -1030,7 +1049,7 @@
           });
           scheduleRenderHistory();
         } catch (err) {
-          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 3 MB and set DEEPSEEK_API_KEY in Vercel. Try again." : thinkFallback(displayMsg));
+          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 3 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
           if (typingEl && typingEl.parentNode) {
             typingEl.parentNode.removeChild(typingEl);
           }

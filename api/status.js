@@ -13,6 +13,7 @@ module.exports = async function handler(req, res) {
   const deepseek = !!process.env.DEEPSEEK_API_KEY;
   const openai = !!process.env.OPENAI_API_KEY;
   const llm = deepseek ? "deepseek" : openai ? "openai" : null;
+  const pixazo = !!process.env.PIXAZO_API_KEY;
 
   res.status(200).json({
     wikipedia: true,
@@ -23,5 +24,6 @@ module.exports = async function handler(req, res) {
     deepseek,
     openai,
     llm,
+    pixazo,
   });
 };
