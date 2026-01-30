@@ -73,8 +73,9 @@
       .history-btn svg { width: 18px; height: 18px; }
       .header .logo { display: none; }
       .header::after { display: none; }
-      .sidebar-header { display: none; }
-      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; max-width: 70vw; padding-left: env(safe-area-inset-left, 0); padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem); transform: translateX(-100%); background: var(--surface); }
+      .sidebar-header { padding-top: calc(env(safe-area-inset-top, 0px) + 1rem); padding-bottom: 1rem; border-bottom: 1px solid var(--border); position: relative; }
+      .sidebar-header::after { content: ""; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #38bdf8, #6366f1, #ec4899); border-radius: 0 0 999px 999px; box-shadow: 0 0 12px rgba(129, 140, 248, 0.5); }
+      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; max-width: 70vw; padding-left: env(safe-area-inset-left, 0); padding-top: 0; transform: translateX(-100%); background: var(--surface); }
       .sidebar.open { transform: translateX(0); }
       .app { padding: calc(1.6rem + env(safe-area-inset-top, 0px)) 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px)) 0.75rem; padding-left: 52px; padding-top: calc(1.6rem + env(safe-area-inset-top, 0px)); }
       .header { margin-bottom: 0.5rem; padding-bottom: 0.5rem; padding-top: 0; position: relative; }
