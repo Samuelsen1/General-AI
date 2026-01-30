@@ -155,9 +155,10 @@
     .attach-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
     .attach-btn svg { width: 20px; height: 20px; }
     .create-gen-wrap { position: relative; flex-shrink: 0; }
-    .create-gen-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: linear-gradient(135deg, var(--accent-soft-2) 0%, rgba(99, 102, 241, 0.08) 100%); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent); cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s; touch-action: manipulation; }
-    .create-gen-btn:hover { color: var(--accent-hover); border-color: var(--accent); background: var(--accent-soft-2); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); }
-    .create-gen-btn svg { width: 22px; height: 22px; }
+    .create-gen-btn { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; min-width: 56px; min-height: 56px; background: linear-gradient(135deg, #38bdf8 0%, #6366f1 50%, #ec4899 100%); border: none; border-radius: var(--radius-sm); color: #fff; cursor: pointer; transition: filter 0.2s, box-shadow 0.2s, transform 0.1s; touch-action: manipulation; box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35), 0 0 0 1px rgba(255,255,255,0.2) inset; }
+    .create-gen-btn:hover { filter: brightness(1.08); box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(255,255,255,0.25) inset; transform: scale(1.02); }
+    .create-gen-btn:active { transform: scale(0.98); }
+    .create-gen-btn svg { width: 34px; height: 34px; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)); }
     .create-gen-dropdown { position: absolute; bottom: 100%; left: 0; margin-bottom: 0.35rem; min-width: 200px; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; display: none; }
     .create-gen-dropdown.open { display: block; }
     .create-gen-dropdown .create-opt { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.65rem; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text-soft); font: inherit; font-size: 0.85rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-align: left; }
