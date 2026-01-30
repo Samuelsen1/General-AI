@@ -151,9 +151,21 @@
     .form button:hover { background: var(--accent-hover); }
     .form button:active { transform: scale(0.98); }
     .form button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .attach-btn, .form .action-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-dim); cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s; flex-shrink: 0; touch-action: manipulation; }
-    .attach-btn:hover, .form .action-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
-    .attach-btn svg, .form .action-btn svg { width: 20px; height: 20px; }
+    .attach-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-dim); cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s; flex-shrink: 0; touch-action: manipulation; }
+    .attach-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
+    .attach-btn svg { width: 20px; height: 20px; }
+    .create-gen-wrap { position: relative; flex-shrink: 0; }
+    .create-gen-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: linear-gradient(135deg, var(--accent-soft-2) 0%, rgba(99, 102, 241, 0.08) 100%); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent); cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s; touch-action: manipulation; }
+    .create-gen-btn:hover { color: var(--accent-hover); border-color: var(--accent); background: var(--accent-soft-2); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); }
+    .create-gen-btn svg { width: 22px; height: 22px; }
+    .create-gen-dropdown { position: absolute; bottom: 100%; left: 0; margin-bottom: 0.35rem; min-width: 200px; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; display: none; }
+    .create-gen-dropdown.open { display: block; }
+    .create-gen-dropdown .create-opt { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.65rem; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--text-soft); font: inherit; font-size: 0.85rem; cursor: pointer; transition: background 0.15s, color 0.15s; text-align: left; }
+    .create-gen-dropdown .create-opt:hover { background: var(--accent-soft-2); color: var(--accent); }
+    .create-gen-dropdown .create-opt svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .create-gen-dropdown .create-opt.disabled { opacity: 0.7; cursor: not-allowed; }
+    .create-gen-dropdown .create-opt.disabled:hover { background: transparent; color: var(--text-dim); }
+    .create-gen-dropdown .create-footer { margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--text-dim); }
     .file-chosen { margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-dim); }
     .file-chosen span { color: var(--accent); font-weight: 500; }
     .hint { margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); }
@@ -210,8 +222,22 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </label>
           <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
-          <button type="button" class="action-btn" id="btn-image" aria-label="Generate image" title="Generate image from text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
-          <button type="button" class="action-btn" id="btn-video" aria-label="Generate video" title="Generate video from text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></button>
+          <div class="create-gen-wrap">
+            <button type="button" class="create-gen-btn" id="create-gen-btn" aria-label="Create image or video" title="Create image or video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2L11 7l5.5 1.5L11 10l-1.5 5.5L8 10 2.5 8.5 8 7 9.5 2z"/><path d="M15 14l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"/></svg>
+            </button>
+            <div class="create-gen-dropdown" id="create-gen-dropdown" role="menu" aria-hidden="true">
+              <button type="button" class="create-opt disabled" id="create-opt-image" data-mode="image" role="menuitem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span data-i18n="createImage">Generate image</span>
+              </button>
+              <button type="button" class="create-opt disabled" id="create-opt-video" data-mode="video" role="menuitem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                <span data-i18n="createVideo">Generate video</span>
+              </button>
+              <div class="create-footer" data-i18n="createRequiresKey">Requires PIXAZO_API_KEY in Vercel to enable.</div>
+            </div>
+          </div>
           <input type="text" id="input" placeholder="Ask anything…" data-i18n-placeholder="askAnything" autocomplete="off" enterkeyhint="send" />
           <button type="submit" id="send" aria-label="Send" data-i18n="send">Send</button>
         </form>
@@ -230,6 +256,10 @@
           askAnything: "Ask anything…",
           send: "Send",
           attachFile: "Attach image or PDF",
+          createImage: "Generate image",
+          createVideo: "Generate video",
+          createRequiresKey: "Requires PIXAZO_API_KEY in Vercel to enable.",
+          createDisabled: "Add PIXAZO_API_KEY in Vercel to enable image and video generation.",
           greeting: "Hello there! I'm General, and I hope you're Good.😉",
           you: "You",
           general: "General",
@@ -242,6 +272,10 @@
           askAnything: "Fragen Sie alles…",
           send: "Senden",
           attachFile: "Bild oder PDF anhängen",
+          createImage: "Bild erzeugen",
+          createVideo: "Video erzeugen",
+          createRequiresKey: "PIXAZO_API_KEY in Vercel erforderlich.",
+          createDisabled: "PIXAZO_API_KEY in Vercel setzen, um Bild- und Videoerstellung zu aktivieren.",
           greeting: "Hallo! Wie kann ich Ihnen heute helfen? 😊",
           you: "Sie",
           general: "General",
@@ -352,18 +386,52 @@
       let lastAiMessageEl = null;
       let chosenFile = null;
 
-      const btnImage = document.getElementById("btn-image");
-      const btnVideo = document.getElementById("btn-video");
-      if (btnImage && input) {
-        btnImage.addEventListener("click", function () {
-          input.value = "image: ";
-          input.focus();
+      var createGenBtn = document.getElementById("create-gen-btn");
+      var createGenDropdown = document.getElementById("create-gen-dropdown");
+      var createOptImage = document.getElementById("create-opt-image");
+      var createOptVideo = document.getElementById("create-opt-video");
+      var createGenWrap = document.querySelector(".create-gen-wrap");
+
+      function closeCreateDropdown() {
+        if (createGenDropdown) {
+          createGenDropdown.classList.remove("open");
+          createGenDropdown.setAttribute("aria-hidden", "true");
+        }
+      }
+
+      if (createGenBtn && createGenDropdown) {
+        createGenBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var isOpen = createGenDropdown.classList.toggle("open");
+          createGenDropdown.setAttribute("aria-hidden", isOpen ? "false" : "true");
         });
       }
-      if (btnVideo && input) {
-        btnVideo.addEventListener("click", function () {
-          input.value = "video: ";
-          input.focus();
+      document.addEventListener("click", function () { closeCreateDropdown(); });
+      if (createGenWrap) createGenWrap.addEventListener("click", function (e) { e.stopPropagation(); });
+
+      function showCreateDisabledMessage() {
+        var msg = t("createDisabled");
+        if (typeof addMessage === "function") {
+          addMessage("ai", msg);
+        } else {
+          alert(msg);
+        }
+      }
+
+      if (createOptImage) {
+        createOptImage.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeCreateDropdown();
+          showCreateDisabledMessage();
+        });
+      }
+      if (createOptVideo) {
+        createOptVideo.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeCreateDropdown();
+          showCreateDisabledMessage();
         });
       }
 
