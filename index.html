@@ -180,6 +180,45 @@
     .typing .label::after { content: " …"; animation: dots 1s steps(4, end) infinite; }
     @keyframes dots { 0%, 20% { content: " …"; } 40% { content: " ."; } 60% { content: " .."; } 80%, 100% { content: " …"; } }
 
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark; }
+      :root {
+        --bg: #0f172a;
+        --bg-gradient: none;
+        --surface: #1e293b;
+        --border: #334155;
+        --border-soft: #475569;
+        --text: #f1f5f9;
+        --text-soft: #cbd5e1;
+        --text-dim: #94a3b8;
+        --accent: #60a5fa;
+        --accent-hover: #93c5fd;
+        --accent-soft: rgba(96, 165, 250, 0.2);
+        --accent-soft-2: rgba(96, 165, 250, 0.1);
+        --user-bg: #1e3a5f;
+        --user-border: #2563eb;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 20px 55px rgba(0, 0, 0, 0.4);
+      }
+      .header { border-bottom-color: rgba(148, 163, 184, 0.25); }
+      .message.user .message-body { background: var(--user-bg); border-color: var(--user-border); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); }
+      .message pre { background: var(--surface); border-color: var(--border); }
+      .message pre code { color: var(--text-soft); }
+      .ai-snippet { background: var(--surface); border-color: var(--border); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); }
+      .attachment-badge { background: rgba(30, 41, 59, 0.95); border-color: var(--border); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
+      .attachment-badge .attachment-name { color: var(--text); }
+      .form-wrap::before { background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.2), transparent); }
+      .form { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-color: var(--border); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+      .form:hover { border-color: var(--border-soft); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35); }
+      .form:focus-within { border-color: var(--accent); box-shadow: 0 8px 36px rgba(96, 165, 250, 0.2); }
+      .form #input { background: rgba(15, 23, 42, 0.8); border-color: var(--border); }
+      .form #input:focus { background: var(--surface); }
+      .attach-btn { background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%); border-color: var(--border); }
+      .chat::-webkit-scrollbar-thumb { background: rgba(96, 165, 250, 0.4); }
+      .sidebar { box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4); }
+      .sidebar-overlay.visible { background: rgba(0, 0, 0, 0.5); }
+    }
+
     /* Widen and shift chat area to the right on larger screens (away from history rail) */
     @media (min-width: 960px) {
       .app {
