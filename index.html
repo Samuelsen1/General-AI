@@ -753,7 +753,7 @@
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ prompt, size: "1024x1024", n: 1 }),
-              signal: AbortSignal.timeout(60000)
+              signal: AbortSignal.timeout(90000)
             });
             let imgData;
             try { imgData = await imgRes.json(); } catch (_) { imgData = { error: "Image request failed." }; }
@@ -775,6 +775,35 @@
             requestAnimationFrame(function () {
               typingEl.scrollIntoView({ behavior: "auto", block: "end" });
             });
+            scheduleRenderHistory();
+            return;
+          }
+
+          // Video generation (Pixazo): "video: prompt"
+          if (!file && raw && raw.toLowerCase().startsWith("video:")) {
+            const prompt = raw.slice(raw.indexOf(":") + 1).trim() || (currentLang === 'de'
+              ? "Eine kurze Szene mit sanfter Bewegung."
+              : "A short scene with gentle motion.");
+            const vidRes = await fetch("/api/pixazo-video", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ prompt, duration: 6, resolution: "1080p" }),
+              signal: AbortSignal.timeout(300000)
+            });
+            let vidData;
+            try { vidData = await vidRes.json(); } catch (_) { vidData = { error: "Video request failed." }; }
+            const vidReply = vidData && vidData.success && vidData.videoUrl
+              ? ((currentLang === 'de' ? "Video erzeugt:" : "Video generated:") + "\\n\\n" + (vidData.videoUrl.startsWith("http") ? "[Watch video](" + vidData.videoUrl + ")" : "Video URL: " + vidData.videoUrl))
+              : (vidData && vidData.error) ? vidData.error
+              : (currentLang === 'de' ? "Es konnte kein Video erzeugt werden." : "No video could be generated.");
+            history.push({ role: "user", content: raw });
+            history.push({ role: "assistant", content: vidReply });
+            if (typingEl && typingEl.parentNode) {
+              typingEl.parentNode.removeChild(typingEl);
+            }
+            addMessage("ai", vidReply);
+            try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+            requestAnimationFrame(function () { typingEl.scrollIntoView({ behavior: "auto", block: "end" }); });
             scheduleRenderHistory();
             return;
           }

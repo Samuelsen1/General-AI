@@ -47,4 +47,16 @@ Used when the query contains: *news*, *latest*, *headlines*, *current*, *recent*
 
 ---
 
+## Image & video (Pixazo)
+
+| Variable | Service | Where to get it |
+|----------|---------|------------------|
+| `PIXAZO_API_KEY` | Pixazo | [api-console.pixazo.ai/api_keys](https://api-console.pixazo.ai/api_keys) → Subscription key |
+| `PIXAZO_SECRET_KEY` | Pixazo | Optional; some models use X-Secret-Key (same console). |
+
+- **Image:** When `PIXAZO_API_KEY` is set, `/api/image-generate` uses Pixazo (Flux Schnell Turbo). Otherwise it uses local Stable Diffusion (`SD_API_URL`).
+- **Video:** Type `video: your prompt` in chat to generate a short video via Pixazo LTX-2. Requires `PIXAZO_API_KEY`.
+
+---
+
 All keys are optional. General always uses Wikipedia, weather, and dictionary when the query fits.

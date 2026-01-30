@@ -1,6 +1,7 @@
-// Local image generation using a Stable Diffusion–compatible server (e.g. AUTOMATIC1111)
-// Configure the URL in SD_API_URL, default: http://127.0.0.1:7860
+// Image generation: Pixazo (if PIXAZO_API_KEY set) or local Stable Diffusion (SD_API_URL)
 const SD_API_URL = process.env.SD_API_URL || "http://127.0.0.1:7860";
+
+const pixazoImageHandler = process.env.PIXAZO_API_KEY ? require("./pixazo-image") : null;
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -13,6 +14,11 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Prefer Pixazo when API key is set
+  if (pixazoImageHandler) {
+    return pixazoImageHandler(req, res);
   }
 
   try {
