@@ -66,7 +66,7 @@
     .history-btn:hover { background: var(--accent-soft-2); color: var(--accent); }
     .history-btn svg { width: 22px; height: 22px; }
     @media (max-width: 767px) {
-      .history-rail { width: 44px; padding-top: calc(0.75rem + env(safe-area-inset-top, 0px) + 8px); }
+      .history-rail { position: fixed; top: calc(0.75rem + env(safe-area-inset-top, 0px)); left: 0.75rem; width: 48px; height: 48px; padding: 0; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); z-index: 70; display: flex; align-items: center; justify-content: center; }
       .sidebar { left: 44px; max-width: 85vw; padding-left: env(safe-area-inset-left, 0); padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
       .app { padding: calc(1rem + env(safe-area-inset-top, 0px) + 8px) 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px) + 60px) 1rem; }
       .header { margin-bottom: 1rem; padding-bottom: 0.75rem; padding-top: 0; }
@@ -155,7 +155,7 @@
     .attach-create-container { display: flex; align-items: center; gap: 0; background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-sm); flex-shrink: 0; overflow: hidden; }
     .attach-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: transparent; border: none; border-radius: 0; color: var(--text-dim); cursor: pointer; transition: color 0.2s, background 0.2s; flex-shrink: 0; touch-action: manipulation; }
     .attach-btn:hover { color: var(--accent); background: var(--accent-soft-2); }
-    .attach-btn svg { width: 20px; height: 20px; }
+    .attach-btn svg { width: 26px; height: 26px; }
     .create-gen-wrap { position: relative; flex-shrink: 0; }
     .create-gen-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: #ffffff; border: none; border-left: 1px solid var(--border); border-radius: 0; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; touch-action: manipulation; }
     .create-gen-btn:hover { background: var(--accent-soft-2); box-shadow: none; }
@@ -465,6 +465,22 @@
         }
       }
 
+      function showCreateDisabledMessage() {
+        var msg = t("createDisabled");
+        if (typeof addMessage === "function") {
+          addMessage("ai", msg);
+        } else {
+          alert(msg);
+        }
+      }
+
+      function triggerImagePrompt() {
+        if (input) { input.value = "image: "; input.focus(); }
+      }
+      function triggerVideoPrompt() {
+        if (input) { input.value = "video: "; input.focus(); }
+      }
+
       if (createGenBtn && createGenDropdown) {
         createGenBtn.addEventListener("click", function (e) {
           e.stopPropagation();
@@ -510,30 +526,6 @@
           if (pixazoEnabled) triggerVideoPrompt(); else showCreateDisabledMessage();
         });
       }
-      (function initStatus() {
-        fetch("/api/status", { signal: AbortSignal.timeout(5000) }).then(function (r) { return r.json(); }).then(function (data) {
-          if (data && data.pixazo) {
-            pixazoEnabled = true;
-            [createOptImage, createOptVideo, mobileOptImage, mobileOptVideo].forEach(function (el) { if (el) el.classList.remove("disabled"); });
-          }
-        }).catch(function () {});
-      })();
-
-      function showCreateDisabledMessage() {
-        var msg = t("createDisabled");
-        if (typeof addMessage === "function") {
-          addMessage("ai", msg);
-        } else {
-          alert(msg);
-        }
-      }
-
-      function triggerImagePrompt() {
-        if (input) { input.value = "image: "; input.focus(); }
-      }
-      function triggerVideoPrompt() {
-        if (input) { input.value = "video: "; input.focus(); }
-      }
       if (createOptImage) {
         createOptImage.addEventListener("click", function (e) {
           e.preventDefault();
@@ -550,6 +542,15 @@
           if (pixazoEnabled) triggerVideoPrompt(); else showCreateDisabledMessage();
         });
       }
+
+      (function initStatus() {
+        fetch("/api/status", { signal: AbortSignal.timeout(5000) }).then(function (r) { return r.json(); }).then(function (data) {
+          if (data && data.pixazo) {
+            pixazoEnabled = true;
+            [createOptImage, createOptVideo, mobileOptImage, mobileOptVideo].forEach(function (el) { if (el) el.classList.remove("disabled"); });
+          }
+        }).catch(function () {});
+      })();
 
       function closeSidebar() {
         if (sidebar) sidebar.classList.remove("open");
