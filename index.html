@@ -153,9 +153,9 @@
     .ai-snippet-copy.copied { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
     .attachment-badge-wrap { margin-top: 0.35rem; max-width: 88%; }
     .message.user .attachment-badge-wrap { margin-left: auto; }
-    .attachment-badge { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0.65rem; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-soft); box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
-    .attachment-badge svg { flex-shrink: 0; color: #dc2626; }
-    .attachment-badge .attachment-name { font-weight: 500; color: var(--text); }
+    .attachment-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.5rem; max-width: 200px; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-soft); box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
+    .attachment-badge svg { flex-shrink: 0; width: 18px; height: 18px; min-width: 18px; min-height: 18px; color: #dc2626; }
+    .attachment-badge .attachment-name { font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .form-wrap { flex-shrink: 0; margin-top: auto; padding-top: 1.75rem; padding-bottom: 1rem; position: relative; z-index: 10; }
     .form-wrap::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.15), transparent); opacity: 0.8; }
     .form { display: flex; gap: 0.65rem; align-items: flex-end; padding: 0.75rem; background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%); border: 1px solid rgba(191, 219, 254, 0.8); border-radius: 18px; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.06), 0 2px 12px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255,255,255,0.9); transition: all 0.25s ease; }
@@ -393,7 +393,7 @@
       }
 
       const COPY_ICON_SVG = '<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true" focusable="false"><rect x="5" y="3" width="9" height="12" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.4"></rect><rect x="8" y="6" width="9" height="12" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.4"></rect></svg>';
-      const PDF_ICON_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h2"/><path d="M9 17h2"/><path d="M15 13h2"/><path d="M15 17h2"/></svg>';
+      const PDF_ICON_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h2v6H8z"/><path d="M14 9h2v4h-2z"/><path d="M10 12h4"/></svg>';
 
       const chat = document.getElementById("chat");
       const form = document.getElementById("form");
@@ -783,7 +783,7 @@
         return d;
       }
 
-      const MAX_FILE = 3 * 1024 * 1024; // 3 MB (keeps JSON under Vercel 4.5MB)
+      const MAX_FILE = 5 * 1024 * 1024; // 5 MB (Vercel body limit ~4.5MB; base64 adds ~33%; very large files may fail)
       function toBase64(buf) {
         const u = new Uint8Array(buf);
         let s = "";
@@ -813,7 +813,7 @@
         const attachmentOpts = file ? { attachment: { type: (file.type || "").toLowerCase() === "application/pdf" ? "pdf" : "image", name: file.name } } : undefined;
         if (file && file.size > MAX_FILE) {
           addMessage("user", displayMsg, undefined, attachmentOpts);
-          addMessage("ai", "File too large. Use a PDF or image under 3 MB.");
+          addMessage("ai", "File too large. Use a PDF or image under 5 MB.");
           chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none";
           return;
         }
@@ -843,7 +843,7 @@
           }, 100);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
-          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 3 MB." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
+          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 5 MB." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") : "No reply.";
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
@@ -855,7 +855,7 @@
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
           scheduleRenderHistory();
         } catch (err) {
-          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 3 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
+          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 5 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
           if (typingEl && typingEl.parentNode) {
             typingEl.parentNode.removeChild(typingEl);
           }
