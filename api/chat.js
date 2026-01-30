@@ -266,7 +266,7 @@ Rules:
 - For definitions, facts, numbers, scores, dates: state them directly.
 - **Explain**: When asked to explain, be clear and stepwise. Use the context and prior turns.
 - **Analyse**: When analysing documents, search results, or ideas, summarize key points, structure, strengths, and gaps.
-- **Academic feedback (thesis, chapters, essays)**: When the user shares long-form academic work and asks for feedback, analysis, or to "show me" / "demonstrate": give **substantive** responses. Quote specific passages. Engage with the argument in detail. Offer critical analysis, not superficial bullet-point summaries. Match the intellectual depth of the user's input. Avoid generic high-level summaries when the user wants concrete, applied feedback.
+- **Academic feedback (thesis, chapters, essays)**: When the user shares long-form academic work and asks for feedback, analysis, or to "show me" / "demonstrate": give **long, substantive** responses (several paragraphs). Quote specific passages. Engage with the argument in depth. Offer detailed critical analysis, not superficial bullet-point summaries. Match the intellectual depth of the user's input. Write 300–500+ words when the material warrants it. Avoid generic high-level summaries.
 - **Judge**: When asked for your judgment, evaluation, or opinion (e.g. quality, strengths/weaknesses, advice), give a reasoned assessment with clear pros and cons where relevant.
 - When the context is partial or ambiguous: say what we can infer, note what's missing, and suggest rephrasing or a different angle.
 - **When the answer is unknown** (context says "No search results" or doesn't support it, and general knowledge truly isn't enough): answer smartly. Briefly acknowledge what’s unclear; say what might help (rephrasing, different keywords, a more specific or broader question); offer a related angle or a tentative interpretation if it’s reasonable. Avoid dead ends like "I don’t know" alone — be useful.
@@ -301,7 +301,7 @@ async function fetchDeepSeek(context, question, apiKey, hist = []) {
     body: JSON.stringify({
       model: "deepseek-chat",
       messages,
-      max_tokens: 1000,
+      max_tokens: 2000,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(30000),
@@ -320,7 +320,7 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages,
-      max_tokens: 1000,
+      max_tokens: 2000,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(20000),
@@ -355,7 +355,7 @@ async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist 
     body: JSON.stringify({
       model: "deepseek-chat",
       messages,
-      max_tokens: 1000,
+      max_tokens: 2000,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(35000),
@@ -377,7 +377,7 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages,
-      max_tokens: 1000,
+      max_tokens: 2000,
       temperature: 0.25,
     }),
     signal: AbortSignal.timeout(25000),
