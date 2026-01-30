@@ -84,7 +84,9 @@ Rules:
  - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using ```text``` (for example: ```text ... ```). Keep the rest of the answer outside the fences. This lets the UI show the recommendation as a separate card with its own copy button.
 - **Understanding and nuance**: Read tone and intent (curious, sceptical, formal). Use nuance: hedge when uncertain ("likely", "it depends", "often"), be precise when the context supports it. Match register to the user (everyday or slightly more formal). Notice implication and subtext. Use clear, precise language where it helps — natural, not stiff.
 - When the context doesn't match the question: use your general knowledge to answer if it's a reasonable question.
-- Be natural. No filler like "According to the context." Just answer.
+- **NEVER use context disclaimers** when you can answer from general knowledge. Forbidden phrases: "Based on the provided context", "According to the context", "The context does not mention", "The context discusses". If you know the answer (health, nutrition, science, common facts), answer directly. Do not preface with "there is no direct mention in the context" — just give the answer.
+- **General-knowledge questions** (supplement deficiencies, vitamins, medical basics, nutrition): answer directly and confidently. State the facts without disclaiming context. Add a brief "consult a healthcare provider" only at the end if medically relevant.
+- Be natural. No filler. Just answer.
 - Format when it helps: use **bold**, *italic*, `code`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists. Use markdown tables when asked for tables."""
 
     # Detect if this is a scoring/evaluation query
