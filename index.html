@@ -457,7 +457,7 @@
       fileInput.addEventListener("change", function() {
         chosenFile = fileInput.files?.[0] || null;
         if (chosenFile) {
-          const isPdf = (chosenFile.type || "").toLowerCase() === "application/pdf";
+          const isPdf = (chosenFile.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(chosenFile.name || "");
           if (fileChosenIcon) fileChosenIcon.innerHTML = isPdf ? '<img src="' + PDF_ICON_URL + '" alt="" class="pdf-attach-icon" width="18" height="18">' : "";
           fileNameEl.textContent = chosenFile.name;
           fileChosen.style.display = "";
@@ -829,7 +829,7 @@
         const file = chosenFile;
         if (!raw && !file) { input.focus(); return; }
         const displayMsg = raw || (file ? "[" + file.name + "]" : (lastPdfAttachment ? "[" + lastPdfAttachment.name + "]" : ""));
-        const attachmentOpts = file ? { attachment: { type: (file.type || "").toLowerCase() === "application/pdf" ? "pdf" : "image", name: file.name } } : (lastPdfAttachment ? { attachment: { type: "pdf", name: lastPdfAttachment.name } } : undefined);
+        const attachmentOpts = file ? { attachment: { type: ((file.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(file.name || "")) ? "pdf" : "image", name: file.name } } : (lastPdfAttachment ? { attachment: { type: "pdf", name: lastPdfAttachment.name } } : undefined);
         if (file && file.size > MAX_FILE) {
           addMessage("user", displayMsg, undefined, attachmentOpts);
           addMessage("ai", "File too large. Use a PDF under 3 MB so it fits within the server limit.");
@@ -846,7 +846,7 @@
           const body = { message: raw || (file ? (currentLang === 'de' ? "Was ist in dieser Datei?" : "What is in this file?") : "") };
           if (file) {
             const buf = await file.arrayBuffer();
-            const isPdf = (file.type || "").toLowerCase() === "application/pdf";
+            const isPdf = (file.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(file.name || "");
             if (isPdf) {
               body.pdf = toBase64(buf);
               lastPdfAttachment = { base64: body.pdf, name: file.name };
