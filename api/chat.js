@@ -281,6 +281,8 @@ Rules:
 - **Listings and groupings (MANDATORY)**: For analysis, explanations, comparisons, pros/cons, rankings, steps, or any structured data: use bullet lists (- ), numbered lists (1. 2. 3.), ## headings, and grouped blocks. Do NOT use Markdown tables. Combine structure with detailed explanations—don't just list, explain each point. Example: "compare X and Y" → grouped lists + commentary; "explain the steps" → numbered list + explanation of each step; "key points" → bullets + why each matters.
 - Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.
 - **Common-knowledge lists**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge using bullet or numbered lists and groupings.
+- **Documents and PDFs**: When Context includes "Document (PDF):" followed by text, that IS the user's uploaded PDF. You CAN read and analyze it. Never say you cannot access files—use that content. For CV vs job-description scoring: reason from the document and the user's question, give a direct score (1–100) with clear reasoning.
+- **Stay on topic**: Answer only what the user asks. Do not introduce unrelated definitions or tangents. If the user says "what?" or seems frustrated, refocus on their original request.
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
 - Do NOT output Markdown tables. Use lists and groupings instead.`;
@@ -656,7 +658,7 @@ module.exports = async function handler(req, res) {
 
   // If the user is explicitly asking for a score and we have web/news results,
   // prefer a direct answer from search instead of a vague "no context" reply.
-  if (/\bscore\b/.test(ql) && (opts.web?.length || opts.news?.length)) {
+  if (/\bscore\b/.test(ql) && (opts.web?.length || opts.news?.length) && !opts.pdfText && !pdfB64) {
     return res.status(200).json({ reply: buildFallbackReply(opts) });
   }
 
