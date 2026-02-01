@@ -698,15 +698,26 @@ module.exports = async function handler(req, res) {
   if (deepseekKey) {
     try {
       const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
-      return res.status(200).json({ reply });
+      if (reply && reply.trim()) return res.status(200).json({ reply });
     } catch (e) { console.warn("DeepSeek:", e?.message); }
   }
   if (openaiKey) {
     try {
       const reply = await fetchOpenAI(context, q, openaiKey, hist);
-      return res.status(200).json({ reply });
+      if (reply && reply.trim()) return res.status(200).json({ reply });
     } catch (e) { console.warn("OpenAI:", e?.message); }
   }
 
+  if (pdfB64 || opts.pdfText) {
+    return res.status(200).json({
+      reply: "I received your CV and job description, but couldn't analyze them (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
+    });
+  }
+  const looksLikeCvScoring = /\b(1-100|score|qualified|qualification)\b/i.test(q) && q.length > 300;
+  if (looksLikeCvScoring) {
+    return res.status(200).json({
+      reply: "To score your qualifications, attach your CV as a PDF in the same message (use the attachment button). I need both the job description (which you pasted) and your CV file to compare them.",
+    });
+  }
   return res.status(200).json({ reply: buildFallbackReply(opts) });
 }
