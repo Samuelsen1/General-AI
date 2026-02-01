@@ -802,7 +802,7 @@
         return d;
       }
 
-      const MAX_FILE = 15 * 1024 * 1024; // 15 MB (10–15 range; Vercel ~4.5MB body limit may reject; self-hosted can handle larger)
+      const MAX_FILE = 3 * 1024 * 1024; // 3 MB – Vercel body limit ~4.5MB; base64 + message must fit
       function toBase64(buf) {
         const u = new Uint8Array(buf);
         let s = "";
@@ -832,7 +832,7 @@
         const attachmentOpts = file ? { attachment: { type: (file.type || "").toLowerCase() === "application/pdf" ? "pdf" : "image", name: file.name } } : (lastPdfAttachment ? { attachment: { type: "pdf", name: lastPdfAttachment.name } } : undefined);
         if (file && file.size > MAX_FILE) {
           addMessage("user", displayMsg, undefined, attachmentOpts);
-          addMessage("ai", "File too large. Use a PDF or image under 15 MB.");
+          addMessage("ai", "File too large. Use a PDF under 3 MB so it fits within the server limit.");
           chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none";
           return;
         }
@@ -870,7 +870,7 @@
           }, 100);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
-          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "File too large. Use under 15 MB." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
+          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "Request too large. Try a smaller PDF (under 3 MB)." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
           const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") : "No reply.";
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
@@ -882,7 +882,7 @@
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
           scheduleRenderHistory();
         } catch (err) {
-          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a file under 15 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
+          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a PDF under 3 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
           if (typingEl && typingEl.parentNode) {
             typingEl.parentNode.removeChild(typingEl);
           }
