@@ -281,6 +281,8 @@ Rules:
 - **Listings and groupings (MANDATORY)**: For analysis, explanations, comparisons, pros/cons, rankings, steps, or any structured data: use bullet lists (- ), numbered lists (1. 2. 3.), ## headings, and grouped blocks. Do NOT use Markdown tables. Combine structure with detailed explanations—don't just list, explain each point. Example: "compare X and Y" → grouped lists + commentary; "explain the steps" → numbered list + explanation of each step; "key points" → bullets + why each matters.
 - Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.
 - **Common-knowledge lists**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge using bullet or numbered lists and groupings.
+- **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", that text IS the user's uploaded document (CV, resume). You CAN and MUST read and analyze it. Never say you cannot access files. For CV vs job-description scoring: compare the document to the job description, give a direct score (1–100), and list strengths and gaps. Output only your analysis—never repeat raw document text or unrelated definitions.
+- **Stay on topic**: Answer only what the user asks. Do not introduce unrelated definitions or tangents. If the user says "what?" or seems frustrated, refocus on their original request.
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
 - Do NOT output Markdown tables. Use lists and groupings instead.`;
@@ -382,7 +384,9 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
 
 function buildContext(opts) {
   const parts = [];
-  if (opts.pdfText) parts.push("Document (PDF):\n" + opts.pdfText);
+  if (opts.pdfText) {
+    parts.push("Document (PDF) – USER'S UPLOADED FILE (CV/resume). This is the extracted text – read it, reason from it, and answer:\n\n" + opts.pdfText);
+  }
   if (opts.wiki?.length) {
     parts.push(
       "Wikipedia:\n" +
@@ -645,6 +649,21 @@ module.exports = async function handler(req, res) {
 
   let context = buildContext(opts);
 
+  // When we have a PDF and user asks for scoring/qualification, pull job description from prior user messages
+  const isScoringWithPdf = opts.pdfText && /\b(score|qualified|qualification|1-100|match)\b/i.test(q);
+  if (isScoringWithPdf && Array.isArray(hist)) {
+    const jobPattern = /\b(responsibilities|requirements|we are looking for|apply|position|full-time|education)\b/i;
+    let bestJob = "";
+    for (const m of hist) {
+      if (m?.role !== "user") continue;
+      const txt = String(m.content || "").trim();
+      if (txt.length > 200 && jobPattern.test(txt) && txt.length > bestJob.length) bestJob = txt;
+    }
+    if (bestJob) {
+      context = "Job description (from user's earlier message):\n\n" + bestJob.slice(0, 8000) + "\n\n" + context;
+    }
+  }
+
   // When user says "explain more", "go on", etc. and there's no new file, use the prior reply as context so we elaborate on the document/topic from the last turn
   const lastA = hist.filter((m) => m.role === "assistant").pop();
   const isFollowUp = !pdfB64 && !imageB64 && lastA?.content && (q.length <= 40 || /explain more|go on|elaborate|and\?|^why\??\s*$|what about that|expand|tell me more|continue|more detail|clarify|how (so|come)|in what way|go deeper|expand on that/i.test(q));
@@ -656,7 +675,7 @@ module.exports = async function handler(req, res) {
 
   // If the user is explicitly asking for a score and we have web/news results,
   // prefer a direct answer from search instead of a vague "no context" reply.
-  if (/\bscore\b/.test(ql) && (opts.web?.length || opts.news?.length)) {
+  if (/\bscore\b/.test(ql) && (opts.web?.length || opts.news?.length) && !opts.pdfText && !pdfB64) {
     return res.status(200).json({ reply: buildFallbackReply(opts) });
   }
 
