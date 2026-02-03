@@ -223,11 +223,11 @@
       .sidebar-overlay.visible { background: rgba(0, 0, 0, 0.5); }
     }
 
-    /* Widen and shift chat area to the right on larger screens (away from history rail) */
+    /* Desktop: chat area centered and spreads evenly, not shifted right */
     @media (min-width: 960px) {
       .app {
-        max-width: 840px;
-        margin: 0 10% 0 auto;
+        max-width: min(900px, calc(100vw - 48px - 4rem));
+        margin: 0 auto;
       }
     }
   </style>
