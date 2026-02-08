@@ -629,9 +629,15 @@
           var u = /^https?:\/\//i.test(url) ? url.replace(/&/g, "&amp;").replace(/"/g, "&quot;") : "#";
           return "<a href=\"" + u + "\" target=\"_blank\" rel=\"noopener\">" + txt + "</a>";
         });
-        // Headings and bullet lists
-        s = s.replace(/^## (.+)$/gm, "<span class=\"msg-heading\">$1</span>");
+        // Headings: # ## ### #### (require space after hashes)
+        s = s.replace(/^####\s+(.+)$/gm, "<span class=\"msg-heading msg-h4\">$1</span>");
+        s = s.replace(/^###\s+(.+)$/gm, "<span class=\"msg-heading msg-h3\">$1</span>");
+        s = s.replace(/^##\s+(.+)$/gm, "<span class=\"msg-heading\">$1</span>");
+        s = s.replace(/^#\s+(.+)$/gm, "<span class=\"msg-heading msg-h1\">$1</span>");
+        // Bullet lists: - or * at line start, with optional space
         s = s.replace(/^\s*[-*]\s+(.+)$/gm, "<li>$1</li>");
+        // Numbered lists: 1. 2. etc.
+        s = s.replace(/^\s*\d+\.\s+(.+)$/gm, "<li>$1</li>");
         s = s.replace(/((?:<li>[\s\S]*?<\/li>\n?)+)/g, "<ul>$1</ul>");
         return s;
       }
