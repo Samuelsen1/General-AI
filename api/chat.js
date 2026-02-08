@@ -275,12 +275,13 @@ Rules:
 - **Understanding and nuance**: Read tone and intent (curious, sceptical, formal). Use nuance: hedge when uncertain ("likely", "it depends", "often"), be precise when the context supports it. Match register to the user (everyday or slightly more formal). Notice implication and subtext. Use clear, precise language where it helps — natural, not stiff.
 - When the context doesn't match the question and general knowledge is enough (for example, tables of common things, conceptual explanations), rely on general knowledge rather than saying you lack context.
 - When neither the context nor reasonable general knowledge can answer the question (for example, highly specific live data that is clearly missing), briefly say so and what would help.
-- **NEVER use context disclaimers** when you can answer from general knowledge. Forbidden phrases: "Based on the provided context", "According to the context", "I don't have anything from search", "Try rephrasing or different keywords". If the user pasted content to analyze, analyze it—do not say you lack context. If you know the answer, answer directly.
+- **NEVER use context disclaimers or excuses** when content was provided. Forbidden: "Based on the provided context", "I don't have anything from search", "Try rephrasing", "I cannot access", "I need more information". When the user pasted content or a document, ANALYZE IT—output analysis only, no excuses.
 - **General-knowledge questions** (e.g. supplement deficiencies, vitamins, medical basics, nutrition): answer directly and confidently. State the facts (iron, magnesium, B12, etc.) without disclaiming context. Add a brief "consult a healthcare provider" only at the end if medically relevant.
 - Be natural. No filler. Just answer.
 - **Formatting (MANDATORY)**: Use **bold** for emphasis and section labels. Use numbered lists (1. 2. 3.) only for steps or ordered items. Write in clear paragraphs. Do NOT use ## ### #### --- or - for bullets. Avoid markdown headings and horizontal rules—use **bold** labels instead. Use *italic* and \`code\` when helpful; [links](url) for URLs. No Markdown tables.
 - **Common-knowledge lists**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge using bullet or numbered lists and groupings.
 - **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", read it and judge based on the content. Do not assume document type. Never mention CV, resume, or job description unless the user explicitly asked about those. Never say you cannot access files. Output your analysis; never repeat raw text or introduce unrelated topics.
+- **NO EXCUSES**: When Context contains pasted content or a document, ANALYZE IT. Never say "I don't have context", "I cannot access", "try rephrasing", "I need more information", or similar. Give your analysis—no excuses.
 - **Stay on topic – BLOCK off-topic content**: Answer ONLY what the user asks, using ONLY the chat context and the user's question. Do NOT introduce topics, examples, definitions, analogies, or tangents that are unrelated to the user's question or the current conversation. If the user asks about X, do not discuss Y unless Y is directly relevant to X. Never add "general knowledge" explanations (e.g. "A computer file is...") when the user asked about something else. If the user says "what?" or seems frustrated, refocus on their original request—do not elaborate on unrelated subjects.
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
@@ -384,7 +385,7 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
 function buildContext(opts) {
   const parts = [];
   if (opts.pdfText) {
-    parts.push("Document (PDF) – USER'S UPLOADED FILE. Read it and respond based on what it actually contains. Do not assume document type—judge from the content:\n\n" + opts.pdfText);
+    parts.push("Document (PDF) – USER'S UPLOADED FILE. ANALYZE IT. Do not assume document type—judge from the content. No excuses—output your analysis:\n\n" + opts.pdfText);
   }
   if (opts.wiki?.length) {
     parts.push(
@@ -648,12 +649,14 @@ module.exports = async function handler(req, res) {
 
   let context = buildContext(opts);
 
-  // When user pastes content (long message or prior user msg) but context is empty/search-only: inject their content so LLM analyzes it
-  const hasPastedContent = q.length > 300 || hist.some((m) => m?.role === "user" && String(m.content || "").length > 200);
-  const contextIsSearchOnly = !opts.pdfText && (!opts.wiki?.length && !opts.web?.length && !opts.weather && !opts.definition && !opts.news?.length);
-  if (hasPastedContent && contextIsSearchOnly) {
-    const pasted = q.length > 300 ? q : hist.filter((m) => m?.role === "user").map((m) => m.content || "").join("\n\n");
-    context = "User has pasted the following content. Read and analyze it. Do NOT say you lack context or search—analyze what they provided:\n\n" + (pasted || q).slice(0, 12000) + "\n\n" + context;
+  // When user pastes content: always inject so LLM analyzes it (no excuses)
+  const hasPastedContent = q.length > 200 || hist.some((m) => m?.role === "user" && String(m.content || "").length > 200);
+  if (hasPastedContent && !opts.pdfText) {
+    const pasted = q.length > 200 ? q : hist.filter((m) => m?.role === "user").map((m) => m.content || "").join("\n\n");
+    const contentToAnalyze = (pasted || q).trim().slice(0, 12000);
+    if (contentToAnalyze) {
+      context = "User has pasted the following content. ANALYZE IT. Do NOT give excuses. Do NOT say you lack context, cannot access, need more info, or try rephrasing—just analyze:\n\n" + contentToAnalyze + "\n\n" + context;
+    }
   }
 
   // When we have a PDF and user asks for scoring/qualification, pull from prior user messages (LLM will judge if it's job-related)
@@ -712,6 +715,11 @@ module.exports = async function handler(req, res) {
   if (pdfB64 || opts.pdfText) {
     return res.status(200).json({
       reply: "I received your document but couldn't analyze it (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
+    });
+  }
+  if (context.includes("User has pasted the following content") || context.includes("Document (PDF)")) {
+    return res.status(200).json({
+      reply: "I received your content but couldn't analyze it (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
     });
   }
   return res.status(200).json({ reply: buildFallbackReply(opts) });
