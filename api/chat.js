@@ -682,6 +682,9 @@ module.exports = async function handler(req, res) {
   if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !openaiKey) {
     return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images." });
   }
+  if ((context.includes("User has pasted the following content") || hasPastedContent) && !deepseekKey && !openaiKey) {
+    return res.status(200).json({ reply: "To analyze pasted text, set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables)." });
+  }
 
   if (imageB64 && (deepseekKey || openaiKey)) {
     if (deepseekKey) {
@@ -719,7 +722,9 @@ module.exports = async function handler(req, res) {
   }
   if (context.includes("User has pasted the following content") || context.includes("Document (PDF)")) {
     return res.status(200).json({
-      reply: "I received your content but couldn't analyze it (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
+      reply: (deepseekKey || openaiKey)
+        ? "The AI service couldn't process your request. Please try again in a moment."
+        : "To analyze pasted text or documents, add DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables).",
     });
   }
   return res.status(200).json({ reply: buildFallbackReply(opts) });
