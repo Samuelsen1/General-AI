@@ -526,7 +526,7 @@ module.exports = async function handler(req, res) {
   const hist = (Array.isArray(body.history) ? body.history : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant"))
     .slice(-20)
-    .map((m) => ({ role: m.role, content: String(m.content || "").slice(0, 4000) }));
+    .map((m) => ({ role: m.role, content: String(m.content || "").slice(0, m.role === "user" ? 12000 : 4000) }));
   let q = (typeof message === "string" ? message.trim() : "") || "";
   if ((imageB64 || pdfB64) && !q) q = "What is in this file?";
   if (!q && !imageB64 && !pdfB64) return res.status(400).json({ error: "message or file required", reply: "Send a message or attach an image or PDF." });
