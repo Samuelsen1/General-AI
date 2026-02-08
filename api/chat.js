@@ -268,7 +268,7 @@ Rules:
 - For definitions, facts, numbers, scores, dates: state them directly.
 - **Explain**: When asked to explain, be clear and thorough. Use numbered lists for steps, bullet lists for key points, grouped lists for comparisons. Provide detailed explanations, not brief summaries.
 - **Analyse**: Provide **in-depth** analysis. Don't stop at surface-level summaries—examine implications, underlying patterns, connections, and trade-offs. Cover structure, strengths, weaknesses, gaps, and context. **Use listings and groupings**: bullet lists for key points, numbered lists for steps, ## headings for sections, grouped blocks for comparisons. Do NOT use tables. Go beyond listing points—explain *why* they matter.
-- **Academic feedback (thesis, chapters, essays)**: When the user shares long-form academic work and asks for feedback, analysis, or to "show me" / "demonstrate": give **long, substantive** responses (several paragraphs). Quote specific passages. Engage with the argument in depth. Offer detailed critical analysis, not superficial bullet-point summaries. Match the intellectual depth of the user's input. Write 300–500+ words when the material warrants it. Avoid generic high-level summaries.
+- **Academic feedback (thesis, chapters, essays)**: When the user shares long-form academic work and asks for feedback, analysis, evaluation, or to "show me" / "demonstrate": give **long, substantive** responses (several paragraphs). Quote specific passages. Engage with the argument in depth. Offer detailed critical analysis, not superficial bullet-point summaries. Match the intellectual depth of the user's input. Write 300–500+ words when the material warrants it. Avoid generic high-level summaries. **CRITICAL**: Never ask for a CV, resume, or job description when evaluating a thesis, essay, or chapter—evaluate what they pasted.
 - **Judge**: When asked for your judgment, evaluation, or opinion (e.g. quality, strengths/weaknesses, advice), give a reasoned assessment with clear pros and cons where relevant.
 - When the context is partial or ambiguous: say what we can infer, note what's missing, and suggest rephrasing or a different angle.
 - **When the answer is unknown** (context says "No search results" or doesn't support it, and general knowledge truly isn't enough): answer smartly. Briefly acknowledge what’s unclear; say what might help (rephrasing, different keywords, a more specific or broader question); offer a related angle or a tentative interpretation if it’s reasonable. Avoid dead ends like "I don’t know" alone — be useful.
@@ -281,7 +281,7 @@ Rules:
 - **Listings and groupings (MANDATORY)**: For analysis, explanations, comparisons, pros/cons, rankings, steps, or any structured data: use bullet lists (- ), numbered lists (1. 2. 3.), ## headings, and grouped blocks. Do NOT use Markdown tables. Combine structure with detailed explanations—don't just list, explain each point. Example: "compare X and Y" → grouped lists + commentary; "explain the steps" → numbered list + explanation of each step; "key points" → bullets + why each matters.
 - Format when it helps: use **bold**, *italic*, \`code\`, and [text](url) for links; ## for a short heading in longer answers; - for bullet lists.
 - **Common-knowledge lists**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge using bullet or numbered lists and groupings.
-- **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", that text IS the user's uploaded document (CV, resume). You CAN and MUST read and analyze it. Never say you cannot access files. For CV vs job-description scoring: compare the document to the job description, give a direct score (1–100), and list strengths and gaps. Output only your analysis—never repeat raw document text or unrelated definitions.
+- **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", read it and judge based on what it actually contains. Do not assume it is a CV, thesis, health info, or any particular type—respond according to the content. Never say you cannot access files. Output your analysis; never repeat raw text or introduce unrelated topics.
 - **Stay on topic – BLOCK off-topic content**: Answer ONLY what the user asks, using ONLY the chat context and the user's question. Do NOT introduce topics, examples, definitions, analogies, or tangents that are unrelated to the user's question or the current conversation. If the user asks about X, do not discuss Y unless Y is directly relevant to X. Never add "general knowledge" explanations (e.g. "A computer file is...") when the user asked about something else. If the user says "what?" or seems frustrated, refocus on their original request—do not elaborate on unrelated subjects.
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
@@ -385,7 +385,7 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
 function buildContext(opts) {
   const parts = [];
   if (opts.pdfText) {
-    parts.push("Document (PDF) – USER'S UPLOADED FILE (CV/resume). This is the extracted text – read it, reason from it, and answer:\n\n" + opts.pdfText);
+    parts.push("Document (PDF) – USER'S UPLOADED FILE. Read it and respond based on what it actually contains—do not assume it is a CV, thesis, or any particular type. Judge from the content:\n\n" + opts.pdfText);
   }
   if (opts.wiki?.length) {
     parts.push(
@@ -649,7 +649,7 @@ module.exports = async function handler(req, res) {
 
   let context = buildContext(opts);
 
-  // When we have a PDF and user asks for scoring/qualification, pull job description from prior user messages
+  // When we have a PDF and user asks for scoring/qualification, pull from prior user messages (LLM will judge if it's job-related)
   const isScoringWithPdf = opts.pdfText && /\b(score|qualified|qualification|1-100|match)\b/i.test(q);
   if (isScoringWithPdf && Array.isArray(hist)) {
     const jobPattern = /\b(responsibilities|requirements|we are looking for|apply|position|full-time|education)\b/i;
@@ -660,7 +660,7 @@ module.exports = async function handler(req, res) {
       if (txt.length > 200 && jobPattern.test(txt) && txt.length > bestJob.length) bestJob = txt;
     }
     if (bestJob) {
-      context = "Job description (from user's earlier message):\n\n" + bestJob.slice(0, 8000) + "\n\n" + context;
+      context = "Additional context from user's earlier message:\n\n" + bestJob.slice(0, 8000) + "\n\n" + context;
     }
   }
 
@@ -710,13 +710,7 @@ module.exports = async function handler(req, res) {
 
   if (pdfB64 || opts.pdfText) {
     return res.status(200).json({
-      reply: "I received your CV and job description, but couldn't analyze them (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
-    });
-  }
-  const looksLikeCvScoring = /\b(1-100|score|qualified|qualification)\b/i.test(q) && q.length > 300;
-  if (looksLikeCvScoring) {
-    return res.status(200).json({
-      reply: "To score your qualifications, attach your CV as a PDF in the same message (use the attachment button). I need both the job description (which you pasted) and your CV file to compare them.",
+      reply: "I received your document but couldn't analyze it (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
     });
   }
   return res.status(200).json({ reply: buildFallbackReply(opts) });
