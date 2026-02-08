@@ -275,7 +275,7 @@ Rules:
 - **Understanding and nuance**: Read tone and intent (curious, sceptical, formal). Use nuance: hedge when uncertain ("likely", "it depends", "often"), be precise when the context supports it. Match register to the user (everyday or slightly more formal). Notice implication and subtext. Use clear, precise language where it helps — natural, not stiff.
 - When the context doesn't match the question and general knowledge is enough (for example, tables of common things, conceptual explanations), rely on general knowledge rather than saying you lack context.
 - When neither the context nor reasonable general knowledge can answer the question (for example, highly specific live data that is clearly missing), briefly say so and what would help.
-- **NEVER use context disclaimers** when you can answer from general knowledge. Forbidden phrases: "Based on the provided context", "According to the context", "The context does not mention", "The context discusses", "In the context", "Based on the context". If you know the answer (health, nutrition, science, common facts), answer directly. Do not preface with "there is no direct mention in the context" — just give the answer.
+- **NEVER use context disclaimers** when you can answer from general knowledge. Forbidden phrases: "Based on the provided context", "According to the context", "I don't have anything from search", "Try rephrasing or different keywords". If the user pasted content to analyze, analyze it—do not say you lack context. If you know the answer, answer directly.
 - **General-knowledge questions** (e.g. supplement deficiencies, vitamins, medical basics, nutrition): answer directly and confidently. State the facts (iron, magnesium, B12, etc.) without disclaiming context. Add a brief "consult a healthcare provider" only at the end if medically relevant.
 - Be natural. No filler. Just answer.
 - **Formatting (MANDATORY)**: Use **bold** for emphasis and section labels. Use numbered lists (1. 2. 3.) only for steps or ordered items. Write in clear paragraphs. Do NOT use ## ### #### --- or - for bullets. Avoid markdown headings and horizontal rules—use **bold** labels instead. Use *italic* and \`code\` when helpful; [links](url) for URLs. No Markdown tables.
@@ -525,7 +525,7 @@ module.exports = async function handler(req, res) {
   const hist = (Array.isArray(body.history) ? body.history : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant"))
     .slice(-20)
-    .map((m) => ({ role: m.role, content: String(m.content || "").slice(0, 800) }));
+    .map((m) => ({ role: m.role, content: String(m.content || "").slice(0, 4000) }));
   let q = (typeof message === "string" ? message.trim() : "") || "";
   if ((imageB64 || pdfB64) && !q) q = "What is in this file?";
   if (!q && !imageB64 && !pdfB64) return res.status(400).json({ error: "message or file required", reply: "Send a message or attach an image or PDF." });
@@ -647,6 +647,14 @@ module.exports = async function handler(req, res) {
   }
 
   let context = buildContext(opts);
+
+  // When user pastes content (long message or prior user msg) but context is empty/search-only: inject their content so LLM analyzes it
+  const hasPastedContent = q.length > 300 || hist.some((m) => m?.role === "user" && String(m.content || "").length > 200);
+  const contextIsSearchOnly = !opts.pdfText && (!opts.wiki?.length && !opts.web?.length && !opts.weather && !opts.definition && !opts.news?.length);
+  if (hasPastedContent && contextIsSearchOnly) {
+    const pasted = q.length > 300 ? q : hist.filter((m) => m?.role === "user").map((m) => m.content || "").join("\n\n");
+    context = "User has pasted the following content. Read and analyze it. Do NOT say you lack context or search—analyze what they provided:\n\n" + (pasted || q).slice(0, 12000) + "\n\n" + context;
+  }
 
   // When we have a PDF and user asks for scoring/qualification, pull from prior user messages (LLM will judge if it's job-related)
   const isScoringWithPdf = opts.pdfText && /\b(score|qualified|qualification|1-100|match)\b/i.test(q);
