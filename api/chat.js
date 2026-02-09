@@ -282,7 +282,7 @@ Rules:
 - **Common-knowledge lists**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge using bullet or numbered lists and groupings.
 - **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", read it and judge based on the content. Do not assume document type. Never mention CV, resume, or job description unless the user explicitly asked about those. Never say you cannot access files. Output your analysis; never repeat raw text or introduce unrelated topics.
 - **NO EXCUSES**: When Context contains pasted content or a document, ANALYZE IT. Never say "I don't have context", "I cannot access", "try rephrasing", "I need more information", or similar. Give your analysis—no excuses.
-- **Stay on topic – BLOCK off-topic content**: Answer ONLY what the user asks, using ONLY the chat context and the user's question. Do NOT introduce topics, examples, definitions, analogies, or tangents that are unrelated to the user's question or the current conversation. If the user asks about X, do not discuss Y unless Y is directly relevant to X. Never add "general knowledge" explanations (e.g. "A computer file is...") when the user asked about something else. If the user says "what?" or seems frustrated, refocus on their original request—do not elaborate on unrelated subjects.
+- **CRITICAL – Answer ONLY from relevant context**: Answer ONLY using information that directly relates to the user's question and the current conversation. NEVER introduce topics, examples, or tangents that are unrelated (e.g. TV shows, movies, celebrities, random events). If search or wiki results contain irrelevant content, IGNORE it. If the user asks about X (e.g. AI development, vibe coding), do NOT discuss Y (e.g. The Pitt, episodes, unrelated media). Stay strictly on topic. Never add unrelated "general knowledge" when the user asked about something else.
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
 - Do NOT output Markdown tables. Use lists and groupings instead.`;
@@ -296,10 +296,10 @@ async function fetchDeepSeek(context, question, apiKey, hist = []) {
     body: JSON.stringify({
       model: "deepseek-chat",
       messages,
-      max_tokens: 2000,
-      temperature: 0.25,
+      max_tokens: 1500,
+      temperature: 0.1,
     }),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(25000),
   });
   if (!res.ok) { const err = await res.text(); throw new Error(`DeepSeek ${res.status}: ${err}`); }
   const data = await res.json();
@@ -315,10 +315,10 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages,
-      max_tokens: 2000,
-      temperature: 0.25,
+      max_tokens: 1500,
+      temperature: 0.1,
     }),
-    signal: AbortSignal.timeout(20000),
+    signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) { const err = await res.text(); throw new Error(`OpenAI ${res.status}: ${err}`); }
   const data = await res.json();
@@ -336,7 +336,7 @@ Answer from the image and any text context. **Explain** what you see when asked.
 **Text extraction (OCR)**: When the image contains text (documents, screenshots, handwritten notes, signs, labels, etc.), extract and transcribe ALL visible text accurately. Preserve formatting, line breaks, and structure when possible. If asked "read the text", "what does it say", "extract text", "read this image", or similar, provide the complete transcribed text.
 
 **When something is unclear or you can't answer from the image**: say so briefly; suggest what might help (a clearer crop, more context, or a different question). Offer a related observation if it’s useful — avoid dead ends.
-**Nuance**: Hedge when uncertain; be precise when you can. Match the user’s tone. Use **bold**, *italic*, \`code\`, ## for headings, and - for lists when it helps. Be concise and helpful.`;
+**CRITICAL – Stay on topic**: Answer ONLY what the user asks, using the image and chat context. NEVER introduce unrelated topics. **Nuance**: Hedge when uncertain; be precise when you can. Match the user’s tone. Use **bold**, *italic*, \`code\`, ## for headings, and - for lists when it helps. Be concise and helpful.`;
 
 async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist = []) {
   const user = [
@@ -350,10 +350,10 @@ async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist 
     body: JSON.stringify({
       model: "deepseek-chat",
       messages,
-      max_tokens: 2000,
-      temperature: 0.25,
+      max_tokens: 1500,
+      temperature: 0.1,
     }),
-    signal: AbortSignal.timeout(35000),
+    signal: AbortSignal.timeout(25000),
   });
   if (!res.ok) { const err = await res.text(); throw new Error(`DeepSeek ${res.status}: ${err}`); }
   const data = await res.json();
@@ -372,10 +372,10 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
     body: JSON.stringify({
       model: "gpt-4o-mini",
       messages,
-      max_tokens: 2000,
-      temperature: 0.25,
+      max_tokens: 1500,
+      temperature: 0.1,
     }),
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) { const err = await res.text(); throw new Error(`OpenAI ${res.status}: ${err}`); }
   const data = await res.json();
@@ -389,13 +389,13 @@ function buildContext(opts) {
   }
   if (opts.wiki?.length) {
     parts.push(
-      "Wikipedia:\n" +
+      "Wikipedia (use only if relevant to the user's question):\n" +
         opts.wiki.map((w) => `- ${w.title}: ${w.snippet}`).join("\n")
     );
   }
   if (opts.web?.length) {
     parts.push(
-      "Web results (title – snippet – URL):\n" +
+      "Web results (use only if relevant to the user's question; ignore unrelated snippets):\n" +
         opts.web
           .map((g) => `- ${g.title}: ${g.snippet}${g.link ? " – " + g.link : ""}`)
           .join("\n")
