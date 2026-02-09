@@ -712,14 +712,22 @@ module.exports = async function handler(req, res) {
     } catch (e) { console.warn("OpenAI:", e?.message); }
   }
 
+  const hadLLM = !!deepseekKey || !!openaiKey;
+
   if (pdfB64 || opts.pdfText) {
     return res.status(200).json({
-      reply: "I received your document but couldn't analyze it (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
+      reply: "I received your document but couldn't analyze it because the AI service failed. Please wait a moment and try again.",
     });
   }
   if (context.includes("User has pasted the following content") || context.includes("Document (PDF)")) {
     return res.status(200).json({
-      reply: "I received your content but couldn't analyze it (API error or missing key). Please ensure DEEPSEEK_API_KEY or OPENAI_API_KEY is set in Vercel → Settings → Environment Variables, then try again.",
+      reply: "I received your content but couldn't analyze it because the AI service failed. Please wait a moment and try again.",
+    });
+  }
+  if (hadLLM) {
+    // We had an LLM key configured but all calls failed; avoid misleading Wikipedia-style snippets.
+    return res.status(200).json({
+      reply: "The AI service (DeepSeek/OpenAI) couldn't process your request right now. Please wait a short while and try again.",
     });
   }
   return res.status(200).json({ reply: buildFallbackReply(opts) });
