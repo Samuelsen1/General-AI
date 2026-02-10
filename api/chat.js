@@ -283,6 +283,7 @@ Rules:
 - **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", read it and judge based on the content. Do not assume document type. Never mention CV, resume, or job description unless the user explicitly asked about those. Never say you cannot access files. Output your analysis; never repeat raw text or introduce unrelated topics.
 - **NO EXCUSES**: When Context contains pasted content or a document, ANALYZE IT. Never say "I don't have context", "I cannot access", "try rephrasing", "I need more information", or similar. Give your analysis—no excuses.
 - **CRITICAL – Answer ONLY from relevant context**: Answer ONLY using information that directly relates to the user's question and the current conversation. NEVER introduce topics, examples, or tangents that are unrelated (e.g. TV shows, movies, celebrities, random events). If search or wiki results contain irrelevant content, IGNORE it. If the user asks about X (e.g. AI development, vibe coding), do NOT discuss Y (e.g. The Pitt, episodes, unrelated media). Stay strictly on topic. Never add unrelated "general knowledge" when the user asked about something else.
+- **Timely, current information**: When Web or News results are provided in Context, treat them as live internet sources. Use them to answer questions about recent events, news, prices, scores, trends, or anything that requires up-to-date information. Prefer sources that appear credible (e.g. official sites, established publishers, .gov, .edu) when multiple sources are available. Synthesize across sources; cite or mention the source when useful.
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
 - Do NOT output Markdown tables. Use lists and groupings instead.`;
@@ -395,7 +396,7 @@ function buildContext(opts) {
   }
   if (opts.web?.length) {
     parts.push(
-      "Web results (use only if relevant to the user's question; ignore unrelated snippets):\n" +
+      "Web results (timely, current information from the internet—use these for up-to-date answers; prefer credible sources like .gov, .edu, established publishers; use only if relevant):\n" +
         opts.web
           .map((g) => `- ${g.title}: ${g.snippet}${g.link ? " – " + g.link : ""}`)
           .join("\n")
@@ -405,7 +406,7 @@ function buildContext(opts) {
   if (opts.definition) parts.push("Definition: " + opts.definition);
   if (opts.news?.length) {
     parts.push(
-      "News:\n" + opts.news.map((n) => `- ${n.title}: ${n.snippet}`).join("\n")
+      "News (current headlines—use for timely information; cite sources when relevant):\n" + opts.news.map((n) => `- ${n.title}: ${n.snippet}`).join("\n")
     );
   }
   return parts.join("\n\n") || "No search results.";
@@ -423,7 +424,7 @@ function buildFallbackReply(opts) {
     const first = opts.news[0];
     return `${first.title}: ${first.snippet}`;
   }
-  return "I don’t have anything on that from search. Try rephrasing or different keywords; if you’ve set up web search in Vercel, that can help too.";
+  return "I don't have anything on that from search. For timely, current information from credible internet sources, set GOOGLE_API_KEY and GOOGLE_CSE_ID, SERPER_API_KEY, BRAVE_API_KEY, TAVILY_API_KEY, or NEWS_API_KEY in Vercel Environment Variables, then try again.";
 }
 
 function extractPlace(q) {
