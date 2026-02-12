@@ -715,20 +715,29 @@ module.exports = async function handler(req, res) {
   const hadLLM = !!deepseekKey || !!openaiKey;
 
   if (pdfB64 || opts.pdfText) {
+    // For PDFs we rely on the LLM; if it failed, surface a clear retry message.
     return res.status(200).json({
-      reply: "Your request could not be processed. Try again later.",
+      reply: "Your request with the document could not be processed right now. Please try again in a moment.",
     });
   }
   if (context.includes("User has pasted the following content") || context.includes("Document (PDF)")) {
+    // When analyzing long pasted content and the LLM fails, don't try to guess from search snippets.
     return res.status(200).json({
-      reply: "Your request could not be processed. Try again later.",
+      reply: "Your request with the long text could not be processed right now. Please try again in a moment.",
     });
   }
+
+  // If we have search-based answers (weather, definitions, web/wiki/news snippets),
+  // use them as a smart fallback even when the LLM call failed, so the first reply is still useful.
+  const fallback = buildFallbackReply(opts);
+  if (fallback && fallback.trim()) {
+    return res.status(200).json({ reply: fallback });
+  }
+
   if (hadLLM) {
-    // We had an LLM key configured but all calls failed; avoid misleading Wikipedia-style snippets.
     return res.status(200).json({
-      reply: "Your request could not be processed. Try again later.",
+      reply: "Your request could not be processed right now. Please try again in a moment.",
     });
   }
-  return res.status(200).json({ reply: buildFallbackReply(opts) });
+  return res.status(200).json({ reply: fallback || "Your request could not be processed right now. Please try again in a moment." });
 }
