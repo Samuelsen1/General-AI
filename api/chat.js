@@ -436,7 +436,9 @@ function buildFallbackReply(opts) {
     const first = opts.news[0];
     return `${first.title}: ${first.snippet}`;
   }
-  return "I don’t have anything on that from search. Try rephrasing or using different keywords, or ask in a simpler way.";
+  // If nothing useful came back from search, prefer a simple generic error
+  // instead of forcing potentially unrelated snippets.
+  return "Your request could not be completed. Try again later.";
 }
 
 function extractPlace(q) {
@@ -741,10 +743,15 @@ module.exports = async function handler(req, res) {
   }
 
   // If we have search-based answers (weather, definitions, web/wiki/news snippets),
-  // use them as a smart fallback even when the LLM call failed, so the first reply is still useful.
-  const fallback = buildFallbackReply(opts);
-  if (fallback && fallback.trim()) {
-    return res.status(200).json({ reply: fallback });
+  // use them as a smart fallback only when no LLM is configured.
+  // If an LLM was configured but failed, we prefer a clear generic error
+  // over potentially unrelated wiki/web snippets.
+  let fallback = null;
+  if (!hadLLM) {
+    fallback = buildFallbackReply(opts);
+    if (fallback && fallback.trim()) {
+      return res.status(200).json({ reply: fallback });
+    }
   }
 
   if (hadLLM) {
