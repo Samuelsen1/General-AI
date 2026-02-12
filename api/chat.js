@@ -436,7 +436,7 @@ function buildFallbackReply(opts) {
     const first = opts.news[0];
     return `${first.title}: ${first.snippet}`;
   }
-  return "I don’t have anything on that from search. Try rephrasing or different keywords; if you’ve set up web search in Vercel, that can help too.";
+  return "I don’t have anything on that from search. Try rephrasing or using different keywords, or ask in a simpler way.";
 }
 
 function extractPlace(q) {
@@ -709,7 +709,7 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ reply });
       } catch (e) { console.warn("OpenAI vision:", e?.message); }
     }
-    return res.status(200).json({ reply: "Image analysis needs DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel." });
+    return res.status(200).json({ reply: "Your request with the image could not be completed. Try again later." });
   }
 
   if (deepseekKey) {
@@ -730,13 +730,13 @@ module.exports = async function handler(req, res) {
   if (pdfB64 || opts.pdfText) {
     // For PDFs we rely on the LLM; if it failed, surface a clear retry message.
     return res.status(200).json({
-      reply: "Your request with the document could not be processed right now. Please try again in a moment.",
+      reply: "Your request with the document could not be completed. Try again later.",
     });
   }
   if (context.includes("User has pasted the following content") || context.includes("Document (PDF)")) {
     // When analyzing long pasted content and the LLM fails, don't try to guess from search snippets.
     return res.status(200).json({
-      reply: "Your request with the long text could not be processed right now. Please try again in a moment.",
+      reply: "Your request with the long text could not be completed. Try again later.",
     });
   }
 
@@ -749,8 +749,8 @@ module.exports = async function handler(req, res) {
 
   if (hadLLM) {
     return res.status(200).json({
-      reply: "Your request could not be processed right now. Please try again in a moment.",
+      reply: "Your request could not be completed. Try again later.",
     });
   }
-  return res.status(200).json({ reply: fallback || "Your request could not be processed right now. Please try again in a moment." });
+  return res.status(200).json({ reply: fallback || "Your request could not be completed. Try again later." });
 }

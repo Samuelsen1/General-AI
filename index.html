@@ -382,8 +382,8 @@
       const KNOWLEDGE = [
         { patterns: ["hi","hello","hey"], responses: ["Hi! How can I help you today? 😊"] },
         { patterns: ["who are you","what are you"], responses: ["I'm General, your AI assistant. What would you like to know?"] },
-        { patterns: ["help"], responses: ["Ask a question. Set API keys in Vercel for search and AI."] },
-        { patterns: [], responses: ["API not configured. Try 'help' or set keys in Vercel."] }
+        { patterns: ["help"], responses: ["Ask me a question about anything you care about—work, learning, or life."] },
+        { patterns: [], responses: ["I couldn't complete that request. Try asking in a simpler way or try again in a moment."] }
       ];
       function normalize(t) { return t.replace(/[^\w\s]/g, "").toLowerCase().trim(); }
       function tokenize(t) { return normalize(t).split(/\s+/).filter(Boolean); }
@@ -395,7 +395,7 @@
         let best = 0, entry = null;
         for (const e of KNOWLEDGE) { if (!e.patterns.length) continue; for (const p of e.patterns) { const s = scoreMatch(userSet, tokenize(p)); if (s > best) { best = s; entry = e; } } }
         if (entry && best >= 0.3) return entry.responses[0];
-        return (KNOWLEDGE.find(e => !e.patterns.length) || {}).responses?.[0] || "No API. Ask 'help'.";
+        return (KNOWLEDGE.find(e => !e.patterns.length) || {}).responses?.[0] || "Your request could not be completed. Try again later.";
       }
 
       const COPY_ICON_SVG = '<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true" focusable="false"><rect x="5" y="3" width="9" height="12" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.4"></rect><rect x="8" y="6" width="9" height="12" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.4"></rect></svg>';
@@ -897,8 +897,24 @@
           }, 100);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
           let data;
-          try { data = await res.json(); } catch (_) { data = { reply: "Request failed (" + (res ? res.status : "?") + "). " + (res && res.status === 413 ? "Request too large. Try a smaller PDF (under 3 MB)." : "Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") }; }
-          const reply = (data && data.reply) ? data.reply : (data && data.error) ? data.error : (!res || !res.ok) ? ("Request failed (" + (res ? res.status : "?") + "). Check /api/chat and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel.") : "No reply.";
+          try {
+            data = await res.json();
+          } catch (_) {
+            data = {
+              reply:
+                res && res.status === 413
+                  ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)."
+                  : "Your request could not be completed. Try again later.",
+            };
+          }
+          const reply =
+            (data && data.reply) ? data.reply
+            : (data && data.error) ? data.error
+            : (!res || !res.ok)
+              ? (res && res.status === 413
+                  ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)."
+                  : "Your request could not be completed. Try again later.")
+              : "No reply.";
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           // Remove typing element and add proper message with copy button
@@ -909,7 +925,12 @@
           try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
           scheduleRenderHistory();
         } catch (err) {
-          var errMsg = (err && err.name === "AbortError") ? "Request timed out. Check your connection and try again." : (file ? "Upload failed. Use a PDF under 3 MB and set LLM keys (DEEPSEEK_API_KEY or OPENAI_API_KEY) in Vercel. Try again." : thinkFallback(displayMsg));
+          var errMsg =
+            (err && err.name === "AbortError")
+              ? "Your request took too long and could not be completed. Please check your connection and try again."
+              : (file
+                  ? "Your request with the file could not be completed. Try again later, or try a smaller PDF (under 3 MB)."
+                  : thinkFallback(displayMsg));
           if (typingEl && typingEl.parentNode) {
             typingEl.parentNode.removeChild(typingEl);
           }
