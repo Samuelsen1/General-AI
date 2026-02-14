@@ -66,7 +66,9 @@
     .history-btn:hover { background: var(--accent-soft-2); color: var(--accent); }
     .history-btn svg { width: 22px; height: 22px; }
     @media (max-width: 767px) {
-      html, body { font-size: 14px; }
+      html, body { font-size: 14px; overflow-x: hidden; min-height: 100vh; min-height: -webkit-fill-available; }
+      .app-wrap { min-height: 100vh; min-height: -webkit-fill-available; }
+      .app { min-height: 0; height: 100%; padding-right: max(0.4rem, env(safe-area-inset-right)); }
       .history-rail { position: fixed; top: calc(1.5rem + env(safe-area-inset-top, 0px)); left: 0.35rem; width: auto; height: auto; padding: 0; background: transparent; border: none; box-shadow: none; z-index: 70; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
       .app-wrap.sidebar-open .history-rail { display: none; }
       .history-btn { width: auto; height: auto; min-height: 32px; padding: 0.3rem 0.6rem; background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-soft); font-size: 0.8rem; }
