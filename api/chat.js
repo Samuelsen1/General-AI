@@ -338,6 +338,27 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
+/** AIMLAPI: OpenAI-compatible endpoint (https://api.aimlapi.com). Env: AIMLAPI. */
+async function fetchAIMLAPI(context, question, apiKey, hist = []) {
+  const user = `Context:\n${context}\n\nQ: ${question}`;
+  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
+  const model = process.env.AIMLAPI_MODEL || "gpt-4o-mini";
+  const res = await fetch("https://api.aimlapi.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      messages,
+      max_tokens: 1500,
+      temperature: 0.1,
+    }),
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error(`AIMLAPI ${res.status}: ${err}`); }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
+}
+
 const LLM_VISION = CREATOR + `
 
 You are General. The user shared an image. Use the chat history to recall what they shared or you said earlier. Resolve "that", "it", "explain", "before", etc. from prior turns.
@@ -586,11 +607,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ reply: tableResult });
   }
 
-  const deepseekDisabled = /^(1|true|yes)$/i.test((process.env.DISABLE_DEEPSEEK || "").trim());
-  const deepseekKey = !deepseekDisabled && process.env.DEEPSEEK_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.AIMLAPI;
-  const usedAimlapi = !!process.env.AIMLAPI && !process.env.OPENAI_API_KEY && !process.env.OPENAI_KEY;
-
   // Check for link visiting requests
   const url = extractUrl(q);
   if (url) {
@@ -602,13 +618,13 @@ module.exports = async function handler(req, res) {
           if (deepseekKey) {
             const reply = await fetchDeepSeek(linkContext, q, deepseekKey, hist);
             if (reply && reply.trim()) {
-              return res.status(200).json({ reply, provider: "deepseek" });
+              return res.status(200).json({ reply });
             }
           }
           if (openaiKey) {
             const reply = await fetchOpenAI(linkContext, q, openaiKey, hist);
             if (reply && reply.trim()) {
-              return res.status(200).json({ reply, provider: usedAimlapi ? "aimlapi" : "openai" });
+              return res.status(200).json({ reply });
             }
           }
         } catch (e) {
@@ -628,6 +644,9 @@ module.exports = async function handler(req, res) {
   }
 
   const ql = q.toLowerCase();
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const aimlKey = process.env.AIMLAPI;
   const googleKey = process.env.GOOGLE_API_KEY;
   const cseId = process.env.GOOGLE_CSE_ID;
   const serperKey = process.env.SERPER_API_KEY;
@@ -698,20 +717,20 @@ module.exports = async function handler(req, res) {
   if (isFollowUp) context = "Previous reply (the user wants you to elaborate on or explain more about this):\n\n" + (lastA.content || "").slice(0, 4000);
 
   if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !openaiKey) {
-    return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images." });
+    return res.status(200).json({ reply: "Your request with the document could not be completed. Try again later." });
   }
 
   if (imageB64 && (deepseekKey || openaiKey)) {
     if (deepseekKey) {
       try {
         const reply = await fetchDeepSeekWithImage(context, q, imageB64, deepseekKey, hist);
-        return res.status(200).json({ reply, provider: "deepseek" });
+        return res.status(200).json({ reply });
       } catch (e) { console.warn("DeepSeek vision:", e?.message); }
     }
     if (openaiKey) {
       try {
         const reply = await fetchOpenAIVision(context, q, imageB64, openaiKey, hist);
-        return res.status(200).json({ reply, provider: usedAimlapi ? "aimlapi" : "openai" });
+        return res.status(200).json({ reply });
       } catch (e) { console.warn("OpenAI vision:", e?.message); }
     }
     return res.status(200).json({ reply: "Your request with the image could not be completed. Try again later." });
@@ -720,17 +739,23 @@ module.exports = async function handler(req, res) {
   if (deepseekKey) {
     try {
       const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply, provider: "deepseek" });
+      if (reply && reply.trim()) return res.status(200).json({ reply });
     } catch (e) { console.warn("DeepSeek:", e?.message); }
   }
   if (openaiKey) {
     try {
       const reply = await fetchOpenAI(context, q, openaiKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply, provider: usedAimlapi ? "aimlapi" : "openai" });
+      if (reply && reply.trim()) return res.status(200).json({ reply });
     } catch (e) { console.warn("OpenAI:", e?.message); }
   }
+  if (aimlKey) {
+    try {
+      const reply = await fetchAIMLAPI(context, q, aimlKey, hist);
+      if (reply && reply.trim()) return res.status(200).json({ reply });
+    } catch (e) { console.warn("AIMLAPI:", e?.message); }
+  }
 
-  const hadLLM = !!deepseekKey || !!openaiKey;
+  const hadLLM = !!deepseekKey || !!openaiKey || !!aimlKey;
 
   if (pdfB64 || opts.pdfText) {
     // For PDFs we rely on the LLM; if it failed, surface a clear retry message.
