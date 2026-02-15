@@ -11,8 +11,9 @@ module.exports = async function handler(req, res) {
   const web = google ? "google" : serper ? "serper" : brave ? "brave" : tavily ? "tavily" : null;
 
   const deepseek = !!process.env.DEEPSEEK_API_KEY;
-  const openai = !!process.env.OPENAI_API_KEY || !!process.env.AIMLAPI;
-  const llm = deepseek ? "deepseek" : openai ? "openai" : null;
+  const openai = !!process.env.OPENAI_API_KEY;
+  const aimlapi = !!process.env.AIMLAPI;
+  const llm = deepseek ? "deepseek" : aimlapi ? "aimlapi" : openai ? "openai" : null;
 
   res.status(200).json({
     wikipedia: true,
@@ -22,7 +23,7 @@ module.exports = async function handler(req, res) {
     news: !!process.env.NEWS_API_KEY,
     deepseek,
     openai,
-    aimlapi: !!process.env.AIMLAPI,
+    aimlapi,
     llm,
   });
 };
