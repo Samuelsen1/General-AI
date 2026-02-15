@@ -624,7 +624,7 @@ module.exports = async function handler(req, res) {
 
   const ql = q.toLowerCase();
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.AIMLAPI;
   const googleKey = process.env.GOOGLE_API_KEY;
   const cseId = process.env.GOOGLE_CSE_ID;
   const serperKey = process.env.SERPER_API_KEY;
