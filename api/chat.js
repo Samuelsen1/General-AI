@@ -338,140 +338,6 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
-/** AIMLAPI: OpenAI-compatible endpoint (https://api.aimlapi.com). Env: AIMLAPI. */
-async function fetchAIMLAPI(context, question, apiKey, hist = []) {
-  const user = `Context:\n${context}\n\nQ: ${question}`;
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
-  const model = process.env.AIMLAPI_MODEL || "gpt-4o-mini";
-  const res = await fetch("https://api.aimlapi.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model,
-      messages,
-      max_tokens: 1500,
-      temperature: 0.1,
-    }),
-    signal: AbortSignal.timeout(25000),
-  });
-  if (!res.ok) { const err = await res.text(); throw new Error(`AIMLAPI ${res.status}: ${err}`); }
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
-}
-
-/** Stream AIMLAPI chat to res as SSE. Each token sent as data: {"content":"..."} */
-async function streamAIMLAPI(context, question, apiKey, hist, res) {
-  const user = `Context:\n${context}\n\nQ: ${question}`;
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
-  const model = process.env.AIMLAPI_MODEL || "gpt-4o-mini";
-  const streamRes = await fetch("https://api.aimlapi.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model,
-      messages,
-      max_tokens: 1500,
-      temperature: 0.1,
-      stream: true,
-    }),
-    signal: AbortSignal.timeout(60000),
-  });
-  if (!streamRes.ok) {
-    const err = await streamRes.text();
-    throw new Error(`AIMLAPI ${streamRes.status}: ${err}`);
-  }
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.status(200);
-  if (typeof res.flushHeaders === "function") res.flushHeaders();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  for await (const chunk of streamRes.body) {
-    buffer += decoder.decode(chunk, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() || "";
-    for (const line of lines) {
-      const s = line.replace(/^data:\s*/, "").trim();
-      if (!s || s === "[DONE]") continue;
-      try {
-        const data = JSON.parse(s);
-        const content = data?.choices?.[0]?.delta?.content;
-        if (typeof content === "string" && content) {
-          res.write("data: " + JSON.stringify({ content }) + "\n\n");
-        }
-      } catch (_) {}
-    }
-  }
-  if (buffer.trim()) {
-    const s = buffer.replace(/^data:\s*/, "").trim();
-    if (s && s !== "[DONE]") {
-      try {
-        const data = JSON.parse(s);
-        const content = data?.choices?.[0]?.delta?.content;
-        if (typeof content === "string" && content) res.write("data: " + JSON.stringify({ content }) + "\n\n");
-      } catch (_) {}
-    }
-  }
-  res.end();
-}
-
-/** Stream OpenAI chat to res as SSE. */
-async function streamOpenAI(context, question, apiKey, hist, res) {
-  const user = `Context:\n${context}\n\nQ: ${question}`;
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
-  const streamRes = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages,
-      max_tokens: 1500,
-      temperature: 0.1,
-      stream: true,
-    }),
-    signal: AbortSignal.timeout(60000),
-  });
-  if (!streamRes.ok) {
-    const err = await streamRes.text();
-    throw new Error(`OpenAI ${streamRes.status}: ${err}`);
-  }
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.status(200);
-  if (typeof res.flushHeaders === "function") res.flushHeaders();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  for await (const chunk of streamRes.body) {
-    buffer += decoder.decode(chunk, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() || "";
-    for (const line of lines) {
-      const s = line.replace(/^data:\s*/, "").trim();
-      if (!s || s === "[DONE]") continue;
-      try {
-        const data = JSON.parse(s);
-        const content = data?.choices?.[0]?.delta?.content;
-        if (typeof content === "string" && content) {
-          res.write("data: " + JSON.stringify({ content }) + "\n\n");
-        }
-      } catch (_) {}
-    }
-  }
-  if (buffer.trim()) {
-    const s = buffer.replace(/^data:\s*/, "").trim();
-    if (s && s !== "[DONE]") {
-      try {
-        const data = JSON.parse(s);
-        const content = data?.choices?.[0]?.delta?.content;
-        if (typeof content === "string" && content) res.write("data: " + JSON.stringify({ content }) + "\n\n");
-      } catch (_) {}
-    }
-  }
-  res.end();
-}
-
 const LLM_VISION = CREATOR + `
 
 You are General. The user shared an image. Use the chat history to recall what they shared or you said earlier. Resolve "that", "it", "explain", "before", etc. from prior turns.
@@ -758,8 +624,7 @@ module.exports = async function handler(req, res) {
 
   const ql = q.toLowerCase();
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
-  const aimlKey = process.env.AIMLAPI;
+  const openaiKey = process.env.OPENAI_API_KEY || process.env.AIMLAPI;
   const googleKey = process.env.GOOGLE_API_KEY;
   const cseId = process.env.GOOGLE_CSE_ID;
   const serperKey = process.env.SERPER_API_KEY;
@@ -830,7 +695,7 @@ module.exports = async function handler(req, res) {
   if (isFollowUp) context = "Previous reply (the user wants you to elaborate on or explain more about this):\n\n" + (lastA.content || "").slice(0, 4000);
 
   if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !openaiKey) {
-    return res.status(200).json({ reply: "Your request with the document could not be completed. Try again later." });
+    return res.status(200).json({ reply: "Document or image received. Set DEEPSEEK_API_KEY or OPENAI_API_KEY in Vercel (Project → Settings → Environment Variables) to get answers from PDFs and images." });
   }
 
   if (imageB64 && (deepseekKey || openaiKey)) {
@@ -849,23 +714,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ reply: "Your request with the image could not be completed. Try again later." });
   }
 
-  // Live streaming: text-only chat when client sends stream: true
-  const wantStream = !!body.stream && !imageB64 && !pdfB64 && !opts.pdfText;
-  if (wantStream) {
-    if (aimlKey) {
-      try {
-        await streamAIMLAPI(context, q, aimlKey, hist, res);
-        return;
-      } catch (e) { console.warn("AIMLAPI stream:", e?.message); }
-    }
-    if (openaiKey) {
-      try {
-        await streamOpenAI(context, q, openaiKey, hist, res);
-        return;
-      } catch (e) { console.warn("OpenAI stream:", e?.message); }
-    }
-  }
-
   if (deepseekKey) {
     try {
       const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
@@ -878,14 +726,8 @@ module.exports = async function handler(req, res) {
       if (reply && reply.trim()) return res.status(200).json({ reply });
     } catch (e) { console.warn("OpenAI:", e?.message); }
   }
-  if (aimlKey) {
-    try {
-      const reply = await fetchAIMLAPI(context, q, aimlKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply });
-    } catch (e) { console.warn("AIMLAPI:", e?.message); }
-  }
 
-  const hadLLM = !!deepseekKey || !!openaiKey || !!aimlKey;
+  const hadLLM = !!deepseekKey || !!openaiKey;
 
   if (pdfB64 || opts.pdfText) {
     // For PDFs we rely on the LLM; if it failed, surface a clear retry message.
