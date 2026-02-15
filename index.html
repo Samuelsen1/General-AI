@@ -94,8 +94,10 @@
       .form { padding: 0.35rem; gap: 0.3rem; border-radius: 14px; }
       .form #input { font-size: 15px !important; padding: 0.5rem 0.6rem; min-height: 34px; -webkit-text-size-adjust: 100%; }
       .form button { padding: 0.55rem 0.9rem; font-size: 0.8rem; }
-      .attach-btn { width: 34px; height: 34px; min-width: 34px; min-height: 34px; padding: 0.3rem; }
-      .attach-btn svg { width: 16px; height: 16px; }
+      .multimedia-btn { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+      .multimedia-icon { width: 16px; height: 16px; }
+      .multimedia-dropdown { min-width: 180px; }
+      .multimedia-option { padding: 0.45rem 0.85rem; font-size: 0.85rem; }
       .form-wrap { margin-top: auto; padding-top: 1.5rem; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.4rem); }
       .hint { font-size: 0.65rem; margin-top: 0.25rem; }
       .disclaimer { margin-top: 0.25rem; font-size: 0.58rem; color: var(--text-dim); opacity: 0.85; }
@@ -187,6 +189,18 @@
     .attach-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,255,0.95) 100%); border: 1px solid rgba(191, 219, 254, 0.7); border-radius: 14px; color: var(--text-dim); cursor: pointer; transition: all 0.2s; flex-shrink: 0; touch-action: manipulation; }
     .attach-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
     .attach-btn svg { width: 20px; height: 20px; }
+    .multimedia-wrap { position: relative; flex-shrink: 0; }
+    .multimedia-btn { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; min-width: 48px; min-height: 48px; background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,255,0.95) 100%); border: 1px solid rgba(191, 219, 254, 0.7); border-radius: 14px; color: var(--text-dim); cursor: pointer; transition: all 0.2s; touch-action: manipulation; }
+    .multimedia-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
+    .multimedia-btn[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
+    .multimedia-icon { width: 20px; height: 20px; }
+    .multimedia-dropdown { position: absolute; bottom: calc(100% + 8px); left: 0; min-width: 200px; padding: 0.5rem 0; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 100; display: none; }
+    .multimedia-dropdown.open { display: block; }
+    .multimedia-section { padding: 0.35rem 0; }
+    .multimedia-section:not(:last-child) { border-bottom: 1px solid var(--border-soft); }
+    .multimedia-section-title { display: block; padding: 0 1rem 0.35rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+    .multimedia-option { display: block; width: 100%; padding: 0.5rem 1rem; border: none; background: none; font: inherit; font-size: 0.9rem; color: var(--text-soft); text-align: left; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .multimedia-option:hover { background: var(--accent-soft-2); color: var(--accent); }
     .file-chosen { margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.35rem; }
 .file-chosen .pdf-attach-icon { flex-shrink: 0; width: 18px; height: 18px; object-fit: contain; }
     .file-chosen span { color: var(--accent); font-weight: 500; }
@@ -196,6 +210,10 @@
     .disclaimer { margin-top: 0.35rem; font-size: 0.7rem; color: var(--text-dim); opacity: 0.9; }
     .typing { opacity: 0.85; }
     .typing .label::after { content: " …"; animation: dots 1s steps(4, end) infinite; }
+    .message-generated-media { margin-top: 0.75rem; }
+    .message-generated-media .generated-image { max-width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); display: block; }
+    .message-generated-media .generated-audio,
+    .message-generated-media .generated-video { max-width: 100%; border-radius: var(--radius-sm); display: block; margin-top: 0.5rem; }
     @keyframes dots { 0%, 20% { content: " …"; } 40% { content: " ."; } 60% { content: " .."; } 80%, 100% { content: " …"; } }
 
     @media (prefers-color-scheme: dark) {
@@ -283,9 +301,23 @@
       </section>
       <div class="form-wrap">
         <form class="form" id="form">
-          <label for="file-input" class="attach-btn" aria-label="Attach image or PDF" data-i18n-title="attachFile" title="Attach image or PDF">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          </label>
+          <div class="multimedia-wrap">
+            <button type="button" class="multimedia-btn" id="multimedia-btn" aria-label="Media & generate" aria-expanded="false" aria-haspopup="true" title="Upload or generate media">
+              <svg class="multimedia-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            </button>
+            <div class="multimedia-dropdown" id="multimedia-dropdown" role="menu" aria-hidden="true">
+              <div class="multimedia-section">
+                <span class="multimedia-section-title">Upload</span>
+                <button type="button" class="multimedia-option" role="menuitem" id="mm-upload-file">File, image or PDF</button>
+              </div>
+              <div class="multimedia-section">
+                <span class="multimedia-section-title">Generate</span>
+                <button type="button" class="multimedia-option" role="menuitem" data-mode="image">Image</button>
+                <button type="button" class="multimedia-option" role="menuitem" data-mode="audio">Audio</button>
+                <button type="button" class="multimedia-option" role="menuitem" data-mode="video">Video</button>
+              </div>
+            </div>
+          </div>
           <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
           <textarea id="input" placeholder="Ask General…" data-i18n-placeholder="askAnything" autocomplete="off" rows="1" enterkeyhint="send"></textarea>
           <button type="submit" id="send" aria-label="Send" data-i18n="send">Send</button>
@@ -467,6 +499,38 @@
       function scheduleRenderHistory() {
         setTimeout(function () { try { renderPastChats(); } catch (e) {} }, 100);
       }
+
+      var generateMode = null;
+      var multimediaBtn = document.getElementById("multimedia-btn");
+      var multimediaDropdown = document.getElementById("multimedia-dropdown");
+      var mmUploadFile = document.getElementById("mm-upload-file");
+      function closeMultimedia() {
+        if (multimediaDropdown) { multimediaDropdown.classList.remove("open"); multimediaDropdown.setAttribute("aria-hidden", "true"); }
+        if (multimediaBtn) multimediaBtn.setAttribute("aria-expanded", "false");
+      }
+      function openMultimedia() {
+        if (multimediaDropdown) { multimediaDropdown.classList.add("open"); multimediaDropdown.setAttribute("aria-hidden", "false"); }
+        if (multimediaBtn) multimediaBtn.setAttribute("aria-expanded", "true");
+      }
+      if (multimediaBtn && multimediaDropdown) {
+        multimediaBtn.addEventListener("click", function(e) { e.preventDefault(); multimediaDropdown.classList.contains("open") ? closeMultimedia() : openMultimedia(); });
+        document.addEventListener("click", function(e) { if (multimediaDropdown.classList.contains("open") && !multimediaDropdown.contains(e.target) && !multimediaBtn.contains(e.target)) closeMultimedia(); });
+      }
+      if (mmUploadFile && fileInput) {
+        mmUploadFile.addEventListener("click", function() { fileInput.click(); closeMultimedia(); });
+      }
+      document.querySelectorAll(".multimedia-option[data-mode]").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          var mode = this.getAttribute("data-mode");
+          generateMode = mode;
+          if (input) {
+            if (mode === "image") input.placeholder = "Describe the image to generate…";
+            else if (mode === "audio") input.placeholder = "Text to turn into speech…";
+            else if (mode === "video") input.placeholder = "Describe the video to generate…";
+          }
+          closeMultimedia();
+        });
+      });
 
       const fileChosenIcon = document.getElementById("file-chosen-icon");
       fileInput.addEventListener("change", function() {
@@ -699,18 +763,39 @@
 
         const lbl = document.createElement("span");
         lbl.className = "label";
-        var labelText = label || (role === "user" ? t("you") : t("general"));
-        if (role === "ai" && opts && opts.provider) {
-          var p = opts.provider === "aimlapi" ? "AIMLAPI" : opts.provider === "deepseek" ? "DeepSeek" : opts.provider === "openai" ? "OpenAI" : "";
-          if (p) labelText = labelText + " · via " + p;
-        }
-        lbl.textContent = labelText;
+        lbl.textContent = label || (role === "user" ? t("you") : t("general"));
         body.appendChild(lbl);
 
         const contentEl = document.createElement("div");
         contentEl.className = "message-content";
         contentEl.innerHTML = role === "user" ? formatUserMsg(text) : formatMsg(text);
         body.appendChild(contentEl);
+
+        if (opts && opts.mediaUrl && opts.mediaKind) {
+          var mediaWrap = document.createElement("div");
+          mediaWrap.className = "message-generated-media";
+          if (opts.mediaKind === "image") {
+            var img = document.createElement("img");
+            img.src = opts.mediaUrl;
+            img.alt = "Generated image";
+            img.loading = "lazy";
+            img.className = "generated-image";
+            mediaWrap.appendChild(img);
+          } else if (opts.mediaKind === "audio") {
+            var aud = document.createElement("audio");
+            aud.controls = true;
+            aud.src = opts.mediaUrl;
+            aud.className = "generated-audio";
+            mediaWrap.appendChild(aud);
+          } else if (opts.mediaKind === "video") {
+            var vid = document.createElement("video");
+            vid.controls = true;
+            vid.src = opts.mediaUrl;
+            vid.className = "generated-video";
+            mediaWrap.appendChild(vid);
+          }
+          body.appendChild(mediaWrap);
+        }
 
         d.appendChild(body);
 
@@ -873,6 +958,37 @@
         const raw = input.value.trim();
         const file = chosenFile;
         if (!raw && !file) { input.focus(); return; }
+
+        if (generateMode) {
+          var mode = generateMode;
+          generateMode = null;
+          if (input) input.placeholder = t("askAnything");
+          var displayMsg = (mode === "image" ? "Generate image: " : mode === "audio" ? "Generate audio: " : "Generate video: ") + raw;
+          addMessage("user", displayMsg);
+          input.value = "";
+          send.disabled = true;
+          var typingEl = addTyping();
+          try {
+            var genRes = await fetch("/api/generate/" + mode, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: raw }), signal: AbortSignal.timeout(90000) });
+            var genData = {};
+            try { genData = await genRes.json(); } catch (_) {}
+            var reply = (genData.reply != null) ? genData.reply : "Your request could not be completed. Try again later.";
+            var mediaUrl = genData.imageUrl || genData.audioUrl || genData.videoUrl;
+            if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+            addMessage("ai", reply, null, mediaUrl ? { mediaUrl: mediaUrl, mediaKind: mode } : null);
+            history.push({ role: "user", content: displayMsg });
+            history.push({ role: "assistant", content: reply, mediaUrl: mediaUrl || undefined });
+            try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+            scheduleRenderHistory();
+          } catch (err) {
+            if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+            addMessage("ai", "Your request could not be completed. Try again later.");
+          }
+          send.disabled = false;
+          if (input) input.focus();
+          return;
+        }
+
         const displayMsg = raw || (file ? "[" + file.name + "]" : (lastPdfAttachment ? "[" + lastPdfAttachment.name + "]" : ""));
         const attachmentOpts = file ? { attachment: { type: ((file.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(file.name || "")) ? "pdf" : "image", name: file.name } } : (lastPdfAttachment ? { attachment: { type: "pdf", name: lastPdfAttachment.name } } : undefined);
         if (file && file.size > MAX_FILE) {
@@ -903,6 +1019,7 @@
             body.pdf = lastPdfAttachment.base64;
           }
           body.history = history.slice(-20);
+          if (!file && !lastPdfAttachment) body.stream = true;
           // Scroll to bottom and ensure form is visible after sending
           setTimeout(function() {
             if (chat) {
@@ -914,7 +1031,62 @@
             }
           }, 100);
           const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
-          let data;
+          const contentType = res.headers.get("content-type") || "";
+          if (contentType.includes("text/event-stream") && res.ok && res.body) {
+            if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+            addMessage("ai", "\u200b");
+            var contentEl = lastAiMessageEl ? lastAiMessageEl.querySelector(".message-content") : null;
+            var fullText = "";
+            try {
+              var reader = res.body.getReader();
+              var dec = new TextDecoder();
+              var buf = "";
+              while (true) {
+                var result = await reader.read();
+                if (result.done) break;
+                buf += dec.decode(result.value, { stream: true });
+                var lines = buf.split("\n");
+                buf = lines.pop() || "";
+                for (var i = 0; i < lines.length; i++) {
+                  var line = lines[i];
+                  if (line.indexOf("data: ") === 0) {
+                    try {
+                      var o = JSON.parse(line.slice(6));
+                      if (o && typeof o.content === "string") {
+                        fullText += o.content;
+                        if (contentEl) contentEl.innerText = fullText;
+                        if (chat) chat.scrollTop = chat.scrollHeight;
+                      }
+                    } catch (_) {}
+                  }
+                }
+              }
+              if (buf.indexOf("data: ") === 0) {
+                try {
+                  var o = JSON.parse(buf.slice(6));
+                  if (o && typeof o.content === "string") { fullText += o.content; if (contentEl) contentEl.innerText = fullText; }
+                } catch (_) {}
+              }
+              if (contentEl && fullText) contentEl.innerHTML = formatMsg(fullText);
+            } catch (streamErr) {
+              if (contentEl) contentEl.innerText = "Your request could not be completed. Try again later.";
+              fullText = contentEl ? contentEl.innerText : "";
+            }
+            history.push({ role: "user", content: body.message });
+            history.push({ role: "assistant", content: fullText });
+            try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+            scheduleRenderHistory();
+            var disclaimerEl = document.getElementById("disclaimer");
+            if (disclaimerEl && window.matchMedia("(max-width: 767px)").matches) {
+              var r = (fullText || "").trim();
+              var isError = !r || r.length < 80 || /your request could not be completed|try again later|no reply|request (failed|timed out)|file too large/i.test(r);
+              if (!isError) disclaimerEl.classList.remove("mobile-only-after-answer");
+            }
+            send.disabled = false;
+            if (input) input.focus();
+            return;
+          }
+          var data;
           try {
             data = await res.json();
           } catch (_) {
@@ -925,7 +1097,7 @@
                   : "Your request could not be completed. Try again later.",
             };
           }
-          const reply =
+          var reply =
             (data && data.reply) ? data.reply
             : (data && data.error) ? data.error
             : (!res || !res.ok)
@@ -933,14 +1105,12 @@
                   ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)."
                   : "Your request could not be completed. Try again later.")
               : "No reply.";
-          const provider = (data && data.provider) ? data.provider : null;
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
-          // Remove typing element and add proper message with copy button
           if (typingEl && typingEl.parentNode) {
             typingEl.parentNode.removeChild(typingEl);
           }
-          addMessage("ai", reply, undefined, { provider: provider });
+          addMessage("ai", reply);
           var disclaimerEl = document.getElementById("disclaimer");
           if (disclaimerEl && window.matchMedia("(max-width: 767px)").matches) {
             var r = (reply || "").trim();
