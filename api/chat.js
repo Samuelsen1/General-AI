@@ -586,7 +586,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ reply: tableResult });
   }
 
-  const deepseekKey = process.env.DEEPSEEK_API_KEY;
+  const deepseekDisabled = /^(1|true|yes)$/i.test((process.env.DISABLE_DEEPSEEK || "").trim());
+  const deepseekKey = !deepseekDisabled && process.env.DEEPSEEK_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.AIMLAPI;
   const usedAimlapi = !!process.env.AIMLAPI && !process.env.OPENAI_API_KEY && !process.env.OPENAI_KEY;
 

@@ -10,7 +10,8 @@ module.exports = async function handler(req, res) {
   const tavily = !!process.env.TAVILY_API_KEY;
   const web = google ? "google" : serper ? "serper" : brave ? "brave" : tavily ? "tavily" : null;
 
-  const deepseek = !!process.env.DEEPSEEK_API_KEY;
+  const deepseekDisabled = /^(1|true|yes)$/i.test((process.env.DISABLE_DEEPSEEK || "").trim());
+  const deepseek = !!process.env.DEEPSEEK_API_KEY && !deepseekDisabled;
   const openai = !!(process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.AIMLAPI);
   const aimlapi = !!process.env.AIMLAPI;
   const llm = deepseek ? "deepseek" : openai ? "openai" : null;

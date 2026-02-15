@@ -43,7 +43,11 @@ Used when the query contains: *news*, *latest*, *headlines*, *current*, *recent*
 | `DEEPSEEK_API_KEY` | DeepSeek | [platform.deepseek.com](https://platform.deepseek.com) → API keys → Create new |
 | `OPENAI_API_KEY` | OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
 
-**Priority:** DeepSeek is used first when configured; otherwise OpenAI.
+**Priority:** DeepSeek is used first when configured; otherwise OpenAI (or AIMLAPI if set).
+
+| Variable | Effect |
+|----------|--------|
+| `DISABLE_DEEPSEEK` | Set to `true` (or `1` / `yes`) to skip DeepSeek and use only OpenAI/AIMLAPI. Useful to test the other API. |
 
 ---
 
