@@ -8,6 +8,28 @@ const SNIPPET_MAX = 180;
 
 function trim(s, n) { return (s || "").length <= n ? s : (s.slice(0, n).trim() + "..."); }
 
+/** Drop snippets that contain sensitive/off-topic content so they are never sent to the LLM or attributed to the user. */
+const SENSITIVE_PATTERN = /\b(sex\s+(toy|robot|doll|worker|trafficking|offender|abuse)|child\s+sex|sexually|pornography|pornographic)\b/i;
+function filterSensitiveSnippets(items) {
+  if (!Array.isArray(items)) return [];
+  return items.filter((i) => {
+    const text = `${i.title || ""} ${i.snippet || ""}`;
+    return !SENSITIVE_PATTERN.test(text);
+  });
+}
+
+/** Keep only snippets that relate to the user's question (contain at least one meaningful query term). Avoids injecting unrelated topics. */
+const STOPWORDS = new Set(["a","an","the","is","are","was","were","be","been","being","have","has","had","do","does","did","will","would","could","should","can","may","might","must","shall","to","of","in","for","on","with","at","by","from","as","into","your","you","me","my","we","us","it","its","this","that","what","how","when","where","why","which","who","if","or","and","but","not","i"]);
+function filterRelevantSnippets(items, query) {
+  if (!Array.isArray(items) || !(query || "").trim()) return items;
+  const terms = (String(query).toLowerCase().replace(/[^\w\s]/g, " ").split(/\s+/)).filter((w) => w.length > 1 && !STOPWORDS.has(w));
+  if (terms.length === 0) return items;
+  return items.filter((i) => {
+    const text = `${i.title || ""} ${i.snippet || ""}`.toLowerCase();
+    return terms.some((t) => text.includes(t));
+  });
+}
+
 async function fetchWikipedia(q) {
   const url = `${WIKI_URL}?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=5`;
   const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
@@ -296,6 +318,8 @@ Rules:
 - **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", read it and judge based on the content. Do not assume document type. Never mention CV, resume, or job description unless the user explicitly asked about those. Never say you cannot access files. Output your analysis; never repeat raw text or introduce unrelated topics.
 - **NO EXCUSES**: When Context contains pasted content or a document, ANALYZE IT. Never say "I don't have context", "I cannot access", "try rephrasing", "I need more information", or similar. Give your analysis—no excuses.
 - **CRITICAL – Answer ONLY from relevant context**: Answer ONLY using information that directly relates to the user's question and the current conversation. NEVER introduce topics, examples, or tangents that are unrelated (e.g. TV shows, movies, celebrities, random events). If search or wiki results contain irrelevant content, IGNORE it. If the user asks about X (e.g. AI development, vibe coding), do NOT discuss Y (e.g. The Pitt, episodes, unrelated media). Stay strictly on topic. Never add unrelated "general knowledge" when the user asked about something else.
+- **CRITICAL – Only what the user asked**: Use and mention ONLY information that is directly needed to answer the user's question. Never introduce, reference, or discuss any topic, example, or detail that the user did not ask about. If context contains unrelated or tangential content, ignore it completely—do not mention it. Do not explain "where something came from" or list topics the user did not ask about.
+- **CRITICAL – Wikipedia and web results are system-retrieved**: The "Wikipedia" and "Web results" in Context are fetched automatically by the system—the user did NOT paste or provide them. Never say "you included", "you provided", "context you provided", or "you pasted" about these. If search results contain anything not needed for the user's question, do not use it and do not mention it in your answer.
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
 - Do NOT output Markdown tables. Use lists and groupings instead.`;
@@ -684,6 +708,10 @@ module.exports = async function handler(req, res) {
   if (newsKey && /\b(news|latest|headlines|current|recent)\b/.test(ql)) {
     try { opts.news = await fetchNews(q, newsKey); } catch (e) { console.warn("News:", e?.message); }
   }
+
+  opts.wiki = filterRelevantSnippets(filterSensitiveSnippets(opts.wiki || []), q);
+  opts.web = filterRelevantSnippets(filterSensitiveSnippets(opts.web || []), q);
+  opts.news = filterRelevantSnippets(filterSensitiveSnippets(opts.news || []), q);
 
   let context = buildContext(opts);
 

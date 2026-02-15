@@ -22,6 +22,47 @@ def _trim(s: Optional[str], n: int) -> str:
     return s if len(s) <= n else (s[:n].rstrip() + "...")
 
 
+# Drop snippets that contain sensitive/off-topic content so they are never sent to the LLM.
+SENSITIVE_PATTERN = re.compile(
+    r"\b(sex\s+(toy|robot|doll|worker|trafficking|offender|abuse)|child\s+sex|sexually|pornography|pornographic)\b",
+    re.I,
+)
+
+
+def filter_sensitive_snippets(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    if not items:
+        return []
+    out = []
+    for i in items:
+        text = f"{i.get('title') or ''} {i.get('snippet') or ''}"
+        if not SENSITIVE_PATTERN.search(text):
+            out.append(i)
+    return out
+
+
+_STOPWORDS = frozenset(
+    {"a", "an", "the", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+     "will", "would", "could", "should", "can", "may", "might", "must", "shall", "to", "of", "in", "for", "on",
+     "with", "at", "by", "from", "as", "into", "your", "you", "me", "my", "we", "us", "it", "its", "this", "that",
+     "what", "how", "when", "where", "why", "which", "who", "if", "or", "and", "but", "not", "i"}
+)
+
+
+def filter_relevant_snippets(items: List[Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
+    """Keep only snippets that relate to the user's question (contain at least one meaningful query term)."""
+    if not items or not (query or "").strip():
+        return items
+    terms = [w for w in re.sub(r"[^\w\s]", " ", query.lower()).split() if len(w) > 1 and w not in _STOPWORDS]
+    if not terms:
+        return items
+    out = []
+    for i in items:
+        text = f"{i.get('title') or ''} {i.get('snippet') or ''}".lower()
+        if any(t in text for t in terms):
+            out.append(i)
+    return out
+
+
 def _get(url: str, timeout: int = 8, headers: Optional[Dict[str, str]] = None) -> Dict:
     req = urllib.request.Request(url, headers=headers or {})
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -351,6 +392,9 @@ def general_query_sources(q: str) -> Dict[str, Any]:
         opts["definition"] = "\n\n".join(defs)[:1200] if defs else None
     if os.environ.get("NEWS_API_KEY") and re.search(r"\b(news|latest|headlines|current|recent)\b", ql):
         opts["news"] = fetch_news(q, os.environ["NEWS_API_KEY"])
+    opts["wiki"] = filter_relevant_snippets(filter_sensitive_snippets(opts.get("wiki") or []), q)
+    opts["web"] = filter_relevant_snippets(filter_sensitive_snippets(opts.get("web") or []), q)
+    opts["news"] = filter_relevant_snippets(filter_sensitive_snippets(opts.get("news") or []), q)
     return opts
 
 
