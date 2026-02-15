@@ -586,6 +586,10 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ reply: tableResult });
   }
 
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.AIMLAPI;
+  const usedAimlapi = !!process.env.AIMLAPI && !process.env.OPENAI_API_KEY && !process.env.OPENAI_KEY;
+
   // Check for link visiting requests
   const url = extractUrl(q);
   if (url) {
@@ -597,13 +601,13 @@ module.exports = async function handler(req, res) {
           if (deepseekKey) {
             const reply = await fetchDeepSeek(linkContext, q, deepseekKey, hist);
             if (reply && reply.trim()) {
-              return res.status(200).json({ reply });
+              return res.status(200).json({ reply, provider: "deepseek" });
             }
           }
           if (openaiKey) {
             const reply = await fetchOpenAI(linkContext, q, openaiKey, hist);
             if (reply && reply.trim()) {
-              return res.status(200).json({ reply });
+              return res.status(200).json({ reply, provider: usedAimlapi ? "aimlapi" : "openai" });
             }
           }
         } catch (e) {
@@ -623,8 +627,6 @@ module.exports = async function handler(req, res) {
   }
 
   const ql = q.toLowerCase();
-  const deepseekKey = process.env.DEEPSEEK_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.AIMLAPI;
   const googleKey = process.env.GOOGLE_API_KEY;
   const cseId = process.env.GOOGLE_CSE_ID;
   const serperKey = process.env.SERPER_API_KEY;
@@ -702,13 +704,13 @@ module.exports = async function handler(req, res) {
     if (deepseekKey) {
       try {
         const reply = await fetchDeepSeekWithImage(context, q, imageB64, deepseekKey, hist);
-        return res.status(200).json({ reply });
+        return res.status(200).json({ reply, provider: "deepseek" });
       } catch (e) { console.warn("DeepSeek vision:", e?.message); }
     }
     if (openaiKey) {
       try {
         const reply = await fetchOpenAIVision(context, q, imageB64, openaiKey, hist);
-        return res.status(200).json({ reply });
+        return res.status(200).json({ reply, provider: usedAimlapi ? "aimlapi" : "openai" });
       } catch (e) { console.warn("OpenAI vision:", e?.message); }
     }
     return res.status(200).json({ reply: "Your request with the image could not be completed. Try again later." });
@@ -717,13 +719,13 @@ module.exports = async function handler(req, res) {
   if (deepseekKey) {
     try {
       const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply });
+      if (reply && reply.trim()) return res.status(200).json({ reply, provider: "deepseek" });
     } catch (e) { console.warn("DeepSeek:", e?.message); }
   }
   if (openaiKey) {
     try {
       const reply = await fetchOpenAI(context, q, openaiKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply });
+      if (reply && reply.trim()) return res.status(200).json({ reply, provider: usedAimlapi ? "aimlapi" : "openai" });
     } catch (e) { console.warn("OpenAI:", e?.message); }
   }
 

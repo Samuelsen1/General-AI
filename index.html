@@ -699,7 +699,12 @@
 
         const lbl = document.createElement("span");
         lbl.className = "label";
-        lbl.textContent = label || (role === "user" ? t("you") : t("general"));
+        var labelText = label || (role === "user" ? t("you") : t("general"));
+        if (role === "ai" && opts && opts.provider) {
+          var p = opts.provider === "aimlapi" ? "AIMLAPI" : opts.provider === "deepseek" ? "DeepSeek" : opts.provider === "openai" ? "OpenAI" : "";
+          if (p) labelText = labelText + " · via " + p;
+        }
+        lbl.textContent = labelText;
         body.appendChild(lbl);
 
         const contentEl = document.createElement("div");
@@ -928,13 +933,14 @@
                   ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)."
                   : "Your request could not be completed. Try again later.")
               : "No reply.";
+          const provider = (data && data.provider) ? data.provider : null;
           history.push({ role: "user", content: body.message });
           history.push({ role: "assistant", content: reply });
           // Remove typing element and add proper message with copy button
           if (typingEl && typingEl.parentNode) {
             typingEl.parentNode.removeChild(typingEl);
           }
-          addMessage("ai", reply);
+          addMessage("ai", reply, undefined, { provider: provider });
           var disclaimerEl = document.getElementById("disclaimer");
           if (disclaimerEl && window.matchMedia("(max-width: 767px)").matches) {
             var r = (reply || "").trim();
