@@ -402,6 +402,127 @@ Answer from the image and any text context. **Explain** what you see when asked.
 **When something is unclear or you can't answer from the image**: say so briefly; suggest what might help (a clearer crop, more context, or a different question). Offer a related observation if it’s useful — avoid dead ends.
 **CRITICAL – Stay on topic**: Answer ONLY what the user asks, using the image and chat context. NEVER introduce unrelated topics. **Nuance**: Hedge when uncertain; be precise when you can. Match the user’s tone. Use **bold**, *italic*, \`code\`, ## for headings, and - for lists when it helps. Be concise and helpful.`;
 
+// ─── SSE streaming helpers ───────────────────────────────────────────────────
+
+function sseStart(res) {
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.setHeader("Connection", "keep-alive");
+  if (typeof res.flushHeaders === "function") res.flushHeaders();
+}
+
+function sseDelta(res, text) {
+  res.write(`data: ${JSON.stringify({ t: text })}\n\n`);
+}
+
+function sseDone(res) {
+  res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+  res.end();
+}
+
+function sseError(res, msg) {
+  res.write(`data: ${JSON.stringify({ err: msg })}\n\n`);
+  res.end();
+}
+
+/** Pipe an OpenAI-compatible SSE response from llmRes into the HTTP response. */
+async function pipeSSEStream(res, llmRes) {
+  if (!llmRes.ok) {
+    const txt = await llmRes.text().catch(() => "");
+    throw new Error(`LLM ${llmRes.status}: ${txt.slice(0, 200)}`);
+  }
+  const reader = llmRes.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  let full = "";
+  let wrote = false;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (raw === "[DONE]") continue;
+        try {
+          const delta = JSON.parse(raw)?.choices?.[0]?.delta?.content || "";
+          if (delta) { full += delta; sseDelta(res, delta); wrote = true; }
+        } catch (_) {}
+      }
+    }
+  } catch (e) {
+    if (!wrote) throw e;
+  }
+  sseDone(res);
+  return full;
+}
+
+async function streamDeepSeek(res, context, question, apiKey, hist = []) {
+  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
+  const r = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: "deepseek-chat", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
+    signal: AbortSignal.timeout(40000),
+  });
+  return pipeSSEStream(res, r);
+}
+
+async function streamOpenAI(res, context, question, apiKey, hist = []) {
+  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: "gpt-4o-mini", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
+    signal: AbortSignal.timeout(30000),
+  });
+  return pipeSSEStream(res, r);
+}
+
+async function streamAIMLAPI(res, context, question, apiKey, hist = []) {
+  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
+  const model = process.env.AIMLAPI_MODEL || "gpt-4o-mini";
+  const base = (process.env.AIMLAPI_BASE_URL || "https://api.aimlapi.com").replace(/\/$/, "");
+  const r = await fetch(`${base}/v1/chat/completions`, {
+    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages, max_tokens: 1500, temperature: 0.1, stream: true }),
+    signal: AbortSignal.timeout(40000),
+  });
+  return pipeSSEStream(res, r);
+}
+
+async function streamDeepSeekImg(res, context, question, imageB64, apiKey, hist = []) {
+  const userContent = [
+    { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
+    { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
+  ];
+  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: userContent }];
+  const r = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: "deepseek-chat", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
+    signal: AbortSignal.timeout(40000),
+  });
+  return pipeSSEStream(res, r);
+}
+
+async function streamOpenAIVisionImg(res, context, question, imageB64, apiKey, hist = []) {
+  const userContent = [
+    { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
+    { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
+  ];
+  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: userContent }];
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: "gpt-4o-mini", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
+    signal: AbortSignal.timeout(30000),
+  });
+  return pipeSSEStream(res, r);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist = []) {
   const user = [
     { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
@@ -754,78 +875,45 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ reply: "Your request with the document could not be completed. Try again later." });
   }
 
-  if (imageB64 && (deepseekKey || aimlKey || openaiKey)) {
+  // All LLM responses are streamed via SSE from here
+  sseStart(res);
+
+  if (imageB64) {
     if (deepseekKey) {
-      try {
-        const reply = await fetchDeepSeekWithImage(context, q, imageB64, deepseekKey, hist);
-        return res.status(200).json({ reply });
-      } catch (e) { console.warn("DeepSeek vision:", e?.message); }
+      try { await streamDeepSeekImg(res, context, q, imageB64, deepseekKey, hist); return; } catch (e) { console.warn("DeepSeek vision:", e?.message); }
     }
     if (aimlKey) {
-      try {
-        const reply = await fetchOpenAIVision(context, q, imageB64, aimlKey, hist);
-        return res.status(200).json({ reply });
-      } catch (e) { console.warn("AIMLAPI vision:", e?.message); }
+      try { await streamOpenAIVisionImg(res, context, q, imageB64, aimlKey, hist); return; } catch (e) { console.warn("AIMLAPI vision:", e?.message); }
     }
     if (openaiKey) {
-      try {
-        const reply = await fetchOpenAIVision(context, q, imageB64, openaiKey, hist);
-        return res.status(200).json({ reply });
-      } catch (e) { console.warn("OpenAI vision:", e?.message); }
+      try { await streamOpenAIVisionImg(res, context, q, imageB64, openaiKey, hist); return; } catch (e) { console.warn("OpenAI vision:", e?.message); }
     }
-    return res.status(200).json({ reply: "Your request with the image could not be completed. Try again later." });
+    return sseError(res, "Your request with the image could not be completed. Try again later.");
   }
 
   if (deepseekKey) {
-    try {
-      const reply = await fetchDeepSeek(context, q, deepseekKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply });
-    } catch (e) { console.warn("DeepSeek:", e?.message); }
+    try { await streamDeepSeek(res, context, q, deepseekKey, hist); return; } catch (e) { console.warn("DeepSeek:", e?.message); }
   }
   if (aimlKey) {
-    try {
-      const reply = await fetchAIMLAPI(context, q, aimlKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply });
-    } catch (e) { console.warn("AIMLAPI:", e?.message); }
+    try { await streamAIMLAPI(res, context, q, aimlKey, hist); return; } catch (e) { console.warn("AIMLAPI:", e?.message); }
   }
   if (openaiKey) {
-    try {
-      const reply = await fetchOpenAI(context, q, openaiKey, hist);
-      if (reply && reply.trim()) return res.status(200).json({ reply });
-    } catch (e) { console.warn("OpenAI:", e?.message); }
+    try { await streamOpenAI(res, context, q, openaiKey, hist); return; } catch (e) { console.warn("OpenAI:", e?.message); }
   }
 
   const hadLLM = !!deepseekKey || !!aimlKey || !!openaiKey;
 
   if (pdfB64 || opts.pdfText) {
-    // For PDFs we rely on the LLM; if it failed, surface a clear retry message.
-    return res.status(200).json({
-      reply: "Your request with the document could not be completed. Try again later.",
-    });
+    return sseError(res, "Your request with the document could not be completed. Try again later.");
   }
   if (context.includes("User has pasted the following content") || context.includes("Document (PDF)")) {
-    // When analyzing long pasted content and the LLM fails, don't try to guess from search snippets.
-    return res.status(200).json({
-      reply: "Your request with the long text could not be completed. Try again later.",
-    });
+    return sseError(res, "Your request with the long text could not be completed. Try again later.");
   }
 
-  // If we have search-based answers (weather, definitions, web/wiki/news snippets),
-  // use them as a smart fallback only when no LLM is configured.
-  // If an LLM was configured but failed, we prefer a clear generic error
-  // over potentially unrelated wiki/web snippets.
-  let fallback = null;
   if (!hadLLM) {
-    fallback = buildFallbackReply(opts);
-    if (fallback && fallback.trim()) {
-      return res.status(200).json({ reply: fallback });
-    }
+    const fallback = buildFallbackReply(opts);
+    if (fallback && fallback.trim()) { sseDelta(res, fallback); return sseDone(res); }
   }
 
-  if (hadLLM) {
-    return res.status(200).json({
-      reply: "Your request could not be completed. Try again later.",
-    });
-  }
-  return res.status(200).json({ reply: fallback || "Your request could not be completed. Try again later." });
+  return sseError(res, "Your request could not be completed. Try again later.");
 }

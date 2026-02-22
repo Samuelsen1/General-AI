@@ -158,6 +158,9 @@
     .copy-btn:hover { background: var(--border-soft); color: var(--text); }
     .copy-btn:active { transform: scale(0.95); }
     .copy-btn.copied { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+    .message-content.streaming { white-space: pre-wrap; word-break: break-word; }
+    .message-content.streaming::after { content: "▋"; animation: blink-cursor 0.9s step-end infinite; color: var(--accent); }
+    @keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
     .ai-snippet { background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 0.7rem 0.85rem; margin-top: 0.6rem; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06); }
     .ai-snippet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
     .ai-snippet-title { font-weight: 600; }
@@ -909,41 +912,138 @@
               formWrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }
           }, 100);
-          const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
-          let data;
-          try {
-            data = await res.json();
-          } catch (_) {
-            data = {
-              reply:
-                res && res.status === 413
-                  ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)."
-                  : "Your request could not be completed. Try again later.",
-            };
+          const apiRes = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
+
+          const contentType = apiRes.headers.get("Content-Type") || "";
+
+          if (contentType.includes("text/event-stream")) {
+            // ── Streaming mode: show text progressively as it arrives ──────
+            if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+
+            // Build the AI message shell
+            const streamWrap = document.createElement("div");
+            streamWrap.className = "message ai";
+            const streamBody = document.createElement("div");
+            streamBody.className = "message-body";
+            const streamLbl = document.createElement("span");
+            streamLbl.className = "label";
+            streamLbl.textContent = t("general");
+            streamBody.appendChild(streamLbl);
+            const streamContent = document.createElement("div");
+            streamContent.className = "message-content streaming";
+            streamBody.appendChild(streamContent);
+            streamWrap.appendChild(streamBody);
+            chat.appendChild(streamWrap);
+            lastAiMessageEl = streamWrap;
+            streamWrap.scrollIntoView({ behavior: "auto", block: "end" });
+
+            let full = "";
+            let finished = false;
+            const reader = apiRes.body.getReader();
+            const dec = new TextDecoder();
+            let ssBuf = "";
+
+            try {
+              outer: while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                ssBuf += dec.decode(value, { stream: true });
+                const lines = ssBuf.split("\n");
+                ssBuf = lines.pop();
+                for (const line of lines) {
+                  if (!line.startsWith("data: ")) continue;
+                  const raw = line.slice(6).trim();
+                  try {
+                    const obj = JSON.parse(raw);
+                    if (obj.t) {
+                      full += obj.t;
+                      streamContent.textContent = full;
+                      streamWrap.scrollIntoView({ behavior: "auto", block: "end" });
+                    }
+                    if (obj.done || obj.err) {
+                      finished = true;
+                      const replyText = obj.err ? (full || obj.err) : full;
+                      // Final markdown render
+                      streamContent.classList.remove("streaming");
+                      streamContent.innerHTML = formatMsg(replyText);
+                      // Wire snippet copy buttons
+                      streamWrap.querySelectorAll(".ai-snippet").forEach(function(snip) {
+                        const btn = snip.querySelector(".ai-snippet-copy");
+                        const snipBody = snip.querySelector(".ai-snippet-body");
+                        if (!btn || !snipBody) return;
+                        btn.addEventListener("click", function() {
+                          const txt = snipBody.innerText || "";
+                          copyToClipboard(txt);
+                          btn.classList.add("copied"); btn.innerHTML = "✓";
+                          setTimeout(function() { btn.innerHTML = COPY_ICON_SVG; btn.classList.remove("copied"); }, 2000);
+                        });
+                      });
+                      // Add copy button
+                      const actionsDiv = document.createElement("div");
+                      actionsDiv.className = "message-actions";
+                      const cpBtn = document.createElement("button");
+                      cpBtn.type = "button"; cpBtn.className = "copy-btn";
+                      cpBtn.setAttribute("aria-label", "Copy message");
+                      cpBtn.innerHTML = COPY_ICON_SVG;
+                      cpBtn.addEventListener("click", function() {
+                        copyToClipboard(streamContent.innerText || "");
+                        cpBtn.innerHTML = "✓"; cpBtn.classList.add("copied");
+                        setTimeout(function() { cpBtn.innerHTML = COPY_ICON_SVG; cpBtn.classList.remove("copied"); }, 2000);
+                      });
+                      actionsDiv.appendChild(cpBtn);
+                      streamWrap.appendChild(actionsDiv);
+                      // Update history and storage
+                      history.push({ role: "user", content: body.message });
+                      history.push({ role: "assistant", content: replyText });
+                      var disclaimerEl = document.getElementById("disclaimer");
+                      if (disclaimerEl && window.matchMedia("(max-width: 767px)").matches) {
+                        var rr = (replyText || "").trim();
+                        var isErr = !rr || rr.length < 80 || /your request could not be completed|try again later|no reply|request (failed|timed out)|file too large/i.test(rr);
+                        if (!isErr) disclaimerEl.classList.remove("mobile-only-after-answer");
+                      }
+                      try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+                      scheduleRenderHistory();
+                      break outer;
+                    }
+                  } catch (_) {}
+                }
+              }
+            } catch (streamErr) {
+              streamContent.classList.remove("streaming");
+              if (!full) streamContent.innerHTML = formatMsg("Your request could not be completed. Try again later.");
+              else streamContent.innerHTML = formatMsg(full);
+            }
+            if (!finished && !full) {
+              streamContent.classList.remove("streaming");
+              streamContent.innerHTML = formatMsg("Your request could not be completed. Try again later.");
+            }
+
+          } else {
+            // ── JSON mode (early returns: safety, table, link, etc.) ────────
+            let data;
+            try { data = await apiRes.json(); } catch (_) {
+              data = { reply: apiRes && apiRes.status === 413 ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)." : "Your request could not be completed. Try again later." };
+            }
+            const reply =
+              (data && data.reply) ? data.reply
+              : (data && data.error) ? data.error
+              : (!apiRes || !apiRes.ok)
+                ? (apiRes && apiRes.status === 413 ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)." : "Your request could not be completed. Try again later.")
+                : "No reply.";
+            history.push({ role: "user", content: body.message });
+            history.push({ role: "assistant", content: reply });
+            if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+            addMessage("ai", reply);
+            var disclaimerEl = document.getElementById("disclaimer");
+            if (disclaimerEl && window.matchMedia("(max-width: 767px)").matches) {
+              var r = (reply || "").trim();
+              var isError = !r || r.length < 80 || /your request could not be completed|try again later|no reply|request (failed|timed out)|file too large/i.test(r);
+              if (!isError) disclaimerEl.classList.remove("mobile-only-after-answer");
+            }
+            try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+            scheduleRenderHistory();
           }
-          const reply =
-            (data && data.reply) ? data.reply
-            : (data && data.error) ? data.error
-            : (!res || !res.ok)
-              ? (res && res.status === 413
-                  ? "Your request could not be completed because the file is too large. Try a smaller PDF (under 3 MB)."
-                  : "Your request could not be completed. Try again later.")
-              : "No reply.";
-          history.push({ role: "user", content: body.message });
-          history.push({ role: "assistant", content: reply });
-          // Remove typing element and add proper message with copy button
-          if (typingEl && typingEl.parentNode) {
-            typingEl.parentNode.removeChild(typingEl);
-          }
-          addMessage("ai", reply);
-          var disclaimerEl = document.getElementById("disclaimer");
-          if (disclaimerEl && window.matchMedia("(max-width: 767px)").matches) {
-            var r = (reply || "").trim();
-            var isError = !r || r.length < 80 || /your request could not be completed|try again later|no reply|request (failed|timed out)|file too large/i.test(r);
-            if (!isError) disclaimerEl.classList.remove("mobile-only-after-answer");
-          }
-          try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
-          scheduleRenderHistory();
+
         } catch (err) {
           var errMsg =
             (err && err.name === "AbortError")
