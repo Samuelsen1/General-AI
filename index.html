@@ -91,7 +91,7 @@
 
     /* ─── Sidebar — always a hidden drawer ───────────────── */
     .sidebar {
-      position: fixed; top: 0; left: 56px; bottom: 0;
+      position: fixed; top: 0; left: 0; bottom: 0;
       width: var(--sidebar-w); max-width: 85vw;
       display: flex; flex-direction: column;
       background: var(--surface);
@@ -643,11 +643,6 @@
     /* ─── Mobile layout ────────────────────────────────────── */
     @media (max-width: 767px) {
       html, body { font-size: 15px; }
-      .sidebar {
-        left: 0;
-        width: var(--sidebar-w);
-        max-width: 82vw;
-      }
       .history-rail {
         width: auto;
         height: auto;
