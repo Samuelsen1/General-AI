@@ -73,7 +73,7 @@
       position: fixed;
       top: 0;
       bottom: 0;
-      left: 0;
+      left: 56px;
       width: 2px;
       background: linear-gradient(to bottom, rgba(37,99,235,0.5), rgba(37,99,235,0.1));
       z-index: 5;
@@ -638,6 +638,7 @@
     /* ─── Mobile layout ────────────────────────────────────── */
     @media (max-width: 767px) {
       html, body { font-size: 15px; }
+      .shell::before { display: none; }
       .form-area { padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom, 0px)); }
       .chat-inner { padding: 0.75rem 0.65rem 0.25rem; }
       .form-box { border-radius: 16px; }
