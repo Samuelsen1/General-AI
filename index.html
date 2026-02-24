@@ -224,7 +224,7 @@
       flex: 1; min-height: 0;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
-      background: radial-gradient(circle at top, rgba(191,219,254,0.45) 0%, rgba(191,219,254,0.08) 32%, transparent 70%);
+      background: none;
     }
     .chat-scroll::-webkit-scrollbar { width: 6px; }
     .chat-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -868,9 +868,6 @@
 
         <!-- Welcome / empty state -->
         <div class="welcome" id="welcome-state">
-          <div class="welcome-icon-wrap">
-            <img src="/images/g.png" alt="General" onerror="this.style.display='none'" />
-          </div>
           <h1 class="welcome-title" id="welcome-title">What can I help with?</h1>
           <p class="welcome-sub" id="welcome-sub">Ask me anything — I search the web, answer questions, and analyze documents.</p>
           <button type="button" class="voice-cta" id="welcome-voice-btn" aria-label="Start voice conversation">
