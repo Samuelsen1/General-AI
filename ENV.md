@@ -42,9 +42,8 @@ Used when the query contains: *news*, *latest*, *headlines*, *current*, *recent*
 |----------|---------|------------------|
 | `DEEPSEEK_API_KEY` | DeepSeek | [platform.deepseek.com](https://platform.deepseek.com) → API keys → Create new |
 | `OPENAI_API_KEY` | OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| `AIMLAPI` | AIMLAPI (400+ models) | [aimlapi.com](https://aimlapi.com) → API key. OpenAI-compatible; optional `AIMLAPI_MODEL` (default: `gpt-4o-mini`). |
 
-**Priority:** DeepSeek → OpenAI → AIMLAPI (first configured is tried first).
+**Priority:** DeepSeek is used first when configured; otherwise OpenAI.
 
 ---
 

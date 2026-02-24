@@ -66,6 +66,18 @@
     .shell {
       display: flex; height: 100vh; height: 100dvh;
       overflow: hidden;
+      position: relative;
+    }
+    .shell::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 1px;
+      background: var(--border-solid);
+      z-index: 5;
+      pointer-events: none;
     }
     @supports not (height: 100dvh) {
       .shell { height: calc(var(--vh, 1vh) * 100); }
@@ -97,7 +109,12 @@
       display: flex; align-items: center; gap: 0.55rem;
       font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text);
     }
-    .sidebar-brand img { width: 26px; height: 26px; border-radius: 7px; object-fit: contain; }
+    .sidebar-brand img {
+      width: 26px; height: 26px; border-radius: 7px; object-fit: contain;
+      background: #ffffff;
+      border: 1px solid var(--border-solid);
+      box-shadow: 0 2px 10px rgba(15,23,42,0.1);
+    }
     .icon-btn {
       display: flex; align-items: center; justify-content: center;
       width: 36px; height: 36px; min-width: 36px;
@@ -190,6 +207,9 @@
     .topbar-title .logo-img {
       width: 26px; height: 26px; object-fit: contain;
       border-radius: 7px;
+      background: #ffffff;
+      border: 1px solid var(--border-solid);
+      box-shadow: 0 2px 10px rgba(15,23,42,0.1);
     }
     .topbar-spacer { flex: 1; }
     .lang-toggle {
@@ -207,6 +227,7 @@
       flex: 1; min-height: 0;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
+      background: radial-gradient(circle at top, rgba(191,219,254,0.45) 0%, rgba(191,219,254,0.08) 32%, transparent 70%);
     }
     .chat-scroll::-webkit-scrollbar { width: 6px; }
     .chat-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -230,7 +251,9 @@
     }
     .welcome-icon-wrap img {
       width: 42px; height: 42px; object-fit: contain;
-      filter: brightness(0) invert(1);
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(15,23,42,0.15);
     }
     .welcome-title {
       font-size: 1.75rem; font-weight: 700;
@@ -301,6 +324,8 @@
       cursor: pointer; margin-top: 1.25rem;
       transition: all 0.2s ease;
       box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+      margin-top: 1.4rem;
+      margin-bottom: 0.8rem;
     }
     .voice-cta:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(37,99,235,0.45); }
     .voice-cta:active { transform: translateY(0); }
@@ -341,15 +366,16 @@
       flex-shrink: 0; margin-top: 2px;
     }
     .msg-avatar.ai-avatar {
-      background: var(--accent);
-      color: #fff;
+      background: #ffffff;
+      border: 1px solid var(--border-solid);
+      box-shadow: 0 4px 14px rgba(15,23,42,0.12);
+      color: var(--accent);
     }
     .msg-avatar.ai-avatar img {
       width: 100%; height: 100%; object-fit: contain;
     }
     .msg-avatar.user-avatar {
-      background: var(--surface-hover);
-      color: var(--text-dim);
+      display: none;
     }
 
     .msg-bubble {
@@ -612,6 +638,7 @@
       .form-box { border-radius: 16px; }
       .welcome { padding: 1.5rem 1rem 1rem; }
       .welcome-title { font-size: 1.45rem; }
+      #input { font-size: 16px; }
     }
 
     /* ─── Wide desktop ─────────────────────────────────────── */
@@ -851,14 +878,14 @@
               <div class="s-icon-wrap news">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>
               </div>
-              <span class="s-text">Today's news</span>
+              <span class="s-text">What's in the news today?</span>
               <span class="s-sub">What's happening right now</span>
             </button>
             <button type="button" class="suggestion-card" data-prompt="Explain how large language models work in simple terms">
               <div class="s-icon-wrap robot">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7"/><circle cx="12" cy="5" r="2"/><path d="M8 15h.01M16 15h.01M8 19h8"/></svg>
               </div>
-              <span class="s-text">How AI works</span>
+              <span class="s-text">How do AI language models work?</span>
               <span class="s-sub">Language models explained simply</span>
             </button>
             <button type="button" class="suggestion-card" data-prompt="What's the weather like in my area?">
@@ -872,7 +899,7 @@
               <div class="s-icon-wrap email">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
               </div>
-              <span class="s-text">Write an email</span>
+              <span class="s-text">Help me write an email</span>
               <span class="s-sub">Professional &amp; polished</span>
             </button>
           </div>
@@ -1291,15 +1318,13 @@
       const row = document.createElement("div");
       row.className = "msg-row " + role;
 
-      // Avatar
-      const avatar = document.createElement("div");
-      avatar.className = role === "ai" ? "msg-avatar ai-avatar" : "msg-avatar user-avatar";
+      // Avatar: only show an avatar for General, not for the user
       if (role === "ai") {
+        const avatar = document.createElement("div");
+        avatar.className = "msg-avatar ai-avatar";
         avatar.innerHTML = `<img src="/images/g.png" alt="General" onerror="this.parentElement.textContent='G'">`;
-      } else {
-        avatar.textContent = "U";
+        row.appendChild(avatar);
       }
-      row.appendChild(avatar);
 
       // Bubble
       const bubble = document.createElement("div");
