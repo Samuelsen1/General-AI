@@ -164,6 +164,19 @@
     .message th { font-weight: 700; color: var(--text); background: var(--surface); }
     .message tbody tr:last-child td { border-bottom: none; }
     .message tbody tr:hover td { background: var(--accent-soft-2, rgba(99,102,241,0.05)); }
+    /* ── Voice input & live-conversation buttons ──────────────────── */
+    .mic-btn.listening { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); animation: mic-pulse 1.2s ease-in-out infinite; }
+    @keyframes mic-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.35); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+    .voice-mode-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .voice-mode-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft-2); }
+    /* hide voice buttons on browsers with no Speech API */
+    .no-speech .mic-btn, .no-speech .voice-mode-btn { display: none !important; }
+    /* shrink extra buttons on narrow screens */
+    @media (max-width: 480px) {
+      .mic-btn, .voice-mode-btn { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+      .mic-btn svg, .voice-mode-btn svg { width: 16px; height: 16px; }
+    }
+    /* ─────────────────────────────────────────────────────────────── */
     .message-content.streaming { white-space: pre-wrap; word-break: break-word; }
     .message-content.streaming::after { content: "▋"; animation: blink-cursor 0.9s step-end infinite; color: var(--accent); }
     @keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -297,6 +310,12 @@
           </label>
           <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
           <textarea id="input" placeholder="Ask General…" data-i18n-placeholder="askAnything" autocomplete="off" rows="1" enterkeyhint="send"></textarea>
+          <button type="button" id="mic-btn" class="attach-btn mic-btn" aria-label="Voice input" title="Voice input">
+            <svg id="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+          </button>
+          <button type="button" id="voice-mode-btn" class="attach-btn voice-mode-btn" aria-label="Live voice conversation" title="Live voice conversation — General speaks back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+          </button>
           <button type="submit" id="send" aria-label="Send" data-i18n="send">Send</button>
         </form>
         <p class="file-chosen" id="file-chosen" style="display:none"><span id="file-chosen-icon"></span><span id="file-name"></span></p>
@@ -438,6 +457,136 @@
       let lastAiMessageEl = null;
       let chosenFile = null;
       let lastPdfAttachment = null;
+
+      // ── Voice input & live-conversation ─────────────────────────────────
+      const micBtn = document.getElementById("mic-btn");
+      const voiceModeBtn = document.getElementById("voice-mode-btn");
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        document.body.classList.add("no-speech");
+      }
+
+      let recognition = null;
+      let isListening = false;
+      let voiceModeOn = false;   // live-conversation flag
+
+      function buildRecognition() {
+        if (!SpeechRecognition) return null;
+        const r = new SpeechRecognition();
+        r.continuous = false;
+        r.interimResults = true;
+        r.lang = currentLang === "de" ? "de-DE" : "en-US";
+
+        r.onstart = function () {
+          isListening = true;
+          if (micBtn) micBtn.classList.add("listening");
+          if (input) input.placeholder = currentLang === "de" ? "Sprechen Sie jetzt …" : "Listening…";
+        };
+
+        r.onresult = function (e) {
+          let transcript = "";
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            transcript += e.results[i][0].transcript;
+          }
+          if (input) {
+            input.value = transcript;
+            input.style.height = "auto";
+            input.style.height = Math.min(input.scrollHeight, 200) + "px";
+          }
+        };
+
+        r.onerror = function (e) {
+          console.warn("STT error:", e.error);
+          stopListening();
+        };
+
+        r.onend = function () {
+          stopListening();
+          // In live-conversation mode, auto-submit if we captured something
+          if (voiceModeOn && input && input.value.trim() && form) {
+            setTimeout(function () { form.requestSubmit(); }, 120);
+          }
+        };
+
+        return r;
+      }
+
+      function startListening() {
+        if (!SpeechRecognition) return;
+        if (isListening && recognition) { recognition.stop(); return; }
+        recognition = buildRecognition();
+        if (!recognition) return;
+        try { recognition.start(); } catch (e) { console.warn("STT start:", e); }
+      }
+
+      function stopListening() {
+        isListening = false;
+        if (micBtn) micBtn.classList.remove("listening");
+        if (input) input.placeholder = t("askAnything");
+      }
+
+      if (micBtn) {
+        micBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          startListening();
+        });
+      }
+
+      if (voiceModeBtn) {
+        voiceModeBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          voiceModeOn = !voiceModeOn;
+          voiceModeBtn.classList.toggle("active", voiceModeOn);
+          voiceModeBtn.title = voiceModeOn
+            ? (currentLang === "de" ? "Live-Gespräch aktiv — klicken zum Beenden" : "Live conversation ON — click to stop")
+            : (currentLang === "de" ? "Live-Gespräch starten" : "Live voice conversation — General speaks back");
+          if (!voiceModeOn && window.speechSynthesis) window.speechSynthesis.cancel();
+        });
+      }
+
+      /** Speak text aloud; when done, open mic if live-conversation is on */
+      function speakReply(text) {
+        if (!voiceModeOn || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        // Strip markdown symbols before speaking
+        const plain = text
+          .replace(/\*\*([^*]+)\*\*/g, "$1")
+          .replace(/\*([^*]+)\*/g, "$1")
+          .replace(/__([^_]+)__/g, "$1")
+          .replace(/_([^_]+)_/g, "$1")
+          .replace(/`([^`]+)`/g, "$1")
+          .replace(/#+\s/g, "")
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+          .replace(/[-*]\s/g, "")
+          .slice(0, 1200); // cap length
+
+        const utt = new SpeechSynthesisUtterance(plain);
+        utt.lang = currentLang === "de" ? "de-DE" : "en-US";
+        utt.rate = 1.05;
+
+        // Prefer a natural-sounding voice
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => /natural|neural|samantha|google/i.test(v.name) && v.lang.startsWith(utt.lang.slice(0, 2)))
+          || voices.find(v => v.lang.startsWith(utt.lang.slice(0, 2)));
+        if (preferred) utt.voice = preferred;
+
+        utt.onend = function () {
+          if (voiceModeOn) setTimeout(startListening, 400);
+        };
+        utt.onerror = function () {
+          if (voiceModeOn) setTimeout(startListening, 400);
+        };
+
+        window.speechSynthesis.speak(utt);
+      }
+
+      // Pre-load voices (some browsers load them lazily)
+      if (window.speechSynthesis) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = function () { window.speechSynthesis.getVoices(); };
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       function closeSidebar() {
         if (sidebar) sidebar.classList.remove("open");
@@ -900,6 +1049,8 @@
         addMessage("user", displayMsg, undefined, attachmentOpts);
         input.value = "";
         if (file) { chosenFile = null; fileInput.value = ""; fileNameEl.textContent = ""; fileChosen.style.display = "none"; }
+        // Stop any ongoing TTS when user sends a new message
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
         send.disabled = true;
         const typingEl = addTyping();
 
@@ -1020,6 +1171,7 @@
                       }
                       try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
                       scheduleRenderHistory();
+                      speakReply(replyText);
                       break outer;
                     }
                   } catch (_) {}
@@ -1059,6 +1211,7 @@
             }
             try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
             scheduleRenderHistory();
+            speakReply(reply);
           }
 
         } catch (err) {
