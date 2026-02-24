@@ -50,6 +50,11 @@
         --user-bg: #1e3a5f;
         --user-border: #2563eb;
       }
+      .history-rail .icon-btn {
+        background: #020617;
+        border: 1px solid var(--border-solid);
+        color: var(--text-soft);
+      }
     }
 
     /* ─── Reset & base ────────────────────────────────────── */
@@ -86,7 +91,7 @@
 
     /* ─── Sidebar — always a hidden drawer ───────────────── */
     .sidebar {
-      position: fixed; top: 0; left: 0; bottom: 0;
+      position: fixed; top: 0; left: 56px; bottom: 0;
       width: var(--sidebar-w); max-width: 85vw;
       display: flex; flex-direction: column;
       background: var(--surface);
@@ -638,6 +643,11 @@
     /* ─── Mobile layout ────────────────────────────────────── */
     @media (max-width: 767px) {
       html, body { font-size: 15px; }
+      .sidebar {
+        left: 0;
+        width: var(--sidebar-w);
+        max-width: 82vw;
+      }
       .history-rail {
         width: auto;
         height: auto;
@@ -658,7 +668,7 @@
         padding: 0.3rem 0.6rem;
         border-radius: 999px;
         border: 1px solid var(--border-solid);
-        background: rgba(255,255,255,0.96);
+        background: var(--bg);
       }
       .form-area { padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom, 0px)); }
       .chat-inner { padding: 0.75rem 0.65rem 0.25rem; }
