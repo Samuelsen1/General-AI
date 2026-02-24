@@ -74,8 +74,8 @@
       top: 0;
       bottom: 0;
       left: 0;
-      width: 1px;
-      background: var(--border-solid);
+      width: 2px;
+      background: linear-gradient(to bottom, rgba(37,99,235,0.5), rgba(37,99,235,0.1));
       z-index: 5;
       pointer-events: none;
     }
@@ -318,16 +318,22 @@
       display: none; /* shown only when SR available */
       align-items: center; gap: 0.6rem;
       padding: 0.7rem 1.4rem;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: 99px;
+      background: var(--bg);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
       font: inherit; font-size: 0.9rem; font-weight: 600;
-      cursor: pointer; margin-top: 1.25rem;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+      cursor: pointer;
       margin-top: 1.4rem;
       margin-bottom: 0.8rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.18);
     }
-    .voice-cta:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(37,99,235,0.45); }
+    .voice-cta:hover {
+      background: var(--accent-soft2);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(37,99,235,0.28);
+    }
     .voice-cta:active { transform: translateY(0); }
     .voice-cta svg { width: 18px; height: 18px; }
     .voice-cta.sr-ready { display: flex; }
@@ -649,15 +655,25 @@
 
     /* ─── Voice button in form bar ───────────────────────── */
     .voice-btn {
-      background: var(--accent-soft) !important;
-      border-color: var(--border-solid) !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      width: auto;
+      min-width: 0;
+      padding: 0 0.85rem;
+      background: var(--bg) !important;
+      border-color: var(--accent) !important;
       color: var(--accent) !important;
+      border-radius: 999px;
     }
     .voice-btn:hover {
-      background: var(--accent) !important;
-      border-color: var(--accent) !important;
-      color: #fff !important;
+      background: var(--accent-soft2) !important;
+      border-color: var(--accent-hover) !important;
+      color: var(--accent-hover) !important;
     }
+    .voice-btn svg { width: 16px; height: 16px; }
+    .voice-btn-label { font-size: 0.8rem; font-weight: 600; }
     .no-speech-hide { display: none !important; }
 
     /* ─── Voice overlay ───────────────────────────────────── */
@@ -740,23 +756,12 @@
 
     /* State label */
     .vo-state {
-      margin: 0;
-      font-size: 1rem; font-weight: 500; letter-spacing: 0.01em;
-      color: rgba(255,255,255,0.75);
-      text-align: center;
-      min-height: 1.5em;
-      transition: opacity 0.2s;
+      display: none; /* voice overlay is visual-only: no status text */
     }
 
     /* Live transcript */
     .vo-transcript {
-      min-height: 3em; max-height: 6em;
-      width: 100%; max-width: 340px;
-      text-align: center;
-      font-size: 1.08rem; font-weight: 500; line-height: 1.5;
-      color: rgba(255,255,255,0.95);
-      overflow: hidden;
-      position: relative;
+      display: none; /* hide text transcript in speaking page */
     }
     .vo-transcript .vo-interim { color: rgba(255,255,255,0.45); }
     .vo-transcript .vo-final   { color: #fff; }
@@ -932,6 +937,7 @@
 
               <button type="button" id="voice-btn" class="form-btn voice-btn no-speech-hide" aria-label="Start voice conversation" title="Talk to General">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+                <span class="voice-btn-label">Talk</span>
               </button>
               <button type="submit" id="send" class="form-btn send-btn" aria-label="Send message" disabled>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -1357,19 +1363,19 @@
       actions.className = "msg-actions";
 
       const copyBtn = document.createElement("button");
-      copyBtn.type = "button"; copyBtn.className = "action-btn"; copyBtn.setAttribute("aria-label","Copy");
-      copyBtn.innerHTML = COPY_SVG + " Copy";
+      copyBtn.type = "button"; copyBtn.className = "action-btn"; copyBtn.setAttribute("aria-label","Copy message");
+      copyBtn.innerHTML = COPY_SVG;
       copyBtn.addEventListener("click", () => {
         copyToClipboard(contentEl.innerText || "");
-        copyBtn.innerHTML = "✓ Copied"; copyBtn.classList.add("copied");
-        setTimeout(() => { copyBtn.innerHTML = COPY_SVG + " Copy"; copyBtn.classList.remove("copied"); }, 2000);
+        copyBtn.innerHTML = "✓"; copyBtn.classList.add("copied");
+        setTimeout(() => { copyBtn.innerHTML = COPY_SVG; copyBtn.classList.remove("copied"); }, 2000);
       });
       actions.appendChild(copyBtn);
 
       if (role === "user") {
         const editBtn = document.createElement("button");
-        editBtn.type = "button"; editBtn.className = "action-btn edit-btn"; editBtn.setAttribute("aria-label","Edit");
-        editBtn.innerHTML = EDIT_SVG + " Edit";
+        editBtn.type = "button"; editBtn.className = "action-btn edit-btn"; editBtn.setAttribute("aria-label","Edit message");
+        editBtn.innerHTML = EDIT_SVG;
         editBtn.addEventListener("click", () => {
           const textContent = contentEl.innerText || ""; if (!textContent) return;
           if (inputEl) { inputEl.value = textContent; inputEl.style.height="auto"; inputEl.style.height=Math.min(inputEl.scrollHeight,200)+"px"; inputEl.focus(); updateSendBtn(); }
@@ -1516,8 +1522,8 @@
                       sb.addEventListener("click", () => { copyToClipboard(sbody.innerText||""); sb.innerHTML="✓"; sb.classList.add("copied"); setTimeout(()=>{sb.innerHTML=COPY_SVG;sb.classList.remove("copied");},2000); });
                     });
                     const acts = document.createElement("div"); acts.className = "msg-actions";
-                    const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy"); cpb.innerHTML = COPY_SVG+" Copy";
-                    cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓ Copied"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG+" Copy";cpb.classList.remove("copied");},2000); });
+                    const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML = COPY_SVG;
+                    cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
                     acts.appendChild(cpb); bbl.appendChild(acts);
                     history.push({ role:"user", content: body.message });
                     history.push({ role:"assistant", content: replyText });
@@ -1824,8 +1830,8 @@
                     replyText = obj.err ? (full||obj.err) : full;
                     cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(replyText);
                     const acts = document.createElement("div"); acts.className="msg-actions";
-                    const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy"); cpb.innerHTML=COPY_SVG+" Copy";
-                    cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓ Copied"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG+" Copy";cpb.classList.remove("copied");},2000); });
+          const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML=COPY_SVG;
+                    cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
                     acts.appendChild(cpb); bbl.appendChild(acts);
                     break outer2;
                   }
@@ -1869,10 +1875,10 @@
       const plain = text
         .replace(/\*\*([^*]+)\*\*/g,"$1").replace(/\*([^*]+)\*/g,"$1")
         .replace(/#+\s/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
-        .replace(/[-*]\s/g,"").replace(/<[^>]*>/g,"").slice(0,1200);
+        .replace(/[-*]\s/g,"").replace(/<[^>]*>/g,"").slice(0,600); // keep replies short for quicker speech
       const utt = new SpeechSynthesisUtterance(plain);
       utt.lang = lang === "de" ? "de-DE" : "en-US";
-      utt.rate = 1.05;
+      utt.rate = 1.0;
       const voices = window.speechSynthesis.getVoices();
       const pref = voices.find(v => /natural|neural|samantha|google/i.test(v.name) && v.lang.startsWith(utt.lang.slice(0,2))) || voices.find(v => v.lang.startsWith(utt.lang.slice(0,2)));
       if (pref) utt.voice = pref;
