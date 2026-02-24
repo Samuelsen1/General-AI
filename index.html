@@ -13,19 +13,19 @@
     /* ─── Base tokens — Blue & White ─────────────────────── */
     :root {
       --bg: #ffffff;
-      --surface: #f0f6ff;
-      --surface-hover: #dbeafe;
-      --border: rgba(37,99,235,0.1);
-      --border-solid: #bfdbfe;
-      --text: #0f172a;
-      --text-soft: #1e3a5f;
-      --text-dim: #64748b;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --accent-soft: rgba(37,99,235,0.1);
-      --accent-soft2: rgba(37,99,235,0.06);
+      --surface: #e9f0ff;
+      --surface-hover: #d7e3ff;
+      --border: rgba(37,99,235,0.16);
+      --border-solid: #93c5fd;
+      --text: #0b1120;
+      --text-soft: #111827;
+      --text-dim: #4b5563;
+      --accent: #1d4ed8;
+      --accent-hover: #1e40af;
+      --accent-soft: rgba(37,99,235,0.16);
+      --accent-soft2: rgba(37,99,235,0.08);
       --user-bg: #dbeafe;
-      --user-border: #bfdbfe;
+      --user-border: #93c5fd;
       --radius: 12px;
       --radius-lg: 18px;
       --font: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -35,20 +35,20 @@
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f172a;
-        --surface: #1e293b;
-        --surface-hover: #263348;
-        --border: rgba(96,165,250,0.12);
-        --border-solid: #334155;
-        --text: #f1f5f9;
-        --text-soft: #cbd5e1;
-        --text-dim: #64748b;
+        --bg: #020617;
+        --surface: #020617;
+        --surface-hover: #0b1120;
+        --border: rgba(148,163,184,0.35);
+        --border-solid: #1f2937;
+        --text: #e5e7eb;
+        --text-soft: #e5e7eb;
+        --text-dim: #9ca3af;
         --accent: #60a5fa;
-        --accent-hover: #93c5fd;
-        --accent-soft: rgba(96,165,250,0.15);
-        --accent-soft2: rgba(96,165,250,0.07);
+        --accent-hover: #3b82f6;
+        --accent-soft: rgba(96,165,250,0.25);
+        --accent-soft2: rgba(96,165,250,0.12);
         --user-bg: #1e3a5f;
-        --user-border: #2563eb;
+        --user-border: #60a5fa;
       }
       .history-rail .icon-btn {
         background: #020617;
@@ -322,21 +322,21 @@
       display: none; /* shown only when SR available */
       align-items: center; gap: 0.6rem;
       padding: 0.7rem 1.4rem;
-      background: var(--bg);
-      color: var(--accent);
-      border: 1px solid var(--accent);
+      background: var(--surface);
+      color: var(--text-soft);
+      border: 1px solid var(--border-solid);
       border-radius: 999px;
       font: inherit; font-size: 0.9rem; font-weight: 600;
       cursor: pointer;
       margin-top: 1.4rem;
       margin-bottom: 0.8rem;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 14px rgba(37,99,235,0.18);
+      box-shadow: none;
     }
     .voice-cta:hover {
-      background: var(--accent-soft2);
+      background: var(--surface-hover);
       transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(37,99,235,0.28);
+      box-shadow: 0 3px 10px rgba(15,23,42,0.08);
     }
     .voice-cta:active { transform: translateY(0); }
     .voice-cta svg { width: 18px; height: 18px; }
@@ -665,7 +665,7 @@
         border: 1px solid var(--border-solid);
         background: var(--bg);
       }
-      .topbar-title .logo-img {
+      .topbar-title {
         display: none;
       }
       .form-area { padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom, 0px)); }
@@ -691,15 +691,15 @@
       width: auto;
       min-width: 0;
       padding: 0 0.85rem;
-      background: var(--bg) !important;
-      border-color: var(--accent) !important;
-      color: var(--accent) !important;
+      background: var(--surface);
+      border-color: var(--border-solid);
+      color: var(--text-dim);
       border-radius: 999px;
     }
     .voice-btn:hover {
-      background: var(--accent-soft2) !important;
-      border-color: var(--accent-hover) !important;
-      color: var(--accent-hover) !important;
+      background: var(--surface-hover);
+      border-color: var(--border-solid);
+      color: var(--accent);
     }
     .voice-btn svg { width: 16px; height: 16px; }
     .voice-btn-label { font-size: 0.8rem; font-weight: 600; }
