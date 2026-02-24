@@ -195,12 +195,6 @@
       border-bottom: 1px solid var(--border-solid);
       position: relative; z-index: 10;
     }
-    .topbar::after {
-      content: ""; position: absolute; bottom: -1px; left: 0;
-      width: 56px; height: 2px;
-      background: linear-gradient(90deg, var(--accent), #60a5fa);
-      border-radius: 0 999px 999px 0;
-    }
     .topbar-title {
       font-size: 0.95rem; font-weight: 700;
       color: var(--text); letter-spacing: -0.025em;
@@ -253,10 +247,12 @@
       box-shadow: 0 8px 32px rgba(37,99,235,0.25);
     }
     .welcome-icon-wrap img {
-      width: 42px; height: 42px; object-fit: contain;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(15,23,42,0.15);
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: none;
+      border: none;
+      box-shadow: none;
     }
     .welcome-title {
       font-size: 1.75rem; font-weight: 700;
@@ -274,7 +270,7 @@
       max-width: 540px; width: 100%;
     }
     @media (max-width: 480px) {
-      .suggestions { grid-template-columns: 1fr; max-width: 340px; }
+      .suggestions { grid-template-columns: repeat(2, 1fr); max-width: 340px; }
     }
     .suggestion-card {
       background: var(--bg);
@@ -1512,7 +1508,7 @@
                 if (!line.startsWith("data: ")) continue;
                 try {
                   const obj = JSON.parse(line.slice(6).trim());
-                  if (obj.t) { full += obj.t; cEl.textContent = full; row.scrollIntoView({ behavior: "auto", block: "end" }); }
+                    if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({ behavior: "auto", block: "end" }); }
                   if (obj.done || obj.err) {
                     finished = true;
                     const replyText = obj.err ? (full||obj.err) : full;
@@ -1828,7 +1824,7 @@
                 if (!line.startsWith("data: ")) continue;
                 try {
                   const obj = JSON.parse(line.slice(6).trim());
-                  if (obj.t) { full += obj.t; cEl.textContent = full; row.scrollIntoView({behavior:"auto",block:"end"}); }
+                  if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({behavior:"auto",block:"end"}); }
                   if (obj.done || obj.err) {
                     replyText = obj.err ? (full||obj.err) : full;
                     cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(replyText);
