@@ -642,13 +642,6 @@
       font-weight: 400; letter-spacing: 0.02em;
     }
 
-    .msg-footnote {
-      margin-top: 0.35rem;
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      opacity: 0.9;
-    }
-
     /* ─── Mobile layout ────────────────────────────────────── */
     @media (max-width: 767px) {
       html, body { font-size: 15px; }
@@ -975,7 +968,7 @@
 
               <button type="button" id="voice-btn" class="form-btn voice-btn no-speech-hide" aria-label="Start voice conversation" title="Talk to General">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-                <span class="voice-btn-label" data-i18n="voiceTalk">Talk</span>
+                <span class="voice-btn-label" data-i18n="voiceLabel">Talk</span>
               </button>
               <button type="submit" id="send" class="form-btn send-btn" aria-label="Send message" disabled>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -1011,7 +1004,7 @@
         </button>
         <button type="button" class="vo-stop-btn" id="vo-stop-btn" aria-label="End voice conversation">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          <span data-i18n="voiceEnd">End</span>
+          End
         </button>
       </div>
     </div>
@@ -1027,17 +1020,16 @@
         attachFile: "Attach image or PDF",
         greeting: "Hello! How can I help you today? 😊",
         you: "You", general: "General",
-        voiceTalk: "Talk",
-        voiceEnd: "End",
         searching: "Thinking…", langCode: "EN",
+        voiceLabel: "Talk",
         welcomeTitle: "What can I help with?",
         welcomeSub: "Ask me anything — I search the web, answer questions, and analyze documents.",
         noChats: "No past chats yet.",
         suggestions: [
-          { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?", sub: "Latest headlines at a glance" },
-          { icon: "🤖", text: "How do AI language models work?", prompt: "Explain how large language models work in simple terms", sub: "Language models explained simply" },
-          { icon: "🌤", text: "Check the weather", prompt: "What's the current weather in Berlin, Germany?", sub: "Live example – change the city" },
-          { icon: "✉️", text: "Help me write an email", prompt: "Help me write a professional email", sub: "Professional & polished" },
+          { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?" },
+          { icon: "🤖", text: "How do AI language models work?", prompt: "Explain how large language models work in simple terms" },
+          { icon: "🌤", text: "Check the weather", prompt: "What's the current weather in Berlin, Germany?" },
+          { icon: "✉️", text: "Help me write an email", prompt: "Help me write a professional email" },
         ]
       },
       de: {
@@ -1046,17 +1038,16 @@
         attachFile: "Bild oder PDF anhängen",
         greeting: "Hallo! Wie kann ich Ihnen heute helfen? 😊",
         you: "Sie", general: "General",
-        voiceTalk: "Sprechen",
-        voiceEnd: "Beenden",
         searching: "Denke nach…", langCode: "DE",
+        voiceLabel: "Sprechen",
         welcomeTitle: "Wie kann ich helfen?",
         welcomeSub: "Stell mir alles — ich suche im Web, beantworte Fragen und analysiere Dokumente.",
         noChats: "Noch keine vergangenen Chats.",
         suggestions: [
-          { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?", sub: "Aktuelle Schlagzeilen im Überblick" },
-          { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren", sub: "Sprachmodelle verständlich erklärt" },
-          { icon: "🌤", text: "Wetter prüfen", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?", sub: "Live-Beispiel – Stadt beliebig ändern" },
-          { icon: "✉️", text: "E-Mail schreiben", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben", sub: "Professionell & gut formuliert" },
+          { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?" },
+          { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren" },
+          { icon: "🌤", text: "Wetter prüfen", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
+          { icon: "✉️", text: "E-Mail schreiben", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben" },
         ]
       }
     };
@@ -1076,21 +1067,13 @@
     }
 
     function buildSuggestions() {
+      // Static HTML already built; just wire up click listeners for i18n prompts
       const cards = document.querySelectorAll(".suggestion-card");
-      const list = (TR[lang] && TR[lang].suggestions) || TR.en.suggestions || [];
-      cards.forEach((btn, idx) => {
-        const cfg = list[idx];
-        if (cfg) {
-          btn.dataset.prompt = cfg.prompt;
-          const textEl = btn.querySelector(".s-text");
-          const subEl = btn.querySelector(".s-sub");
-          if (textEl) textEl.textContent = cfg.text;
-          if (subEl && cfg.sub) subEl.textContent = cfg.sub;
-        }
-        btn.onclick = () => {
+      cards.forEach(btn => {
+        btn.addEventListener("click", () => {
           const prompt = btn.dataset.prompt;
           if (inputEl && prompt) { inputEl.value = prompt; updateSendBtn(); inputEl.focus(); }
-        };
+        });
       });
     }
 
@@ -1320,18 +1303,6 @@
     function isTableRow(l) { const t2=l.trim(); return t2.startsWith("|")&&t2.endsWith("|"); }
     function isSep(l) { return /^\|[\s|:\-]+\|$/.test(l.trim()); }
 
-    function splitFootnote(text) {
-      if (!text) return { main: "", footnote: "" };
-      const lines = String(text).split(/\r?\n/);
-      let idx = lines.length - 1;
-      while (idx >= 0 && !lines[idx].trim()) idx--;
-      if (idx < 0) return { main: text, footnote: "" };
-      const last = lines[idx].trim();
-      if (!/^(note|hinweis):/i.test(last)) return { main: text, footnote: "" };
-      const main = lines.slice(0, idx).join("\n").replace(/\s+$/, "");
-      return { main, footnote: last };
-    }
-
     function formatMsg(raw) {
       if (!raw) return "";
       raw = convertTsv(String(raw));
@@ -1404,20 +1375,7 @@
       // Content
       const contentEl = document.createElement("div");
       contentEl.className = "msg-content";
-      if (role === "user") {
-        contentEl.innerHTML = formatUserMsg(text);
-      } else {
-        const parts = splitFootnote(text);
-        const mainText = parts.main || text;
-        const footnote = parts.footnote;
-        contentEl.innerHTML = formatMsg(mainText);
-        if (footnote) {
-          const foot = document.createElement("div");
-          foot.className = "msg-footnote";
-          foot.innerHTML = formatUserMsg(footnote);
-          bubble.appendChild(foot);
-        }
-      }
+      contentEl.innerHTML = role === "user" ? formatUserMsg(text) : formatMsg(text);
       bubble.appendChild(contentEl);
 
       // Attachment badge (user)
@@ -1578,17 +1536,8 @@
                   if (obj.done || obj.err) {
                     finished = true;
                     const replyText = obj.err ? (full||obj.err) : full;
-                    const parts = splitFootnote(replyText);
-                    const mainText = parts.main || replyText;
-                    const footnote = parts.footnote;
                     cEl.classList.remove("streaming");
-                    cEl.innerHTML = formatMsg(mainText);
-                    if (footnote) {
-                      const foot = document.createElement("div");
-                      foot.className = "msg-footnote";
-                      foot.innerHTML = formatUserMsg(footnote);
-                      bbl.appendChild(foot);
-                    }
+                    cEl.innerHTML = formatMsg(replyText);
                     row.querySelectorAll(".ai-snippet").forEach(snip => {
                       const sb = snip.querySelector(".ai-snippet-copy");
                       const sbody = snip.querySelector(".ai-snippet-body");
@@ -1611,18 +1560,7 @@
           } catch (streamErr) {
             cEl.classList.remove("streaming");
             if (!full) cEl.innerHTML = formatMsg("Your request could not be completed. Try again later.");
-            else {
-              const parts = splitFootnote(full);
-              const mainText = parts.main || full;
-              const footnote = parts.footnote;
-              cEl.innerHTML = formatMsg(mainText);
-              if (footnote) {
-                const foot = document.createElement("div");
-                foot.className = "msg-footnote";
-                foot.innerHTML = formatUserMsg(footnote);
-                bbl.appendChild(foot);
-              }
-            }
+            else cEl.innerHTML = formatMsg(full);
           }
           if (!finished && !full) { cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg("Your request could not be completed. Try again later."); }
 
@@ -1910,16 +1848,7 @@
                   if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({behavior:"auto",block:"end"}); }
                   if (obj.done || obj.err) {
                     replyText = obj.err ? (full||obj.err) : full;
-                    const parts = splitFootnote(replyText);
-                    const mainText = parts.main || replyText;
-                    const footnote = parts.footnote;
-                    cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(mainText);
-                    if (footnote) {
-                      const foot = document.createElement("div");
-                      foot.className = "msg-footnote";
-                      foot.innerHTML = formatUserMsg(footnote);
-                      bbl.appendChild(foot);
-                    }
+                    cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(replyText);
                     const acts = document.createElement("div"); acts.className="msg-actions";
           const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML=COPY_SVG;
                     cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
@@ -1929,21 +1858,7 @@
                 } catch(_) {}
               }
             }
-          } catch(_) {
-            if (!full) replyText="Your request could not be completed.";
-            else replyText=full;
-            cEl.classList.remove("streaming");
-            const parts = splitFootnote(replyText);
-            const mainText = parts.main || replyText;
-            const footnote = parts.footnote;
-            cEl.innerHTML = formatMsg(mainText);
-            if (footnote) {
-              const foot = document.createElement("div");
-              foot.className = "msg-footnote";
-              foot.innerHTML = formatUserMsg(footnote);
-              bbl.appendChild(foot);
-            }
-          }
+          } catch(_) { if (!full) replyText="Your request could not be completed."; else replyText=full; cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg(replyText); }
           if (!replyText) { cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg("Your request could not be completed."); replyText="Your request could not be completed."; }
         } else {
           let data; try { data = await apiRes.json(); } catch(_) { data={}; }

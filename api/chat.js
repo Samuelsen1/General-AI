@@ -943,13 +943,9 @@ module.exports = async function handler(req, res) {
     return sseError(res, "Your request with the long text could not be completed. Try again later.");
   }
 
-  // Fallback: when LLM is unavailable or streaming failed, try to answer from search/aux data
-  const fallback = buildFallbackReply(opts);
-  if (!hadLLM || (fallback && fallback.trim())) {
-    if (fallback && fallback.trim()) {
-      sseDelta(res, fallback);
-      return sseDone(res);
-    }
+  if (!hadLLM) {
+    const fallback = buildFallbackReply(opts);
+    if (fallback && fallback.trim()) { sseDelta(res, fallback); return sseDone(res); }
   }
 
   return sseError(res, "Your request could not be completed. Try again later.");
