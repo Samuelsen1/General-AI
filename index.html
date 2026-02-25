@@ -402,6 +402,9 @@
       color: var(--text-dim); margin-bottom: 0.25rem;
       letter-spacing: 0.01em;
     }
+    .msg-row.user .msg-name {
+      display: none;
+    }
 
     .msg-content {
       display: inline-block;
@@ -1330,6 +1333,11 @@
       s = s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/__([^_]+)__/g,"<strong>$1</strong>");
       s = s.replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/_([^_]+)_/g,"<em>$1</em>");
       s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_,txt,url) => { const u = /^https?:\/\//i.test(url) ? url.replace(/"/g,"&quot;") : "#"; return `<a href="${u}" target="_blank" rel="noopener">${txt}</a>`; });
+      // Make bare URLs clickable (avoid matching inside existing href="...")
+      s = s.replace(/(^|>|\s)(https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)/g, (_, pre, url) => {
+        const safe = url.replace(/"/g,"&quot;");
+        return pre + `<a href="${safe}" target="_blank" rel="noopener">${url}</a>`;
+      });
       s = s.replace(/^####\s+(.+)$/gm,"<span class=\"msg-heading\">$1</span>");
       s = s.replace(/^###\s+(.+)$/gm,"<span class=\"msg-heading\">$1</span>");
       s = s.replace(/^##\s+(.+)$/gm,"<span class=\"msg-heading\">$1</span>");
