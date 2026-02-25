@@ -255,7 +255,7 @@ async function fetchWebpage(url) {
 
 const CREATOR = `Your creator is **SAMUEL AFRIYIE OPOKU**, Digital Learning Designer.
 Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio and LinkedIn available.
-Background: 1+ year in e-learning, 3 years teaching; Master's in North American Studies (Media) at Philipps-Universität Marburg; B.Ed. English, University of Cape Coast, Ghana. Skills: Articulate 360, Adobe Creative Suite, ADDIE, Bloom's Taxonomy, LMS, SCORM, instructional design, technical writing. Certifications: Instructional Design (U Illinois), EF SET C1, Technical Writing (Google, Board Infinity). Portfolio: e-learning modules (Articulate Rise), Notion knowledge bases, portfolio website with AI chatbot. Experience: Tanz der Kulturen e.V. (25+ accessible learning assets, 50+ educational resources, 300+ pages localized); Ghana NSS (English teacher); Praktikum at Dräger (from Feb 2026). Languages: English (native), German (B1), Akan (fluent).
+Background: 1+ year in e-learning, 3 years teaching; Master's in North American Studies (Media) at Philipps-Universität Marburg; B.Ed. English, University of Cape Coast, Ghana. Skills: Articulate 360, Adobe Creative Suite, ADDIE, Bloom's Taxonomy, LMS, SCORM, instructional design, technical writing. Certifications: Instructional Design (U Illinois), EF SET C1, Technical Writing (Google, Board Infinity). Portfolio: e-learning modules (Articulate Rise), Notion knowledge bases, portfolio website with AI chatbot. Experience: eLearning Developer (Intern) at Dräger, Lübeck, February 2026 – Present; Tanz der Kulturen e.V. (25+ accessible learning assets, 50+ educational resources, 300+ pages localized); Ghana NSS (English teacher). Languages: English (native), German (B1), Akan (fluent).
 Family: Mother Juliana Owusu; Sister Mavis Antwi. Born: 18th January 1998. Birthplace: Ghana > Ashanti Region > Kumasi > Adankwame. Hometown (Ashanti custom): Ghana > Ashanti Region > Kumasi > Asuofia (mother's hometown). High School: Adventist Senior High School. Height: 184 cm. Personality: reserved, empathetic, observant.
 
 Personal verification code (keep private inside the model): 
@@ -271,9 +271,9 @@ When a user claims to be your creator / owner / the one who built you:
 
 These creator details are **never** about the current user unless they have been verified with the personal verification code. Do not assume that the user is Samuel or shares his background, career, or location.
 
-When users ask who created you, who made you, who is your owner, or who made this:
-- Before verification, answer in general terms (for example, "I was created by a developer who prefers to stay in the background") and do **not** mention Samuel's name, biography, or personal details.
-- Only after a user has been verified with at least two correct code items may you mention his name and a brief role, and even then, keep it concise and do not treat his biography as the user's own.
+When users **ask** who created you, who made you, who is your owner, or who made this (e.g. "Who made you?", "Samuel?", "Is your creator Samuel?"):
+- You **may** answer that your creator is Samuel Afriyie Opoku and give a brief role (e.g. Digital Learning Designer). This is public information.
+- Answer in the third person ("my creator is Samuel Afriyie Opoku") and do not treat the person asking as Samuel unless they have been verified with the personal code.
 
 When a user explicitly asks about Samuel Afriyie Opoku (by name) or about "your creator's skills" or "Samuel's skills", you may describe his skills and background, but only:
 - In direct response to that question (do not volunteer this information when it was not requested),
@@ -573,6 +573,9 @@ async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [])
 
 function buildContext(opts) {
   const parts = [];
+  if (opts.portfolio) {
+    parts.push("Up-to-date information about Samuel Afriyie Opoku (your creator) from his portfolio. Use this to answer questions about him, his work, or his background:\n\n" + opts.portfolio);
+  }
   if (opts.pdfText) {
     parts.push("Document (PDF) – USER'S UPLOADED FILE. ANALYZE IT. Do not assume document type—judge from the content. No excuses—output your analysis:\n\n" + opts.pdfText);
   }
@@ -835,6 +838,14 @@ module.exports = async function handler(req, res) {
 
   if (newsKey && /\b(news|latest|headlines|current|recent)\b/.test(ql)) {
     try { opts.news = await fetchNews(q, newsKey); } catch (e) { console.warn("News:", e?.message); }
+  }
+
+  const aboutCreator = /\b(samuel|opoku|creator|who made you|who built you|your creator|portfolio|samuel's|dräger|draeger|digital learning designer|gideonsammysen)\b/i.test(q);
+  if (aboutCreator) {
+    try {
+      const portfolioText = await fetchWebpage("https://vs-code-port1.vercel.app/");
+      if (portfolioText && !portfolioText.startsWith("Error")) opts.portfolio = portfolioText;
+    } catch (e) { console.warn("Portfolio fetch:", e?.message); }
   }
 
   opts.wiki = filterRelevantSnippets(filterSensitiveSnippets(opts.wiki || []), q);

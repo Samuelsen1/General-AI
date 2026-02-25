@@ -387,6 +387,9 @@
     .msg-avatar.user-avatar {
       display: none;
     }
+    .msg-row.ai .msg-avatar {
+      display: none !important;
+    }
 
     .msg-bubble {
       flex: 1; min-width: 0;
@@ -636,8 +639,9 @@
     .form-btn.send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: scale(1); }
 
     .form-hint {
-      text-align: center; font-size: 0.72rem; color: var(--text-dim);
-      margin-top: 0.5rem;
+      text-align: center; font-size: 0.7rem; color: var(--text-dim);
+      margin-top: 0.5rem; opacity: 0.85;
+      font-weight: 400; letter-spacing: 0.02em;
     }
 
     /* ─── Mobile layout ────────────────────────────────────── */
@@ -972,7 +976,7 @@
               </button>
             </div>
           </form>
-          <p class="form-hint">General can make mistakes. Verify important information.</p>
+          <p class="form-hint">Built by Samuel Opoku</p>
         </div>
       </div>
 
@@ -1438,10 +1442,6 @@
     function addTyping() {
       const row = document.createElement("div");
       row.className = "msg-row ai typing-row";
-      const avatar = document.createElement("div");
-      avatar.className = "msg-avatar ai-avatar";
-      avatar.innerHTML = `<img src="/images/g.png" alt="" onerror="this.parentElement.textContent='G'">`;
-      row.appendChild(avatar);
       const bubble = document.createElement("div");
       bubble.className = "msg-bubble";
       const name = document.createElement("div");
@@ -1502,9 +1502,6 @@
 
           // Streaming shell
           const row = document.createElement("div"); row.className = "msg-row ai";
-          const av = document.createElement("div"); av.className = "msg-avatar ai-avatar";
-          av.innerHTML = `<img src="/images/g.png" alt="" onerror="this.parentElement.textContent='G'">`;
-          row.appendChild(av);
           const bbl = document.createElement("div"); bbl.className = "msg-bubble";
           const nm = document.createElement("div"); nm.className = "msg-name"; nm.textContent = t("general");
           bbl.appendChild(nm);
@@ -1823,9 +1820,6 @@
           if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
           // Build streaming shell in chat
           const row = document.createElement("div"); row.className = "msg-row ai";
-          const av = document.createElement("div"); av.className = "msg-avatar ai-avatar";
-          av.innerHTML = `<img src="/images/g.png" alt="" onerror="this.parentElement.textContent='G'">`;
-          row.appendChild(av);
           const bbl = document.createElement("div"); bbl.className = "msg-bubble";
           const nm = document.createElement("div"); nm.className = "msg-name"; nm.textContent = t("general");
           bbl.appendChild(nm);
