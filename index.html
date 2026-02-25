@@ -975,7 +975,7 @@
 
               <button type="button" id="voice-btn" class="form-btn voice-btn no-speech-hide" aria-label="Start voice conversation" title="Talk to General">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-                <span class="voice-btn-label">Talk</span>
+                <span class="voice-btn-label" data-i18n="voiceTalk">Talk</span>
               </button>
               <button type="submit" id="send" class="form-btn send-btn" aria-label="Send message" disabled>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -1011,7 +1011,7 @@
         </button>
         <button type="button" class="vo-stop-btn" id="vo-stop-btn" aria-label="End voice conversation">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          End
+          <span data-i18n="voiceEnd">End</span>
         </button>
       </div>
     </div>
@@ -1027,6 +1027,8 @@
         attachFile: "Attach image or PDF",
         greeting: "Hello! How can I help you today? 😊",
         you: "You", general: "General",
+        voiceTalk: "Talk",
+        voiceEnd: "End",
         searching: "Thinking…", langCode: "EN",
         welcomeTitle: "What can I help with?",
         welcomeSub: "Ask me anything — I search the web, answer questions, and analyze documents.",
@@ -1044,6 +1046,8 @@
         attachFile: "Bild oder PDF anhängen",
         greeting: "Hallo! Wie kann ich Ihnen heute helfen? 😊",
         you: "Sie", general: "General",
+        voiceTalk: "Sprechen",
+        voiceEnd: "Beenden",
         searching: "Denke nach…", langCode: "DE",
         welcomeTitle: "Wie kann ich helfen?",
         welcomeSub: "Stell mir alles — ich suche im Web, beantworte Fragen und analysiere Dokumente.",
