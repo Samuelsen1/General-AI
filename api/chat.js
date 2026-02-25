@@ -618,7 +618,7 @@ function buildContext(opts) {
 function buildFallbackReply(opts) {
   if (opts.weather) return opts.weather;
   if (opts.definition) return opts.definition;
-  const best = opts.wiki?.[0] || opts.web?.[0];
+  const best = opts.web?.[0] || opts.news?.[0] || opts.wiki?.[0];
   if (best) {
     const link = best.link ? `\n\nSource: ${best.link}` : "";
     return `${best.title}: ${best.snippet}${link}`;
@@ -850,6 +850,14 @@ module.exports = async function handler(req, res) {
 
   if (newsKey && /\b(news|latest|headlines|current|recent)\b/.test(ql)) {
     try { opts.news = await fetchNews(q, newsKey); } catch (e) { console.warn("News:", e?.message); }
+  }
+
+  // For clearly time-sensitive questions (scores, results, \"yesterday\", \"today\", \"latest\", etc.),
+  // drop Wikipedia entirely so the model doesn't see historical snippets when the user wants live info.
+  const timeSensitivePattern = /\b(yesterday|today|tonight|last night|score|scores|result|results|final score|live|latest|breaking|today's|currently|right now|this (week|month|year)|price|prices|stock|stocks|market|markets|rate|rates|forecast|update|updates|fixture|fixtures)\b/i;
+  const isTimeSensitive = timeSensitivePattern.test(ql);
+  if (isTimeSensitive) {
+    opts.wiki = [];
   }
 
   const aboutCreator = /\b(samuel|opoku|creator|who made you|who built you|your creator|portfolio|samuel's|dräger|draeger|digital learning designer|gideonsammysen)\b/i.test(q);
