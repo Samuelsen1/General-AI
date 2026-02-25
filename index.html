@@ -1032,10 +1032,10 @@
         welcomeSub: "Ask me anything — I search the web, answer questions, and analyze documents.",
         noChats: "No past chats yet.",
         suggestions: [
-          { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?" },
-          { icon: "🤖", text: "How do AI language models work?", prompt: "Explain how large language models work in simple terms" },
-          { icon: "🌤", text: "Check the weather", prompt: "What's the current weather in Berlin, Germany?" },
-          { icon: "✉️", text: "Help me write an email", prompt: "Help me write a professional email" },
+          { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?", sub: "Latest headlines at a glance" },
+          { icon: "🤖", text: "How do AI language models work?", prompt: "Explain how large language models work in simple terms", sub: "Language models explained simply" },
+          { icon: "🌤", text: "Check the weather", prompt: "What's the current weather in Berlin, Germany?", sub: "Live example – change the city" },
+          { icon: "✉️", text: "Help me write an email", prompt: "Help me write a professional email", sub: "Professional & polished" },
         ]
       },
       de: {
@@ -1049,10 +1049,10 @@
         welcomeSub: "Stell mir alles — ich suche im Web, beantworte Fragen und analysiere Dokumente.",
         noChats: "Noch keine vergangenen Chats.",
         suggestions: [
-          { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?" },
-          { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren" },
-          { icon: "🌤", text: "Wetter prüfen", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
-          { icon: "✉️", text: "E-Mail schreiben", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben" },
+          { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?", sub: "Aktuelle Schlagzeilen im Überblick" },
+          { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren", sub: "Sprachmodelle verständlich erklärt" },
+          { icon: "🌤", text: "Wetter prüfen", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?", sub: "Live-Beispiel – Stadt beliebig ändern" },
+          { icon: "✉️", text: "E-Mail schreiben", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben", sub: "Professionell & gut formuliert" },
         ]
       }
     };
@@ -1072,13 +1072,21 @@
     }
 
     function buildSuggestions() {
-      // Static HTML already built; just wire up click listeners for i18n prompts
       const cards = document.querySelectorAll(".suggestion-card");
-      cards.forEach(btn => {
-        btn.addEventListener("click", () => {
+      const list = (TR[lang] && TR[lang].suggestions) || TR.en.suggestions || [];
+      cards.forEach((btn, idx) => {
+        const cfg = list[idx];
+        if (cfg) {
+          btn.dataset.prompt = cfg.prompt;
+          const textEl = btn.querySelector(".s-text");
+          const subEl = btn.querySelector(".s-sub");
+          if (textEl) textEl.textContent = cfg.text;
+          if (subEl && cfg.sub) subEl.textContent = cfg.sub;
+        }
+        btn.onclick = () => {
           const prompt = btn.dataset.prompt;
           if (inputEl && prompt) { inputEl.value = prompt; updateSendBtn(); inputEl.focus(); }
-        });
+        };
       });
     }
 
