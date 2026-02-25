@@ -642,6 +642,13 @@
       font-weight: 400; letter-spacing: 0.02em;
     }
 
+    .msg-footnote {
+      margin-top: 0.35rem;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      opacity: 0.9;
+    }
+
     /* ─── Mobile layout ────────────────────────────────────── */
     @media (max-width: 767px) {
       html, body { font-size: 15px; }
@@ -1301,6 +1308,18 @@
     function isTableRow(l) { const t2=l.trim(); return t2.startsWith("|")&&t2.endsWith("|"); }
     function isSep(l) { return /^\|[\s|:\-]+\|$/.test(l.trim()); }
 
+    function splitFootnote(text) {
+      if (!text) return { main: "", footnote: "" };
+      const lines = String(text).split(/\r?\n/);
+      let idx = lines.length - 1;
+      while (idx >= 0 && !lines[idx].trim()) idx--;
+      if (idx < 0) return { main: text, footnote: "" };
+      const last = lines[idx].trim();
+      if (!/^(note|hinweis):/i.test(last)) return { main: text, footnote: "" };
+      const main = lines.slice(0, idx).join("\n").replace(/\s+$/, "");
+      return { main, footnote: last };
+    }
+
     function formatMsg(raw) {
       if (!raw) return "";
       raw = convertTsv(String(raw));
@@ -1373,7 +1392,20 @@
       // Content
       const contentEl = document.createElement("div");
       contentEl.className = "msg-content";
-      contentEl.innerHTML = role === "user" ? formatUserMsg(text) : formatMsg(text);
+      if (role === "user") {
+        contentEl.innerHTML = formatUserMsg(text);
+      } else {
+        const parts = splitFootnote(text);
+        const mainText = parts.main || text;
+        const footnote = parts.footnote;
+        contentEl.innerHTML = formatMsg(mainText);
+        if (footnote) {
+          const foot = document.createElement("div");
+          foot.className = "msg-footnote";
+          foot.innerHTML = formatUserMsg(footnote);
+          bubble.appendChild(foot);
+        }
+      }
       bubble.appendChild(contentEl);
 
       // Attachment badge (user)
@@ -1534,8 +1566,17 @@
                   if (obj.done || obj.err) {
                     finished = true;
                     const replyText = obj.err ? (full||obj.err) : full;
+                    const parts = splitFootnote(replyText);
+                    const mainText = parts.main || replyText;
+                    const footnote = parts.footnote;
                     cEl.classList.remove("streaming");
-                    cEl.innerHTML = formatMsg(replyText);
+                    cEl.innerHTML = formatMsg(mainText);
+                    if (footnote) {
+                      const foot = document.createElement("div");
+                      foot.className = "msg-footnote";
+                      foot.innerHTML = formatUserMsg(footnote);
+                      bbl.appendChild(foot);
+                    }
                     row.querySelectorAll(".ai-snippet").forEach(snip => {
                       const sb = snip.querySelector(".ai-snippet-copy");
                       const sbody = snip.querySelector(".ai-snippet-body");
@@ -1558,7 +1599,18 @@
           } catch (streamErr) {
             cEl.classList.remove("streaming");
             if (!full) cEl.innerHTML = formatMsg("Your request could not be completed. Try again later.");
-            else cEl.innerHTML = formatMsg(full);
+            else {
+              const parts = splitFootnote(full);
+              const mainText = parts.main || full;
+              const footnote = parts.footnote;
+              cEl.innerHTML = formatMsg(mainText);
+              if (footnote) {
+                const foot = document.createElement("div");
+                foot.className = "msg-footnote";
+                foot.innerHTML = formatUserMsg(footnote);
+                bbl.appendChild(foot);
+              }
+            }
           }
           if (!finished && !full) { cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg("Your request could not be completed. Try again later."); }
 
@@ -1846,7 +1898,16 @@
                   if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({behavior:"auto",block:"end"}); }
                   if (obj.done || obj.err) {
                     replyText = obj.err ? (full||obj.err) : full;
-                    cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(replyText);
+                    const parts = splitFootnote(replyText);
+                    const mainText = parts.main || replyText;
+                    const footnote = parts.footnote;
+                    cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(mainText);
+                    if (footnote) {
+                      const foot = document.createElement("div");
+                      foot.className = "msg-footnote";
+                      foot.innerHTML = formatUserMsg(footnote);
+                      bbl.appendChild(foot);
+                    }
                     const acts = document.createElement("div"); acts.className="msg-actions";
           const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML=COPY_SVG;
                     cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
@@ -1856,7 +1917,21 @@
                 } catch(_) {}
               }
             }
-          } catch(_) { if (!full) replyText="Your request could not be completed."; else replyText=full; cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg(replyText); }
+          } catch(_) {
+            if (!full) replyText="Your request could not be completed.";
+            else replyText=full;
+            cEl.classList.remove("streaming");
+            const parts = splitFootnote(replyText);
+            const mainText = parts.main || replyText;
+            const footnote = parts.footnote;
+            cEl.innerHTML = formatMsg(mainText);
+            if (footnote) {
+              const foot = document.createElement("div");
+              foot.className = "msg-footnote";
+              foot.innerHTML = formatUserMsg(footnote);
+              bbl.appendChild(foot);
+            }
+          }
           if (!replyText) { cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg("Your request could not be completed."); replyText="Your request could not be completed."; }
         } else {
           let data; try { data = await apiRes.json(); } catch(_) { data={}; }
