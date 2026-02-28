@@ -652,11 +652,19 @@
       transition: color var(--transition);
     }
     .legal-footer a:hover { color: var(--accent); }
-    .ai-disclosure {
-      display: flex; align-items: center; gap: 0.35rem;
-      font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.5rem;
+    .form-legal-line {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem;
+      flex-wrap: nowrap; min-height: 2rem; margin-bottom: 0.5rem;
+      font-size: 0.7rem; color: var(--text-dim);
     }
-    .ai-disclosure svg { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.7; }
+    .form-legal-line .ai-disclosure {
+      display: flex; align-items: center; gap: 0.35rem; min-width: 0; flex: 1 1 auto;
+    }
+    .form-legal-line .ai-disclosure svg { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.7; }
+    .form-legal-line .form-hint { flex-shrink: 0; margin: 0; white-space: nowrap; }
+    @media (max-width: 480px) {
+      .form-legal-line { flex-wrap: wrap; }
+    }
 
     /* ─── Mobile layout ────────────────────────────────────── */
     @media (max-width: 767px) {
@@ -991,11 +999,13 @@
               </button>
             </div>
           </form>
-          <p class="ai-disclosure" id="ai-disclosure" role="status" aria-live="polite">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7"/><circle cx="12" cy="5" r="2"/></svg>
-            <span data-i18n="aiDisclosure">You are chatting with an AI. Answers can be wrong or outdated. Not legal, medical, or financial advice.</span>
-          </p>
-          <p class="form-hint">Built by Samuel Opoku</p>
+          <div class="form-legal-line" role="status" aria-live="polite">
+            <p class="ai-disclosure" id="ai-disclosure">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7"/><circle cx="12" cy="5" r="2"/></svg>
+              <span data-i18n="aiDisclosure">You are chatting with an AI. Answers can be wrong or outdated. Not legal, medical, or financial advice.</span>
+            </p>
+            <p class="form-hint" data-i18n="builtBy">Built by Opoku Samuel.</p>
+          </div>
           <nav class="legal-footer" aria-label="Legal and compliance">
             <a href="privacy.html" data-i18n="privacyLink">Privacy</a>
             <span aria-hidden="true">·</span>
@@ -1056,6 +1066,7 @@
         privacyLink: "Privacy",
         termsLink: "Terms & AI use",
         reportLink: "Report content",
+        builtBy: "Built by Opoku Samuel.",
         suggestions: [
           { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?" },
           { icon: "🤖", text: "How do AI language models work?", prompt: "Explain how large language models work in simple terms" },
@@ -1074,10 +1085,11 @@
         welcomeTitle: "Wie kann ich helfen?",
         welcomeSub: "Stell mir alles — ich suche im Web, beantworte Fragen und analysiere Dokumente.",
         noChats: "Noch keine vergangenen Chats.",
-        aiDisclosure: "Sie chatten mit einer KI. Antworten können unvollständig oder veraltet sein. Kein Rechts-, Medizin- oder Anlageberatung.",
+        aiDisclosure: "Sie chatten mit einer KI. Antworten können falsch oder veraltet sein. Kein Rechts-, Medizin- oder Finanzberatung.",
         privacyLink: "Datenschutz",
         termsLink: "Nutzungsbedingungen & KI",
         reportLink: "Inhalt melden",
+        builtBy: "Erstellt von Opoku Samuel.",
         suggestions: [
           { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?" },
           { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren" },
