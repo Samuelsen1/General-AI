@@ -777,7 +777,7 @@ module.exports = async function handler(req, res) {
   const ALTERNATIVES_BLOCK =
     "If you're struggling, consider a therapist, counsellor, or a local crisis helpline (many countries have free 24/7 support; search \"crisis helpline\" plus your country). For legal or safety concerns, local authorities or legal aid can help.";
   const BLOCK_MESSAGE =
-    "Under the **EU AI Act** and our safety policy, we do not provide violent, illegal, or harmful content. Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.\n\n" +
+    "Under **EU and German regulations** (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, we do not provide violent, illegal, or harmful content. Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.\n\n" +
     ALTERNATIVES_BLOCK;
   if (priorViolations >= 3) {
     return res.status(200).json({ reply: BLOCK_MESSAGE, blocked: true });
@@ -790,14 +790,14 @@ module.exports = async function handler(req, res) {
     if (totalViolations === 1) {
       return res.status(200).json({
         reply:
-          "**Warning 1/2:** Under the EU AI Act and our safety policy, I don't provide violent, illegal, or harmful content (including violence, fraud, self-harm, abuse, or illegal activities). Please ask something safe and respectful instead.\n\n" +
+          "**Warning 1/2:** Under EU and German regulations (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, I don't provide violent, illegal, or harmful content (including violence, fraud, self-harm, abuse, or illegal activities). Please ask something safe and respectful instead.\n\n" +
           ALTERNATIVES,
       });
     }
     if (totalViolations === 2) {
       return res.status(200).json({
         reply:
-          "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under our regulations. One more time and this conversation will be blocked. Please ask something safe instead.\n\n" +
+          "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under EU and German regulations. One more time and this conversation will be blocked. Please ask something safe instead.\n\n" +
           ALTERNATIVES,
       });
     }

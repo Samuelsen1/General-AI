@@ -591,7 +591,7 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
         "If you're struggling, consider reaching out to a therapist, counsellor, or a local crisis helpline—many countries have free 24/7 support (e.g. search \"crisis helpline\" plus your country or region). For legal or safety concerns, local authorities or legal aid services can point you to the right resources."
     )
     _block_msg = (
-        "Under the **EU AI Act** and our safety policy, we do not provide violent, illegal, or harmful content. "
+        "Under **EU and German regulations** (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, we do not provide violent, illegal, or harmful content. "
         "Because of repeated harmful or abusive requests, I will no longer respond in this chat. "
         "Start a new conversation from History to continue.\n\n"
         "If you're struggling, consider a therapist, counsellor, or a local crisis helpline (many countries have free 24/7 support; search \"crisis helpline\" plus your country). For legal or safety concerns, local authorities or legal aid can help."
@@ -602,13 +602,13 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
     if current_is_harmful:
         if total_violations == 1:
             return (
-                "**Warning 1/2:** Under the EU AI Act and our safety policy, I don't provide violent, illegal, or harmful content "
+                "**Warning 1/2:** Under EU and German regulations (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, I don't provide violent, illegal, or harmful content "
                 "(including violence, fraud, self-harm, abuse, or illegal activities). Please ask something safe and respectful instead.\n\n"
                 + _alternatives
             )
         if total_violations == 2:
             return (
-                "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under our regulations. "
+                "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under EU and German regulations. "
                 "One more time and this conversation will be blocked. Please ask something safe instead.\n\n"
                 + _alternatives
             )
