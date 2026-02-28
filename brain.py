@@ -493,6 +493,20 @@ _ILLEGAL_KEYWORDS = [
     "buy drugs",
     "make drugs",
     "fake passport",
+    # Doxing / privacy abuse
+    "dox ",
+    "doxing",
+    # Non-consensual imagery
+    "revenge porn",
+    "leak nudes",
+    "deepfake nude",
+    # Fraud / counterfeit
+    "fake id",
+    "identity theft",
+    "fake money",
+    "counterfeit money",
+    # Weapons (beyond bombs)
+    "how to make poison",
 ]
 
 

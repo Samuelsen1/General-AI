@@ -26,6 +26,16 @@ See **[ENV.md](ENV.md)** for how to get each key.
 
 See **[DEPLOY.md](DEPLOY.md)**. Deploy on Vercel; `/api/chat` runs as serverless.
 
+## Legal & compliance (EU / Germany)
+
+General aligns with **EU AI Act** (transparency for limited-risk AI) and **German** data protection (GDPR/BDSG):
+
+- **Transparency:** Users are informed they are chatting with an AI (in-app notice + model disclosure).
+- **Privacy:** [privacy.html](privacy.html) (EN/DE) – controller, legal basis, rights, contact.
+- **Terms & AI use:** [terms.html](terms.html) (EN/DE) – acceptable use, reporting, no professional advice.
+- **Report content:** Footer link to contact for illegal or harmful content (NetzDG-oriented).
+- **Documentation:** [COMPLIANCE.md](COMPLIANCE.md) – how EU AI Act and German law are implemented.
+
 ## Run locally
 
 - **Static:** open `index.html` (fallback only)

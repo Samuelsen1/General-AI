@@ -641,6 +641,22 @@
       margin-top: 0.5rem; opacity: 0.85;
       font-weight: 400; letter-spacing: 0.02em;
     }
+    /* EU AI Act Art. 50 / German law: transparency and legal footer */
+    .legal-footer {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem 1rem;
+      margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid var(--border-solid);
+      font-size: 0.72rem; color: var(--text-dim);
+    }
+    .legal-footer a {
+      color: var(--text-dim); text-decoration: none; font-weight: 500;
+      transition: color var(--transition);
+    }
+    .legal-footer a:hover { color: var(--accent); }
+    .ai-disclosure {
+      display: flex; align-items: center; gap: 0.35rem;
+      font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.5rem;
+    }
+    .ai-disclosure svg { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.7; }
 
     /* ─── Mobile layout ────────────────────────────────────── */
     @media (max-width: 767px) {
@@ -975,7 +991,18 @@
               </button>
             </div>
           </form>
+          <p class="ai-disclosure" id="ai-disclosure" role="status" aria-live="polite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7"/><circle cx="12" cy="5" r="2"/></svg>
+            <span data-i18n="aiDisclosure">You are chatting with an AI. Answers can be wrong or outdated. Not legal, medical, or financial advice.</span>
+          </p>
           <p class="form-hint">Built by Samuel Opoku</p>
+          <nav class="legal-footer" aria-label="Legal and compliance">
+            <a href="privacy.html" data-i18n="privacyLink">Privacy</a>
+            <span aria-hidden="true">·</span>
+            <a href="terms.html" data-i18n="termsLink">Terms &amp; AI use</a>
+            <span aria-hidden="true">·</span>
+            <a href="mailto:gideonsammysen@gmail.com?subject=Report%20-%20General%20AI" data-i18n="reportLink">Report content</a>
+          </nav>
         </div>
       </div>
 
@@ -1025,6 +1052,10 @@
         welcomeTitle: "What can I help with?",
         welcomeSub: "Ask me anything — I search the web, answer questions, and analyze documents.",
         noChats: "No past chats yet.",
+        aiDisclosure: "You are chatting with an AI. Answers can be wrong or outdated. Not legal, medical, or financial advice.",
+        privacyLink: "Privacy",
+        termsLink: "Terms & AI use",
+        reportLink: "Report content",
         suggestions: [
           { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?" },
           { icon: "🤖", text: "How do AI language models work?", prompt: "Explain how large language models work in simple terms" },
@@ -1043,6 +1074,10 @@
         welcomeTitle: "Wie kann ich helfen?",
         welcomeSub: "Stell mir alles — ich suche im Web, beantworte Fragen und analysiere Dokumente.",
         noChats: "Noch keine vergangenen Chats.",
+        aiDisclosure: "Sie chatten mit einer KI. Antworten können unvollständig oder veraltet sein. Kein Rechts-, Medizin- oder Anlageberatung.",
+        privacyLink: "Datenschutz",
+        termsLink: "Nutzungsbedingungen & KI",
+        reportLink: "Inhalt melden",
         suggestions: [
           { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?" },
           { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren" },

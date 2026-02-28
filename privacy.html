@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy – General</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg: #fff; --text: #111827; --text-dim: #4b5563; --accent: #1d4ed8; --border: #e5e7eb; --font: "Inter", sans-serif; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --text: #e5e7eb; --text-dim: #94a3b8; --accent: #60a5fa; --border: #334155; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 1.5rem; font-family: var(--font); font-size: 1rem; line-height: 1.6; background: var(--bg); color: var(--text); max-width: 720px; margin-left: auto; margin-right: auto; }
+    h1 { font-size: 1.5rem; margin-top: 0; }
+    h2 { font-size: 1.15rem; margin-top: 1.5rem; }
+    p, ul { margin: 0.5rem 0; }
+    ul { padding-left: 1.25rem; }
+    a { color: var(--accent); }
+    .lang-toggle { margin-bottom: 1rem; }
+    .lang-toggle button { margin-right: 0.5rem; padding: 0.25rem 0.5rem; cursor: pointer; font: inherit; background: var(--border); border: none; border-radius: 6px; color: var(--text); }
+    .lang-toggle button.active { background: var(--accent); color: #fff; }
+    section[data-lang] { display: none; }
+    section[data-lang].on { display: block; }
+    .back { display: inline-block; margin-bottom: 1rem; color: var(--accent); text-decoration: none; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← Back to General</a>
+
+  <div class="lang-toggle">
+    <button type="button" id="lang-en" class="active" aria-pressed="true">English</button>
+    <button type="button" id="lang-de" aria-pressed="false">Deutsch</button>
+  </div>
+
+  <section id="privacy-en" data-lang="en" class="on">
+    <h1>Privacy Policy</h1>
+    <p><strong>Controller (EU/EEA & Germany):</strong> Samuel Afriyie Opoku, Große Klosterkoppel 8, 23562 Lübeck, Germany. Email: gideonsammysen@gmail.com.</p>
+
+    <h2>What data we process</h2>
+    <ul>
+      <li><strong>Messages and chat history:</strong> When you use the chat, your messages and the AI’s replies may be sent to our API (hosted on Vercel) and to third‑party AI providers (e.g. OpenAI, Anthropic, DeepSeek) to generate answers. Chat history may be stored temporarily in your browser (localStorage) and is not stored on our servers unless the hosting provider keeps short-lived logs.</li>
+      <li><strong>Attachments:</strong> If you upload an image or PDF, that content is sent to our API and may be sent to AI providers for processing. We do not use it for training.</li>
+      <li><strong>Technical data:</strong> The hosting provider (e.g. Vercel) may log IP address, user agent, and request metadata for security and operation.</li>
+    </ul>
+
+    <h2>Legal basis (GDPR Art. 6)</h2>
+    <p>We process your data on the basis of <strong>contract performance</strong> (Art. 6(1)(b)) and, where applicable, our <strong>legitimate interests</strong> (Art. 6(1)(f)) for operating and securing the service.</p>
+
+    <h2>Retention</h2>
+    <p>We do not retain your chat content on our own systems. Data in your browser (localStorage) stays until you clear it. Provider logs are kept only as long as required by the provider’s policy or law.</p>
+
+    <h2>Your rights (GDPR)</h2>
+    <p>You have the right to access, rectify, erase, restrict processing, data portability, and to object. You can withdraw consent where processing is based on consent. You have the right to lodge a complaint with a supervisory authority (e.g. in Germany: the competent Landesdatenschutzbehörde).</p>
+
+    <h2>Contact</h2>
+    <p>For privacy requests or questions: gideonsammysen@gmail.com.</p>
+  </section>
+
+  <section id="privacy-de" data-lang="de">
+    <h1>Datenschutzerklärung</h1>
+    <p><strong>Verantwortlicher (EU/EWR & Deutschland):</strong> Samuel Afriyie Opoku, Große Klosterkoppel 8, 23562 Lübeck. E-Mail: gideonsammysen@gmail.com.</p>
+
+    <h2>Welche Daten verarbeiten wir</h2>
+    <ul>
+      <li><strong>Nachrichten und Chat-Verlauf:</strong> Wenn Sie den Chat nutzen, werden Ihre Nachrichten und die KI-Antworten an unsere API (gehostet bei Vercel) und an Drittanbieter-KI-Dienste (z. B. OpenAI, Anthropic, DeepSeek) übermittelt. Der Chat-Verlauf kann lokal in Ihrem Browser (localStorage) gespeichert werden; auf unseren Servern speichern wir ihn nicht, sofern der Hoster keine kurzfristigen Logs führt.</li>
+      <li><strong>Anhänge:</strong> Hochgeladene Bilder oder PDFs werden an unsere API und ggf. an KI-Anbieter zur Verarbeitung gesendet. Wir nutzen sie nicht zum Training.</li>
+      <li><strong>Technische Daten:</strong> Der Hoster (z. B. Vercel) kann IP-Adresse, User-Agent und Metadaten für Betrieb und Sicherheit protokollieren.</li>
+    </ul>
+
+    <h2>Rechtsgrundlage (DSGVO Art. 6)</h2>
+    <p>Die Verarbeitung erfolgt auf Grundlage der <strong>Vertragserfüllung</strong> (Art. 6 Abs. 1 lit. b) und ggf. unserer <strong>berechtigten Interessen</strong> (Art. 6 Abs. 1 lit. f) für den Betrieb und die Sicherheit des Dienstes.</p>
+
+    <h2>Aufbewahrung</h2>
+    <p>Wir speichern Ihren Chat-Inhalt nicht auf eigenen Systemen. Daten im Browser (localStorage) verbleiben, bis Sie sie löschen. Logs beim Hoster werden nur im von dessen Richtlinie oder dem Gesetz vorgegebenen Umfang aufbewahrt.</p>
+
+    <h2>Ihre Rechte (DSGVO)</h2>
+    <p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Sie können eine Einwilligung widerrufen. Sie haben das Recht, sich bei einer Aufsichtsbehörde zu beschweren (z. B. in Deutschland: die zuständige Landesdatenschutzbehörde).</p>
+
+    <h2>Kontakt</h2>
+    <p>Für Datenschutzanfragen: gideonsammysen@gmail.com.</p>
+  </section>
+
+  <script>
+    (function() {
+      var en = document.getElementById('privacy-en');
+      var de = document.getElementById('privacy-de');
+      var btnEn = document.getElementById('lang-en');
+      var btnDe = document.getElementById('lang-de');
+      btnEn.addEventListener('click', function() { en.classList.add('on'); de.classList.remove('on'); btnEn.classList.add('active'); btnDe.classList.remove('active'); btnEn.setAttribute('aria-pressed', 'true'); btnDe.setAttribute('aria-pressed', 'false'); });
+      btnDe.addEventListener('click', function() { de.classList.add('on'); en.classList.remove('on'); btnDe.classList.add('active'); btnEn.classList.remove('active'); btnDe.setAttribute('aria-pressed', 'true'); btnEn.setAttribute('aria-pressed', 'false'); });
+    })();
+  </script>
+</body>
+</html>
