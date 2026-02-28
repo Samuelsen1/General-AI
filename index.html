@@ -166,6 +166,24 @@
       flex-shrink: 0; padding: 0.65rem 0.65rem;
       border-top: 1px solid var(--border-solid);
     }
+    .sidebar-legal {
+      margin-top: 0.5rem;
+    }
+    .sidebar-legal summary {
+      list-style: none; cursor: pointer; font-size: 0.75rem; font-weight: 600; color: var(--text-dim);
+      padding: 0.4rem 0.5rem; border-radius: var(--radius); display: flex; align-items: center; gap: 0.35rem;
+      transition: background var(--transition), color var(--transition);
+    }
+    .sidebar-legal summary::-webkit-details-marker { display: none; }
+    .sidebar-legal summary:hover { background: var(--surface-hover); color: var(--accent); }
+    .sidebar-legal summary svg { width: 14px; height: 14px; opacity: 0.8; }
+    .sidebar-legal-nav {
+      display: flex; flex-wrap: wrap; gap: 0.25rem 0.5rem; padding: 0.5rem 0.5rem 0 0;
+      font-size: 0.72rem;
+    }
+    .sidebar-legal-nav a { color: var(--text-dim); text-decoration: none; font-weight: 500; }
+    .sidebar-legal-nav a:hover { color: var(--accent); }
+    .sidebar-legal-nav .sep { color: var(--text-dim); opacity: 0.6; user-select: none; }
     .new-chat-btn {
       width: 100%; display: flex; align-items: center; gap: 0.55rem;
       padding: 0.65rem 0.9rem; min-height: 42px;
@@ -642,16 +660,6 @@
       font-weight: 400; letter-spacing: 0.02em;
     }
     /* EU AI Act Art. 50 / German law: transparency and legal footer */
-    .legal-footer {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem 1rem;
-      margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid var(--border-solid);
-      font-size: 0.72rem; color: var(--text-dim);
-    }
-    .legal-footer a {
-      color: var(--text-dim); text-decoration: none; font-weight: 500;
-      transition: color var(--transition);
-    }
-    .legal-footer a:hover { color: var(--accent); }
     .form-legal-line {
       display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem;
       flex-wrap: nowrap; min-height: 2rem; margin-bottom: 0.5rem;
@@ -902,6 +910,19 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
           <span data-i18n="newChat">New chat</span>
         </button>
+        <details class="sidebar-legal">
+          <summary>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span data-i18n="legalLabel">Legal</span>
+          </summary>
+          <nav class="sidebar-legal-nav" aria-label="Legal and compliance">
+            <a href="privacy.html" data-i18n="privacyLink">Privacy</a>
+            <span class="sep" aria-hidden="true">·</span>
+            <a href="terms.html" data-i18n="termsLink">Terms &amp; AI use</a>
+            <span class="sep" aria-hidden="true">·</span>
+            <a href="mailto:gideonsammysen@gmail.com?subject=Report%20-%20General%20AI" data-i18n="reportLink">Report content</a>
+          </nav>
+        </details>
       </div>
     </nav>
     <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
@@ -1006,13 +1027,6 @@
             </p>
             <p class="form-hint" data-i18n="builtBy">Built by Opoku Samuel.</p>
           </div>
-          <nav class="legal-footer" aria-label="Legal and compliance">
-            <a href="privacy.html" data-i18n="privacyLink">Privacy</a>
-            <span aria-hidden="true">·</span>
-            <a href="terms.html" data-i18n="termsLink">Terms &amp; AI use</a>
-            <span aria-hidden="true">·</span>
-            <a href="mailto:gideonsammysen@gmail.com?subject=Report%20-%20General%20AI" data-i18n="reportLink">Report content</a>
-          </nav>
         </div>
       </div>
 
@@ -1066,6 +1080,7 @@
         privacyLink: "Privacy",
         termsLink: "Terms & AI use",
         reportLink: "Report content",
+        legalLabel: "Legal",
         builtBy: "Built by Opoku Samuel.",
         suggestions: [
           { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?" },
@@ -1089,6 +1104,7 @@
         privacyLink: "Datenschutz",
         termsLink: "Nutzungsbedingungen & KI",
         reportLink: "Inhalt melden",
+        legalLabel: "Rechtliches",
         builtBy: "Erstellt von Opoku Samuel.",
         suggestions: [
           { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?" },
