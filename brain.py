@@ -569,13 +569,13 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
     current_is_harmful = _is_harmful_or_illegal(raw)
     total_violations = prior_violations + (1 if current_is_harmful else 0)
 
-    # If we've already reached 3+ violations in earlier turns, refuse any further prompts
+    # Strict 3-strike rule: after 3 violations, block conversation entirely; user must start a new chat.
+    _block_msg = (
+        "Because of repeated harmful or abusive requests, I will no longer respond in this chat. "
+        "Start a new conversation from History to continue."
+    )
     if prior_violations >= 3:
-        return (
-            "Because of repeated harmful or abusive requests earlier in this chat, "
-            "I will not respond to further prompts. Please start a new conversation "
-            "if you’d like to continue respectfully."
-        )
+        return _block_msg
 
     if current_is_harmful:
         if total_violations == 1:
@@ -586,13 +586,10 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
         if total_violations == 2:
             return (
                 "Warning 2/2: I still can’t assist with abusive, harmful, or illegal requests. "
-                "One more time and I will stop responding in this chat."
+                "One more time and this conversation will be blocked."
             )
         if total_violations >= 3:
-            return (
-                "Because of repeated harmful or abusive requests, I will no longer respond to prompts "
-                "in this chat. Please start a new conversation if you’d like to continue respectfully."
-            )
+            return _block_msg
 
     # 1) Teach/learn
     q, a = _parse_teach(raw)

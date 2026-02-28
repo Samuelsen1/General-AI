@@ -31,6 +31,10 @@ General does not deploy:
 
 Content moderation (blocklists for illegal and harmful user input, snippet filtering for sensitive search results) is in place to reduce risks to fundamental rights. See `LEGAL-GAPS.md` and the blocklists in `brain.py` and `api/chat.js`.
 
+### Strict 3-strike rule
+
+If a user attempts **three** harmful or abusive violations in a single conversation (insults, hate, self-harm, illegal content, etc.), the **conversation is blocked entirely**. No further messages are accepted in that chat. The user must start a **new chat** from History to continue using General. This is enforced in the API (`api/chat.js`) and Python backend (`brain.py`), and in the UI: the input is disabled and a block banner is shown until the user starts a new conversation.
+
 ---
 
 ## 2. German law
@@ -64,6 +68,7 @@ Content moderation (blocklists for illegal and harmful user input, snippet filte
 | Terms & AI use / acceptable use | `terms.html` (EN/DE). |
 | Report content | `index.html`: footer link (e.g. mailto) + `terms.html` reporting section. |
 | Content moderation | `brain.py`, `api/chat.js` (harmful/illegal blocklists); `general.py`, `api/chat.js` (sensitive snippet filter). |
+| 3-strike block (conversation blocked after 3 violations) | `brain.py`, `api/chat.js` (strike count + block response with `blocked: true`); `index.html` (block banner, disabled input, restore blocked state from history). |
 | Documentation | This file (`COMPLIANCE.md`), `LEGAL-GAPS.md`. |
 
 ---

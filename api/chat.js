@@ -760,12 +760,11 @@ module.exports = async function handler(req, res) {
   const currentIsHarmful = isHarmfulOrIllegal(q);
   const totalViolations = priorViolations + (currentIsHarmful ? 1 : 0);
 
-  // If we already reached 3+ violations earlier in this chat, refuse any further prompts
+  // Strict 3-strike rule: after 3 violations, block conversation entirely; user must start a new chat.
+  const BLOCK_MESSAGE =
+    "Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.";
   if (priorViolations >= 3) {
-    return res.status(200).json({
-      reply:
-        "Because of repeated harmful or abusive requests earlier in this chat, I will not respond to further prompts. Please start a new conversation if you’d like to continue respectfully.",
-    });
+    return res.status(200).json({ reply: BLOCK_MESSAGE, blocked: true });
   }
 
   if (currentIsHarmful) {
@@ -778,14 +777,11 @@ module.exports = async function handler(req, res) {
     if (totalViolations === 2) {
       return res.status(200).json({
         reply:
-          "Warning 2/2: I still can’t assist with abusive, harmful, or illegal requests. One more time and I will stop responding in this chat.",
+          "Warning 2/2: I still can’t assist with abusive, harmful, or illegal requests. One more time and this conversation will be blocked.",
       });
     }
     if (totalViolations >= 3) {
-      return res.status(200).json({
-        reply:
-          "Because of repeated harmful or abusive requests, I will no longer respond to prompts in this chat. Please start a new conversation if you’d like to continue respectfully.",
-      });
+      return res.status(200).json({ reply: BLOCK_MESSAGE, blocked: true });
     }
   }
 
