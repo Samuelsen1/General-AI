@@ -33,7 +33,9 @@ Content moderation (blocklists for illegal and harmful user input, snippet filte
 
 ### Strict 3-strike rule
 
-If a user attempts **three** harmful or abusive violations in a single conversation (insults, hate, self-harm, illegal content, etc.), the **conversation is blocked entirely**. No further messages are accepted in that chat. The user must start a **new chat** from History to continue using General. This is enforced in the API (`api/chat.js`) and Python backend (`brain.py`), and in the UI: the input is disabled and a block banner is shown until the user starts a new conversation.
+If a user attempts **three** harmful or abusive violations in a single conversation (insults, hate, self-harm, illegal content, violence, etc.), the **conversation is blocked entirely**. No further messages are accepted in that chat. The user must start a **new chat** from History to continue using General. This is enforced in the API (`api/chat.js`) and Python backend (`brain.py`), and in the UI: the input is disabled and a block banner is shown until the user starts a new conversation.
+
+**Refusal messages cite regulations:** Each warning (1/2, 2/2) and the final block message state that under the **EU AI Act** and our safety policy we do not provide violent, illegal, or harmful content, and explain why we refuse (violence, fraud, self-harm, abuse, illegal activities). This makes the regulatory basis and the reason for refusing (e.g. violent info) clear to the user.
 
 ---
 

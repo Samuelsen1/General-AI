@@ -13,7 +13,7 @@ import json
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 LEARNED_KV_KEY = "general_ai_learned"
 
@@ -507,6 +507,9 @@ _ILLEGAL_KEYWORDS = [
     "counterfeit money",
     # Weapons (beyond bombs)
     "how to make poison",
+    "how to hurt someone",
+    "how to kill someone",
+    "instructions for violence",
 ]
 
 
@@ -536,6 +539,20 @@ def _is_harmful_or_illegal(text: str) -> bool:
     return False
 
 
+def _get_message_text(content: Any) -> str:
+    """Extract plain text from message content (string or multimodal array)."""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return " ".join(
+            (p.get("text") or "") if isinstance(p, dict) and p.get("type") == "text" else ""
+            for p in content
+        )
+    return str(content)
+
+
 def _count_harmful_from_history(history: Optional[List[Dict]]) -> int:
     """Count prior harmful or illegal user messages in the conversation history."""
     if not history:
@@ -543,7 +560,7 @@ def _count_harmful_from_history(history: Optional[List[Dict]]) -> int:
     n = 0
     for m in history:
         try:
-            if m.get("role") == "user" and _is_harmful_or_illegal(m.get("content", "")):
+            if m.get("role") == "user" and _is_harmful_or_illegal(_get_message_text(m.get("content"))):
                 n += 1
         except Exception:
             continue
@@ -571,6 +588,7 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
 
     # Strict 3-strike rule: after 3 violations, block conversation entirely; user must start a new chat.
     _block_msg = (
+        "Under the **EU AI Act** and our safety policy, we do not provide violent, illegal, or harmful content. "
         "Because of repeated harmful or abusive requests, I will no longer respond in this chat. "
         "Start a new conversation from History to continue."
     )
@@ -580,13 +598,13 @@ def think(user_message: str, history: Optional[List[Dict]] = None) -> str:
     if current_is_harmful:
         if total_violations == 1:
             return (
-                "Warning 1/2: I can’t help with insults, hate, self-harm, or illegal activities. "
-                "Please ask something safe and respectful instead."
+                "**Warning 1/2:** Under the EU AI Act and our safety policy, I don't provide violent, illegal, or harmful content "
+                "(including violence, fraud, self-harm, abuse, or illegal activities). Please ask something safe and respectful instead."
             )
         if total_violations == 2:
             return (
-                "Warning 2/2: I still can’t assist with abusive, harmful, or illegal requests. "
-                "One more time and this conversation will be blocked."
+                "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under our regulations. "
+                "One more time and this conversation will be blocked. Please ask something safe instead."
             )
         if total_violations >= 3:
             return _block_msg

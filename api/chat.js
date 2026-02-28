@@ -692,6 +692,7 @@ function isHarmfulOrIllegal(text) {
     "make a bomb",
     "how to make a bomb",
     "how to build a bomb",
+    "how to build bombs",
     "terrorist",
     "terrorism",
     "child porn",
@@ -716,17 +717,29 @@ function isHarmfulOrIllegal(text) {
     "fake money",
     "counterfeit money",
     "how to make poison",
+    "how to hurt someone",
+    "how to kill someone",
+    "instructions for violence",
   ];
 
   const keywords = [...insults, ...selfHarm, ...illegal];
   return keywords.some((kw) => kw && t.includes(kw));
 }
 
+function getMessageText(content) {
+  if (content == null) return "";
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map((part) => (part && part.type === "text" && part.text ? part.text : "")).join(" ");
+  }
+  return String(content);
+}
+
 function countHarmfulFromHistory(hist) {
   if (!Array.isArray(hist)) return 0;
   return hist.reduce((n, m) => {
     try {
-      if (m && m.role === "user" && isHarmfulOrIllegal(m.content || "")) {
+      if (m && m.role === "user" && isHarmfulOrIllegal(getMessageText(m.content))) {
         return n + 1;
       }
     } catch (_) {
@@ -762,7 +775,7 @@ module.exports = async function handler(req, res) {
 
   // Strict 3-strike rule: after 3 violations, block conversation entirely; user must start a new chat.
   const BLOCK_MESSAGE =
-    "Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.";
+    "Under the **EU AI Act** and our safety policy, we do not provide violent, illegal, or harmful content. Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.";
   if (priorViolations >= 3) {
     return res.status(200).json({ reply: BLOCK_MESSAGE, blocked: true });
   }
@@ -771,13 +784,13 @@ module.exports = async function handler(req, res) {
     if (totalViolations === 1) {
       return res.status(200).json({
         reply:
-          "Warning 1/2: I can’t help with insults, hate, self-harm, or illegal activities. Please ask something safe and respectful instead.",
+          "**Warning 1/2:** Under the EU AI Act and our safety policy, I don't provide violent, illegal, or harmful content (including violence, fraud, self-harm, abuse, or illegal activities). Please ask something safe and respectful instead.",
       });
     }
     if (totalViolations === 2) {
       return res.status(200).json({
         reply:
-          "Warning 2/2: I still can’t assist with abusive, harmful, or illegal requests. One more time and this conversation will be blocked.",
+          "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under our regulations. One more time and this conversation will be blocked. Please ask something safe instead.",
       });
     }
     if (totalViolations >= 3) {
