@@ -408,7 +408,8 @@ def general_synthesize(context: str, question: str) -> Optional[str]:
 - Be very concise: 1–3 short sentences. No intros, no filler.
 - If the question asks for a definition, fact, date, or number: give it directly.
 - If the context doesn't contain enough: say "Not in the context" or what's missing.
-- No speculation. No "According to…" or "The context suggests…" — just answer."""
+- No speculation. No "According to…" or "The context suggests…" — just answer.
+- If the question is in Twi (Akan), respond in Twi (Akan)."""
     
     # Add judgment instructions for scoring/evaluation queries
     question_lower = question.lower()

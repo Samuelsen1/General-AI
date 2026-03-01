@@ -40,6 +40,16 @@ KNOWLEDGE = [
         "Hi there! What's on your mind?",
         "Hey! Good to meet you."
     ]},
+    # Twi (Akan) greetings – full conversation in Twi when user uses these
+    {"patterns": [
+        "ɛte sɛn", "ete sɛn", "wo ho te sɛn", "maakye", "maaha", "maadwo", "me din de",
+        "meda wo ase", "yɛbɛhyia", "ɛte sɛn?", "wo ho te sɛn?", "akwaaba", "ɛyɛ", "daa"
+    ], "responses": [
+        "Ɛte sɛn! Mɛtumi aboa wo sɛn?",
+        "Maakye! Ɛte sɛn?",
+        "Wo ho te sɛn? Mɛtumi aboa wo sɛn?",
+        "Akwaaba! Yɛbɛhyia. Ɛte sɛn?"
+    ]},
     # Farewells
     {"patterns": ["bye", "goodbye", "see you", "later", "take care"], "responses": [
         "Goodbye! Take care.",
