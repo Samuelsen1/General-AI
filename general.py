@@ -409,7 +409,7 @@ def general_synthesize(context: str, question: str) -> Optional[str]:
 - If the question asks for a definition, fact, date, or number: give it directly.
 - If the context doesn't contain enough: say "Not in the context" or what's missing.
 - No speculation. No "According to…" or "The context suggests…" — just answer.
-- If the question is in Twi (Akan), respond in Twi (Akan)."""
+- If the question is in Twi (Akan), respond in Twi (Akan) naturally and fluently (common expressions, greetings, conversational register)."""
     
     # Add judgment instructions for scoring/evaluation queries
     question_lower = question.lower()

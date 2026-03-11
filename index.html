@@ -1099,10 +1099,10 @@
         builtBy: "Built by Opoku Samuel.",
         conversationBlocked: "This conversation is blocked due to repeated violations. Start a new chat from History to continue.",
         suggestions: [
-          { icon: "📰", text: "What's in the news today?", prompt: "What's happening in the news today?" },
-          { icon: "🤖", text: "How do AI language models work?", prompt: "Explain how large language models work in simple terms" },
-          { icon: "🌤", text: "Check the weather", prompt: "What's the current weather in Berlin, Germany?" },
-          { icon: "✉️", text: "Help me write an email", prompt: "Help me write a professional email" },
+          { icon: "📰", text: "What's in the news today?", sub: "What's happening right now", prompt: "What's happening in the news today?" },
+          { icon: "🤖", text: "How do AI language models work?", sub: "Language models explained simply", prompt: "Explain how large language models work in simple terms" },
+          { icon: "🌤", text: "Check the weather", sub: "Live example – change the city", prompt: "What's the current weather in Berlin, Germany?" },
+          { icon: "✉️", text: "Help me write an email", sub: "Professional & polished", prompt: "Help me write a professional email" },
         ]
       },
       de: {
@@ -1124,10 +1124,10 @@
         builtBy: "Erstellt von Opoku Samuel.",
         conversationBlocked: "Dieser Chat wurde wegen wiederholter Verstöße gesperrt. Starten Sie über Verlauf einen neuen Chat.",
         suggestions: [
-          { icon: "📰", text: "Was ist heute in den Nachrichten?", prompt: "Was ist heute in den Nachrichten passiert?" },
-          { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren" },
-          { icon: "🌤", text: "Wetter prüfen", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
-          { icon: "✉️", text: "E-Mail schreiben", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben" },
+          { icon: "📰", text: "Was ist heute in den Nachrichten?", sub: "Was gerade passiert", prompt: "Was ist heute in den Nachrichten passiert?" },
+          { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", sub: "Sprachmodelle einfach erklärt", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren" },
+          { icon: "🌤", text: "Wetter prüfen", sub: "Live-Beispiel – Stadt ändern", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
+          { icon: "✉️", text: "E-Mail schreiben", sub: "Professionell & poliert", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben" },
         ]
       }
     };
@@ -1143,17 +1143,27 @@
       document.documentElement.lang = lang;
       const wt = document.getElementById("welcome-title"); if (wt) wt.textContent = t("welcomeTitle");
       const ws = document.getElementById("welcome-sub"); if (ws) ws.textContent = t("welcomeSub");
-      buildSuggestions();
+      const sugs = TR[lang].suggestions;
+      const cards = document.querySelectorAll(".suggestion-card");
+      cards.forEach((card, i) => {
+        if (sugs[i]) {
+          const st = card.querySelector(".s-text");
+          const ss = card.querySelector(".s-sub");
+          if (st) st.textContent = sugs[i].text;
+          if (ss) ss.textContent = sugs[i].sub || "";
+          card.dataset.prompt = sugs[i].prompt;
+        }
+      });
     }
 
-    function buildSuggestions() {
-      // Static HTML already built; just wire up click listeners for i18n prompts
-      const cards = document.querySelectorAll(".suggestion-card");
-      cards.forEach(btn => {
-        btn.addEventListener("click", () => {
-          const prompt = btn.dataset.prompt;
-          if (inputEl && prompt) { inputEl.value = prompt; updateSendBtn(); inputEl.focus(); }
-        });
+    function setupSuggestionClicks() {
+      const suggestionsEl = document.getElementById("suggestions");
+      if (!suggestionsEl) return;
+      suggestionsEl.addEventListener("click", (e) => {
+        const card = e.target.closest(".suggestion-card");
+        if (!card) return;
+        const prompt = card.dataset.prompt;
+        if (inputEl && prompt) { inputEl.value = prompt; updateSendBtn(); inputEl.focus(); }
       });
     }
 
@@ -2071,6 +2081,7 @@
     updateWelcome();
     scheduleHistory();
     applyI18n();
+    setupSuggestionClicks();
     if (inputEl) { inputEl.focus(); updateSendBtn(); }
 
   })();
