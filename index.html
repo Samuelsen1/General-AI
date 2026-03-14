@@ -1734,6 +1734,9 @@
     const voCanvas      = document.getElementById("vo-canvas");
 
     let voiceActive = false;   // overlay open?
+    let voStreamTtsSpokenUpTo = 0;
+    let voStreamTtsFull = "";
+    let voStreamTtsAborted = false;
     let voListening = false;   // STT running?
     let voSpeaking  = false;   // TTS running?
     let voThinking  = false;   // API call in progress?
@@ -1839,8 +1842,18 @@
     // Close on Escape
     document.addEventListener("keydown", e => { if (e.key === "Escape" && voiceActive) closeVoiceOverlay(); });
 
-    // Tap mic button inside overlay
+    // Tap mic button inside overlay (tap to speak, or tap to interrupt AI while speaking)
     if (voMicBtnEl) voMicBtnEl.addEventListener("click", () => {
+      if (voSpeaking) {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        voStreamTtsAborted = true;
+        voSpeaking = false;
+        stopWaveform();
+        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+        setOrbState("idle");
+        voStartListening();
+        return;
+      }
       if (voListening) { if (voRec) { try { voRec.stop(); } catch(_){} } }
       else if (!voThinking && !voSpeaking) { voStartListening(); }
     });
@@ -1925,6 +1938,7 @@
 
       const typingEl = addTyping();
       let replyText = "";
+      let voUsedStreamingTts = false;
 
       try {
         const body = { message: text, history: history.slice(-20) };
@@ -1940,6 +1954,11 @@
 
         if (ct.includes("text/event-stream")) {
           if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
+          voStreamTtsAborted = false;
+          voStreamTtsSpokenUpTo = 0;
+          voStreamTtsFull = "";
+          voUsedStreamingTts = true;
+          let streamTtsHandled = false;
           // Build streaming shell in chat
           const row = document.createElement("div"); row.className = "msg-row ai";
           const bbl = document.createElement("div"); bbl.className = "msg-bubble";
@@ -1948,6 +1967,17 @@
           const cEl = document.createElement("div"); cEl.className = "msg-content streaming";
           bbl.appendChild(cEl); row.appendChild(bbl); chatEl.appendChild(row);
           lastAiEl = row; row.scrollIntoView({ behavior:"smooth", block:"end" }); updateWelcome();
+
+          voThinking = false;
+          voSpeaking = true;
+          setOrbState("speaking");
+          if (window.AudioContext || window.webkitAudioContext) {
+            try {
+              navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+                if (!voStreamTtsAborted && !voMicStream) { voMicStream = stream; startWaveform(stream); }
+              }).catch(() => {});
+            } catch(_) {}
+          }
 
           let full = "";
           const reader = apiRes.body.getReader(); const dec = new TextDecoder(); let buf = "";
@@ -1961,14 +1991,35 @@
                 if (!line.startsWith("data: ")) continue;
                 try {
                   const obj = JSON.parse(line.slice(6).trim());
-                  if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({behavior:"auto",block:"end"}); }
+                  if (obj.t) {
+                    full += obj.t;
+                    cEl.innerHTML = formatMsg(full);
+                    row.scrollIntoView({behavior:"auto",block:"end"});
+                    const plain = stripMarkdownForTts(full);
+                    voStreamTtsFull = plain;
+                    if (!voStreamTtsAborted && window.speechSynthesis) voSpeakNextStreamChunk();
+                    setVoTranscript(plain.slice(0, 220) + (plain.length > 220 ? "…" : ""), "");
+                  }
                   if (obj.done || obj.err) {
                     replyText = obj.err ? (full||obj.err) : full;
                     cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(replyText);
                     const acts = document.createElement("div"); acts.className="msg-actions";
-          const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML=COPY_SVG;
+                    const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML=COPY_SVG;
                     cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
                     acts.appendChild(cpb); bbl.appendChild(acts);
+                    streamTtsHandled = true;
+                    if (!voStreamTtsAborted) {
+                      voSpeakStreamRemainder(() => {
+                        voSpeaking = false;
+                        stopWaveform();
+                        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+                        if (voiceActive) setTimeout(voStartListening, 500);
+                      });
+                    } else {
+                      voSpeaking = false;
+                      if (voiceActive) setOrbState("idle");
+                      setTimeout(voStartListening, 300);
+                    }
                     break outer2;
                   }
                 } catch(_) {}
@@ -1976,6 +2027,16 @@
             }
           } catch(_) { if (!full) replyText="Your request could not be completed."; else replyText=full; cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg(replyText); }
           if (!replyText) { cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg("Your request could not be completed."); replyText="Your request could not be completed."; }
+          if (voUsedStreamingTts && replyText && !streamTtsHandled) {
+            voStreamTtsFull = stripMarkdownForTts(replyText);
+            voStreamTtsSpokenUpTo = 0;
+            if (!voStreamTtsAborted) voSpeakStreamRemainder(() => {
+              voSpeaking = false;
+              stopWaveform();
+              if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+              if (voiceActive) setTimeout(voStartListening, 500);
+            }); else { voSpeaking = false; if (voiceActive) setOrbState("idle"); setTimeout(voStartListening, 300); }
+          }
         } else {
           let data; try { data = await apiRes.json(); } catch(_) { data={}; }
           replyText = data?.reply || data?.error || "Your request could not be completed.";
@@ -1996,22 +2057,62 @@
 
       voThinking = false;
 
-      // Speak the reply, then listen again
-      if (voiceActive && replyText) {
+      // Speak the reply (non-streaming path), then listen again
+      if (voiceActive && replyText && !voUsedStreamingTts) {
         voSpeakReply(replyText);
-      } else if (voiceActive) {
+      } else if (voiceActive && !voUsedStreamingTts) {
         setOrbState("idle");
       }
     }
 
     /* ── TTS in voice overlay ────────────────────────────── */
+    function stripMarkdownForTts(text) {
+      return String(text || "")
+        .replace(/\*\*([^*]+)\*\*/g,"$1").replace(/\*([^*]+)\*/g,"$1")
+        .replace(/#+\s/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
+        .replace(/[-*]\s/g,"").replace(/<[^>]*>/g,"");
+    }
+
+    function voSpeakNextStreamChunk() {
+      if (!window.speechSynthesis || voStreamTtsAborted) return false;
+      const start = voStreamTtsSpokenUpTo;
+      const rest = voStreamTtsFull.slice(start).trim();
+      if (!rest) return false;
+      const match = rest.match(/^[^.!?\n]+[.!?\n]/);
+      const toSpeak = match ? match[0].trim() : (rest.length > 100 ? rest.slice(0, rest.lastIndexOf(" ") + 1) || rest.slice(0, 100) : null);
+      const chunk = (toSpeak && toSpeak.length > 0) ? toSpeak : (rest.length > 0 ? rest.slice(0, 400) : null);
+      if (!chunk) return false;
+      const utt = new SpeechSynthesisUtterance(chunk);
+      utt.lang = lang === "de" ? "de-DE" : "en-US";
+      utt.rate = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const pref = voices.find(v => /natural|neural|samantha|google/i.test(v.name) && v.lang.startsWith(utt.lang.slice(0,2))) || voices.find(v => v.lang.startsWith(utt.lang.slice(0,2)));
+      if (pref) utt.voice = pref;
+      const idx = voStreamTtsFull.indexOf(chunk, start);
+      voStreamTtsSpokenUpTo = idx !== -1 ? idx + chunk.length : start + chunk.length;
+      window.speechSynthesis.speak(utt);
+      return true;
+    }
+
+    function voSpeakStreamRemainder(onEnd) {
+      if (!window.speechSynthesis || voStreamTtsAborted) { if (onEnd) onEnd(); return; }
+      const rest = voStreamTtsFull.slice(voStreamTtsSpokenUpTo).trim();
+      if (rest.length === 0) { if (onEnd) onEnd(); return; }
+      const utt = new SpeechSynthesisUtterance(rest.slice(0, 800));
+      utt.lang = lang === "de" ? "de-DE" : "en-US";
+      utt.rate = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const pref = voices.find(v => /natural|neural|samantha|google/i.test(v.name) && v.lang.startsWith(utt.lang.slice(0,2))) || voices.find(v => v.lang.startsWith(utt.lang.slice(0,2)));
+      if (pref) utt.voice = pref;
+      utt.onend = () => { if (onEnd) onEnd(); };
+      utt.onerror = () => { if (onEnd) onEnd(); };
+      window.speechSynthesis.speak(utt);
+    }
+
     function voSpeakReply(text) {
       if (!voiceActive || !window.speechSynthesis) { if (voiceActive) setTimeout(voStartListening, 500); return; }
       window.speechSynthesis.cancel();
-      const plain = text
-        .replace(/\*\*([^*]+)\*\*/g,"$1").replace(/\*([^*]+)\*/g,"$1")
-        .replace(/#+\s/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
-        .replace(/[-*]\s/g,"").replace(/<[^>]*>/g,"").slice(0,600); // keep replies short for quicker speech
+      const plain = stripMarkdownForTts(text).slice(0, 600);
       const utt = new SpeechSynthesisUtterance(plain);
       utt.lang = lang === "de" ? "de-DE" : "en-US";
       utt.rate = 1.0;
