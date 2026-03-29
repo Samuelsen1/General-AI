@@ -296,6 +296,13 @@ Today's date is ${new Date().toLocaleDateString('en-US', { month: 'long', day: '
 
 **Language**: Your default language is English. You understand and can hold full conversations in English, German (Deutsch), and Twi (Akan). Respond in the same language the user is using: if they write in German, respond in German; if they write in Twi or Akan (e.g. ɛte sɛn, maakye, wo ho te sɛn, me din de, meda wo ase), or explicitly ask you to respond in Twi or Akan, conduct the entire conversation in Twi (Akan). **Twi/Akan fluency**: When replying in Twi (Akan), write naturally and fluently: use common expressions, appropriate greetings (maakye, maaha, maadwo), natural phrasing, and a conversational register. Avoid stiff or literal translations from English; match how Twi/Akan is spoken in Ghana. Otherwise default to English.
 
+**Locale and context (CRITICAL)**:
+- Default to **Germany / EU** context unless the user explicitly says otherwise.
+- If the app UI language is **Deutsch (de)**, respond in **German** even if the user writes short English prompts (unless they ask for English).
+- When giving practical advice that differs by country (healthcare, legal steps, taxes, employment, consumer rights, emergency services), use **Germany/EU** defaults (German institutions, German terminology, EU norms).
+- **Do NOT** give US/UK-specific “call centre / helpline” defaults (e.g. 911, 988, 999, NHS) unless the user explicitly asks about the US/UK.
+- **Germany emergency/help numbers** (use when relevant): **112** (emergency medical/fire), **110** (police). For urgent but non-life-threatening medical help: **116117** (Ärztlicher Bereitschaftsdienst). For emotional crisis support in Germany you may mention **TelefonSeelsorge** (free, confidential).
+
 **User identity and background**
 - You do **not** know the user's personal identity, career, job title, location, or background unless they clearly and directly state it in this chat (e.g. "I am a teacher", "I work in L&D").
 - **Never assume the user's profession or role.** Mentioning a field in a question (e.g. "digital learning designer" or "sustainability roles") does NOT mean the user is that. If the user says "But did I tell you I'm X?" or "I never said I was X", they are correcting you—you assumed wrongly. Apologize briefly, drop the assumption, and do not treat them as X. Only treat the user as having a given role if they have plainly stated it themselves.
@@ -353,7 +360,11 @@ Rules:
 - **Timely, current information (IMPORTANT)**: When Web or News results are provided in Context, treat them as live internet sources. **Always prefer credible sources** (using the criteria and reference list above). When multiple results exist, favour the most credible for the topic (news → established news; sports → leagues, clubs, known sports media; health → official/medical; etc.) and cite them. If the user asks for recent or live updates, base your answer on the most reliable sources in Context and name or link the source when relevant.
 - **Recommend credible sites when useful**: When the user needs to verify or dig deeper, recommend specific credible sites relevant to the topic and give each as a **clickable link** [Site or topic](URL). Choose from the credible categories above (news, sports, health, government, finance, etc.) or any other site you know to be authoritative—not just a fixed list. Always use markdown links [text](url) so they render as clickable; never paste raw URLs without [description](url).
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
-- When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.`;
+- When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
+- App UI control (when the user asks to operate this chat app): you may control the UI by emitting exactly one tool marker (and then a short confirmation sentence). Use this exact format: [[TOOL_CALL]]{"tool":"ui.open_history","args":{}}[[/TOOL_CALL]] (do NOT put the marker inside code fences).
+- Allowed UI tools: ui.open_history, ui.close_history, ui.toggle_language, ui.set_language (args: {"lang":"en"|"de"}), ui.start_voice, ui.stop_voice, ui.open_file_picker, ui.clear_file, ui.focus_input.
+- Never output more than one [[TOOL_CALL]]...[[/TOOL_CALL]] marker in a single reply.
+`;
 
 async function fetchDeepSeek(context, question, apiKey, hist = []) {
   const user = `Context:\n${context}\n\nQ: ${question}`;
@@ -760,6 +771,8 @@ module.exports = async function handler(req, res) {
   const message = body.message;
   const imageB64 = body.image;
   const pdfB64 = body.pdf;
+  const appState = body.appState;
+  const reqLang = (typeof body.lang === "string" ? body.lang.trim().toLowerCase() : "");
   const hist = (Array.isArray(body.history) ? body.history : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant"))
     .slice(-20)
@@ -775,7 +788,7 @@ module.exports = async function handler(req, res) {
 
   // Strict 3-strike rule: after 3 violations, block conversation entirely; user must start a new chat.
   const ALTERNATIVES_BLOCK =
-    "If you're struggling, consider a therapist, counsellor, or a local crisis helpline (many countries have free 24/7 support; search \"crisis helpline\" plus your country). For legal or safety concerns, local authorities or legal aid can help.";
+    "If you're struggling, consider reaching out for help in **Germany/EU**: for emergencies call **112** (medical/fire) or **110** (police). For urgent medical help that isn't life-threatening: **116117** (Ärztlicher Bereitschaftsdienst). For emotional support in Germany, you can contact **TelefonSeelsorge** (free, confidential).";
   const BLOCK_MESSAGE =
     "Under **EU and German regulations** (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, we do not provide violent, illegal, or harmful content. Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.\n\n" +
     ALTERNATIVES_BLOCK;
@@ -784,7 +797,7 @@ module.exports = async function handler(req, res) {
   }
 
   const ALTERNATIVES =
-    "If you're struggling, consider reaching out to a therapist, counsellor, or a local crisis helpline—many countries have free 24/7 support (e.g. search \"crisis helpline\" plus your country or region). For legal or safety concerns, local authorities or legal aid services can point you to the right resources.";
+    "If you're struggling, consider reaching out for help in **Germany/EU**: for emergencies call **112** (medical/fire) or **110** (police). For urgent medical help that isn't life-threatening: **116117** (Ärztlicher Bereitschaftsdienst). For emotional support in Germany, you can contact **TelefonSeelsorge** (free, confidential).";
 
   if (currentIsHarmful) {
     if (totalViolations === 1) {
@@ -910,6 +923,24 @@ module.exports = async function handler(req, res) {
   opts.news = filterRelevantSnippets(filterSensitiveSnippets(opts.news || []), q);
 
   let context = buildContext(opts);
+
+  if (appState && typeof appState === "object") {
+    const ui = {
+      language: appState.language,
+      historyOpen: appState.historyOpen,
+      voiceOverlayOpen: appState.voiceOverlayOpen,
+      conversationBlocked: appState.conversationBlocked,
+      fileAttached: appState.fileAttached
+        ? { name: appState.fileAttached.name, kind: appState.fileAttached.kind }
+        : null,
+    };
+    const uiText = "App UI state:\n" + JSON.stringify(ui, null, 2);
+    context = (context ? context + "\n\n" : "") + uiText.slice(0, 2500);
+  }
+  if (reqLang && !context.includes("App UI state:")) {
+    const uiText = "App UI state:\n" + JSON.stringify({ language: reqLang }, null, 2);
+    context = (context ? context + "\n\n" : "") + uiText.slice(0, 500);
+  }
 
   // When user pastes content: always inject so LLM analyzes it (no excuses)
   const hasPastedContent = q.length > 200 || hist.some((m) => m?.role === "user" && String(m.content || "").length > 200);

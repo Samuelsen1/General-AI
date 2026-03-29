@@ -1208,8 +1208,199 @@
       updateSendBtn();
     }
 
+    function getAppState() {
+      const isPdf = (f) => {
+        if (!f) return false;
+        const type = (f.type || "").toLowerCase();
+        const name = (f.name || "").toLowerCase();
+        return type === "application/pdf" || /\.pdf$/i.test(name);
+      };
+
+      const fileObj = chosenFile
+        ? { name: chosenFile.name, kind: isPdf(chosenFile) ? "pdf" : "image" }
+        : (lastPdfAttachment ? { name: lastPdfAttachment.name, kind: "pdf" } : null);
+
+      return {
+        language: lang,
+        historyOpen: !!sidebarOpen,
+        voiceOverlayOpen: typeof voiceActive !== "undefined" ? !!voiceActive : false,
+        conversationBlocked: !!conversationBlocked,
+        fileAttached: fileObj,
+      };
+    }
+
     function isBlockedReply(text) {
       return typeof text === "string" && text.includes(BLOCK_MESSAGE_MARKER);
+    }
+
+    /* ── UI tool-calls (fused general ↔ app control) ───────────── */
+    const TOOL_CALL_START = "[[TOOL_CALL]]";
+    const TOOL_CALL_END = "[[/TOOL_CALL]]";
+
+    const UI_TOOL_ALLOWLIST = new Set([
+      "ui.open_history",
+      "ui.close_history",
+      "ui.toggle_language",
+      "ui.set_language",
+      "ui.start_voice",
+      "ui.stop_voice",
+      "ui.open_file_picker",
+      "ui.clear_file",
+      "ui.focus_input",
+    ]);
+
+    function _safeJsonParse(s) {
+      try { return JSON.parse(s); } catch (_) { return null; }
+    }
+
+    function extractToolCall(text) {
+      if (typeof text !== "string") return null;
+      const start = text.indexOf(TOOL_CALL_START);
+      if (start < 0) return null;
+      const end = text.indexOf(TOOL_CALL_END, start + TOOL_CALL_START.length);
+      if (end < 0) return null;
+      const jsonStr = text.slice(start + TOOL_CALL_START.length, end).trim();
+      const obj = _safeJsonParse(jsonStr);
+      if (!obj || typeof obj !== "object") return null;
+      if (!obj.tool || typeof obj.tool !== "string") return null;
+      return {
+        marker: text.slice(start, end + TOOL_CALL_END.length),
+        tool: obj.tool,
+        args: (obj.args && typeof obj.args === "object") ? obj.args : {},
+      };
+    }
+
+    function uiConfirm(enText, deText) {
+      return lang === "de" ? (deText || enText) : (enText || deText || "Done.");
+    }
+
+    function executeUiTool(tool, args = {}) {
+      try {
+        if (!UI_TOOL_ALLOWLIST.has(tool)) return null;
+
+        if (tool === "ui.open_history") {
+          openSidebar();
+          return uiConfirm("Opened history.", "Verlauf geöffnet.");
+        }
+
+        if (tool === "ui.close_history") {
+          closeSidebar();
+          return uiConfirm("Closed history.", "Verlauf geschlossen.");
+        }
+
+        if (tool === "ui.toggle_language") {
+          if (langToggle) langToggle.click();
+          return uiConfirm("Toggled language.", "Sprache gewechselt.");
+        }
+
+        if (tool === "ui.set_language") {
+          const target = (args && typeof args.lang === "string") ? args.lang.toLowerCase() : "";
+          if (target === "de" || target === "deutsch") lang = "de";
+          else lang = "en";
+          localStorage.setItem("general_lang", lang);
+          applyI18n();
+          return uiConfirm("Set language.", "Sprache festgelegt.");
+        }
+
+        if (tool === "ui.start_voice") {
+          if (typeof openVoiceOverlay === "function") openVoiceOverlay();
+          return uiConfirm("Voice started.", "Sprachmodus gestartet.");
+        }
+
+        if (tool === "ui.stop_voice") {
+          if (typeof closeVoiceOverlay === "function") closeVoiceOverlay();
+          return uiConfirm("Voice stopped.", "Sprachmodus beendet.");
+        }
+
+        if (tool === "ui.open_file_picker") {
+          if (fileInput && fileInput.click) fileInput.click();
+          return uiConfirm("Opened file picker.", "Dateiauswahl geöffnet.");
+        }
+
+        if (tool === "ui.clear_file") {
+          if (typeof clearFile === "function") clearFile();
+          return uiConfirm("Cleared attached file.", "Angehängte Datei entfernt.");
+        }
+
+        if (tool === "ui.focus_input") {
+          if (inputEl) inputEl.focus();
+          return uiConfirm("Focused input.", "Fokus auf Eingabefeld.");
+        }
+      } catch (_) {
+        // Ignore UI tool execution errors; still return something safe.
+      }
+      return null;
+    }
+
+    function maybeExecuteUiToolFromReply(replyText) {
+      const call = extractToolCall(replyText);
+      if (!call) return replyText;
+      // Always execute tool for side-effects, even if model included additional text.
+      const confirmation = executeUiTool(call.tool, call.args || {});
+      const cleaned = String(replyText).replace(call.marker, "").trim();
+      if (!cleaned) return confirmation || uiConfirm("Done.", "Erledigt.");
+      return cleaned;
+    }
+
+    function tryHandleUiCommand(raw) {
+      // Small local command shortcuts (instant app control without waiting for LLM).
+      const q = String(raw || "").trim().toLowerCase();
+      if (!q) return null;
+      // Don't hijack normal questions.
+      if (q.includes("?")) return null;
+      if (chosenFile || lastPdfAttachment) {
+        // If a file is selected, avoid interpreting unrelated words as commands.
+        // (User can still ask the app normally; commands are mostly for UI panels.)
+        // However, "clear file" is always allowed.
+        if (!(q === "clear file" || q === "remove file" || q === "delete file")) return null;
+      }
+
+      if (q === "open history" || q === "show history" || q === "history") {
+        executeUiTool("ui.open_history");
+        return uiConfirm("Opened history.", "Verlauf geöffnet.");
+      }
+      if (q === "close history" || q === "hide history") {
+        executeUiTool("ui.close_history");
+        return uiConfirm("Closed history.", "Verlauf geschlossen.");
+      }
+
+      if (q === "toggle language" || q === "switch language") {
+        executeUiTool("ui.toggle_language");
+        return uiConfirm("Language toggled.", "Sprache gewechselt.");
+      }
+      if (q === "german" || q === "de" || q === "switch to german" || q === "change to german") {
+        executeUiTool("ui.set_language", { lang: "de" });
+        return uiConfirm("Language set to German.", "Sprache auf Deutsch gesetzt.");
+      }
+      if (q === "english" || q === "en" || q === "switch to english" || q === "change to english") {
+        executeUiTool("ui.set_language", { lang: "en" });
+        return uiConfirm("Language set to English.", "Sprache auf Englisch gesetzt.");
+      }
+
+      if (q === "start voice" || q === "talk" || q === "talk to general" || q === "voice") {
+        executeUiTool("ui.start_voice");
+        return uiConfirm("Voice started.", "Sprachmodus gestartet.");
+      }
+      if (q === "stop voice" || q === "end voice" || q === "stop talking" || q === "stop") {
+        executeUiTool("ui.stop_voice");
+        return uiConfirm("Voice stopped.", "Sprachmodus beendet.");
+      }
+
+      if (q === "attach file" || q === "upload file" || q === "upload" || q === "attach") {
+        executeUiTool("ui.open_file_picker");
+        return uiConfirm("Opened file picker.", "Dateiauswahl geöffnet.");
+      }
+      if (q === "clear file" || q === "remove file" || q === "delete file") {
+        executeUiTool("ui.clear_file");
+        return uiConfirm("Cleared attached file.", "Angehängte Datei entfernt.");
+      }
+
+      if (q === "focus" || q === "focus input") {
+        executeUiTool("ui.focus_input");
+        return uiConfirm("Focused input.", "Fokus auf Eingabefeld.");
+      }
+
+      return null;
     }
 
     const PDF_ICON_URL = new URL("images/pdf.png", document.location.href).href;
@@ -1597,11 +1788,26 @@
       if (inputEl) { inputEl.value = ""; inputEl.style.height = "auto"; }
       if (file) clearFile();
       if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+      // Local UI control shortcuts (instant app control).
+      const localUiReply = tryHandleUiCommand(raw);
+      if (localUiReply) {
+        history.push({ role: "user", content: raw });
+        history.push({ role: "assistant", content: localUiReply });
+        try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+        updateWelcome();
+        addMsg("ai", localUiReply);
+        scheduleHistory();
+        if (inputEl) inputEl.focus();
+        updateSendBtn();
+        return;
+      }
       sendBtn.disabled = true; sendBtn.classList.remove("active");
       const typingEl = addTyping();
 
       try {
         const body = { message: raw || (file ? (lang==="de"?"Was ist in dieser Datei?":"What is in this file?") : "") };
+        body.lang = lang;
         if (file) {
           const buf = await file.arrayBuffer();
           const isPdf = (file.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(file.name||"");
@@ -1610,6 +1816,7 @@
         } else if (lastPdfAttachment) {
           body.pdf = lastPdfAttachment.base64;
         }
+        body.appState = getAppState();
         body.history = history.slice(-20);
 
         const apiRes = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
@@ -1647,7 +1854,8 @@
                     if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({ behavior: "auto", block: "end" }); }
                   if (obj.done || obj.err) {
                     finished = true;
-                    const replyText = obj.err ? (full||obj.err) : full;
+                    let replyText = obj.err ? (full||obj.err) : full;
+                    replyText = maybeExecuteUiToolFromReply(replyText);
                     if (obj.blocked || isBlockedReply(replyText)) setConversationBlocked(true);
                     cEl.classList.remove("streaming");
                     cEl.innerHTML = formatMsg(replyText);
@@ -1680,7 +1888,8 @@
         } else {
           let data;
           try { data = await apiRes.json(); } catch(_) { data = { reply: apiRes?.status===413 ? "File too large. Try a smaller PDF (under 3 MB)." : "Your request could not be completed. Try again later." }; }
-          const reply = (data?.reply) ? data.reply : (data?.error) ? data.error : (!apiRes?.ok) ? (apiRes?.status===413?"File too large. Try a smaller PDF (under 3 MB).":"Your request could not be completed. Try again later.") : "No reply.";
+          let reply = (data?.reply) ? data.reply : (data?.error) ? data.error : (!apiRes?.ok) ? (apiRes?.status===413?"File too large. Try a smaller PDF (under 3 MB).":"Your request could not be completed. Try again later.") : "No reply.";
+          reply = maybeExecuteUiToolFromReply(reply);
           if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
           if (data && data.blocked) setConversationBlocked(true);
           else if (isBlockedReply(reply)) setConversationBlocked(true);
@@ -1942,6 +2151,8 @@
 
       try {
         const body = { message: text, history: history.slice(-20) };
+        body.lang = lang;
+        body.appState = getAppState();
         if (lastPdfAttachment) body.pdf = lastPdfAttachment.base64;
 
         const apiRes = await fetch("/api/chat", {
