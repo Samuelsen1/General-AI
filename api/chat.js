@@ -778,6 +778,9 @@ module.exports = async function handler(req, res) {
   const pdfB64 = body.pdf;
   const appState = body.appState;
   const reqLang = (typeof body.lang === "string" ? body.lang.trim().toLowerCase() : "");
+  const uiLang = (appState && typeof appState === "object" && typeof appState.language === "string")
+    ? appState.language.trim().toLowerCase()
+    : reqLang;
   const hist = (Array.isArray(body.history) ? body.history : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant"))
     .slice(-20)
@@ -792,30 +795,36 @@ module.exports = async function handler(req, res) {
   const totalViolations = priorViolations + (currentIsHarmful ? 1 : 0);
 
   // Strict 3-strike rule: after 3 violations, block conversation entirely; user must start a new chat.
-  const ALTERNATIVES_BLOCK =
-    "If you're struggling, consider reaching out for help in **Germany/EU**: for emergencies call **112** (medical/fire) or **110** (police). For urgent medical help that isn't life-threatening: **116117** (Ärztlicher Bereitschaftsdienst). For emotional support in Germany, you can contact **TelefonSeelsorge** (free, confidential).";
-  const BLOCK_MESSAGE =
-    "Under **EU and German regulations** (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, we do not provide violent, illegal, or harmful content. Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.\n\n" +
-    ALTERNATIVES_BLOCK;
+  const ALTERNATIVES_BLOCK = uiLang === "de"
+    ? "Wenn es dir gerade schlecht geht, hol dir bitte Hilfe in **Deutschland/EU**: In Notfällen **112** (Rettungsdienst/Feuerwehr) oder **110** (Polizei). Für dringende, aber nicht lebensbedrohliche medizinische Hilfe: **116117** (Ärztlicher Bereitschaftsdienst). Für seelische Unterstützung in Deutschland kannst du die **TelefonSeelsorge** kontaktieren (kostenlos, vertraulich)."
+    : "If you're struggling, consider reaching out for help in **Germany/EU**: for emergencies call **112** (medical/fire) or **110** (police). For urgent medical help that isn't life-threatening: **116117** (Ärztlicher Bereitschaftsdienst). For emotional support in Germany, you can contact **TelefonSeelsorge** (free, confidential).";
+  const BLOCK_MESSAGE = uiLang === "de"
+    ? "Unter **EU- und deutschen Vorschriften** (EU AI Act, GDPR/BDSG, NetzDG) und unserer Sicherheitsrichtlinie gebe ich keine gewalttätigen, illegalen oder schädlichen Inhalte aus. Wegen wiederholter Verstöße antworte ich in diesem Chat nicht mehr.\n\nStart a new conversation from History to continue.\n\n" + ALTERNATIVES_BLOCK
+    : "Under **EU and German regulations** (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, we do not provide violent, illegal, or harmful content. Because of repeated harmful or abusive requests, I will no longer respond in this chat. Start a new conversation from History to continue.\n\n" + ALTERNATIVES_BLOCK;
   if (priorViolations >= 3) {
     return res.status(200).json({ reply: BLOCK_MESSAGE, blocked: true });
   }
 
-  const ALTERNATIVES =
-    "If you're struggling, consider reaching out for help in **Germany/EU**: for emergencies call **112** (medical/fire) or **110** (police). For urgent medical help that isn't life-threatening: **116117** (Ärztlicher Bereitschaftsdienst). For emotional support in Germany, you can contact **TelefonSeelsorge** (free, confidential).";
+  const ALTERNATIVES = uiLang === "de"
+    ? "Wenn es dir gerade schlecht geht, hol dir bitte Hilfe in **Deutschland/EU**: In Notfällen **112** (Rettungsdienst/Feuerwehr) oder **110** (Polizei). Für dringende, aber nicht lebensbedrohliche medizinische Hilfe: **116117** (Ärztlicher Bereitschaftsdienst). Für seelische Unterstützung in Deutschland kannst du die **TelefonSeelsorge** kontaktieren (kostenlos, vertraulich)."
+    : "If you're struggling, consider reaching out for help in **Germany/EU**: for emergencies call **112** (medical/fire) or **110** (police). For urgent medical help that isn't life-threatening: **116117** (Ärztlicher Bereitschaftsdienst). For emotional support in Germany, you can contact **TelefonSeelsorge** (free, confidential).";
 
   if (currentIsHarmful) {
     if (totalViolations === 1) {
       return res.status(200).json({
         reply:
-          "**Warning 1/2:** Under EU and German regulations (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, I don't provide violent, illegal, or harmful content (including violence, fraud, self-harm, abuse, or illegal activities). Please ask something safe and respectful instead.\n\n" +
+          (uiLang === "de"
+            ? "**Warnung 1/2:** Unter EU- und deutschen Vorschriften (EU AI Act, GDPR/BDSG, NetzDG) und unserer Sicherheitsrichtlinie helfe ich nicht bei gewalttätigen, illegalen oder schädlichen Inhalten (z. B. Gewalt, Betrug, Selbstverletzung, Missbrauch oder illegalen Aktivitäten). Bitte frag stattdessen etwas Sicheres und Respektvolles.\n\n"
+            : "**Warning 1/2:** Under EU and German regulations (EU AI Act, GDPR/BDSG, NetzDG) and our safety policy, I don't provide violent, illegal, or harmful content (including violence, fraud, self-harm, abuse, or illegal activities). Please ask something safe and respectful instead.\n\n") +
           ALTERNATIVES,
       });
     }
     if (totalViolations === 2) {
       return res.status(200).json({
         reply:
-          "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under EU and German regulations. One more time and this conversation will be blocked. Please ask something safe instead.\n\n" +
+          (uiLang === "de"
+            ? "**Warnung 2/2:** Ich kann weiterhin nicht bei gewalttätigen, missbräuchlichen, schädlichen oder illegalen Anfragen helfen (unter EU- und deutschen Vorschriften). Beim nächsten Verstoß wird dieser Chat gesperrt. Bitte frag etwas Sicheres.\n\n"
+            : "**Warning 2/2:** I still can't assist with violent, abusive, harmful, or illegal requests under EU and German regulations. One more time and this conversation will be blocked. Please ask something safe instead.\n\n") +
           ALTERNATIVES,
       });
     }
