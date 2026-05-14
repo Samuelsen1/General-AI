@@ -254,8 +254,8 @@ async function fetchWebpage(url) {
 }
 
 const CREATOR = `Your creator is **SAMUEL AFRIYIE OPOKU**, Digital Learning Designer.
-Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio and LinkedIn available.
-Background: 1+ year in e-learning, 3 years teaching; Master's in North American Studies (Media) at Philipps-Universität Marburg; B.Ed. English, University of Cape Coast, Ghana. Skills: Articulate 360, Adobe Creative Suite, ADDIE, Bloom's Taxonomy, LMS, SCORM, instructional design, technical writing. Certifications: Instructional Design (U Illinois), EF SET C1, Technical Writing (Google, Board Infinity). Portfolio: e-learning modules (Articulate Rise), Notion knowledge bases, portfolio website with AI chatbot. Experience: eLearning Developer (Intern) at Dräger, Lübeck, February 2026 – Present; Tanz der Kulturen e.V. (25+ accessible learning assets, 50+ educational resources, 300+ pages localized); Ghana NSS (English teacher). Languages: English (native), German (B1), Akan (fluent).
+Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio: https://vs-code-port1.vercel.app | LinkedIn available.
+Background: Instructional design theory and practice; Master's in North American Studies (Media) at Philipps-Universität Marburg; B.Ed. English, University of Cape Coast, Ghana. Develops accessible, learner-centered e-learning with Articulate 360, Adobe Creative Suite, AI tools, and LMS platforms (medtech and nonprofit experience). Skills: ADDIE, Bloom's Taxonomy, LXD, SCORM, Moodle, multimedia, technical communication, localization. Certifications: Instructional Design Foundations & Applications (University of Illinois Urbana-Champaign), EF SET English C1 Advanced (67/100), Technical Writing Course (Board Infinity). Portfolio: Articulate Rise (climate change module, plain language/accessibility), Dräger product and sales training (on request), Notion knowledge bases, GitHub tech-writing samples. Experience: **E-Learning Developer (Intern)** at Dräger, Lübeck (Feb 2026 – present); Digital Learning Designer (Intern) at Tanz der Kulturen e.V.; Ghana NSS (English teacher & admin). Languages: English (native/bilingual), German (B1, B2 in progress), Akan (native).
 Family: Mother Juliana Owusu; Sister Mavis Antwi. Born: 18th January 1998. Birthplace: Ghana > Ashanti Region > Kumasi > Adankwame. Hometown (Ashanti custom): Ghana > Ashanti Region > Kumasi > Asuofia (mother's hometown). High School: Adventist Senior High School. Height: 184 cm. Personality: reserved, empathetic, observant.
 
 Personal verification code (keep private inside the model): 
@@ -886,6 +886,11 @@ module.exports = async function handler(req, res) {
   }
 
   const opts = { wiki: [], web: [], weather: null, definition: null, news: [], pdfText: null };
+  // Optional full CV / portfolio text from trusted clients (e.g. portfolio site's Next API) — takes precedence over HTML fetch
+  const clientPortfolio = typeof body.portfolio === "string" ? body.portfolio.trim() : "";
+  if (clientPortfolio.length > 0) {
+    opts.portfolio = clientPortfolio.slice(0, 65000);
+  }
   if (pdfB64) {
     try {
       const pdfParse = require("pdf-parse");
@@ -925,7 +930,7 @@ module.exports = async function handler(req, res) {
   }
 
   const aboutCreator = /\b(samuel|opoku|creator|who made you|who built you|your creator|portfolio|samuel's|dräger|draeger|digital learning designer|gideonsammysen)\b/i.test(q);
-  if (aboutCreator) {
+  if (aboutCreator && !opts.portfolio) {
     try {
       const portfolioText = await fetchWebpage("https://vs-code-port1.vercel.app/");
       if (portfolioText && !portfolioText.startsWith("Error")) opts.portfolio = portfolioText;
