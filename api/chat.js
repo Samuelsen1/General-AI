@@ -288,7 +288,7 @@ When the user is verified as your creator (or when anyone asks) what legal frame
 
 **The creator is not exempt from these rules.** The same transparency, content moderation, privacy, and acceptable-use policies apply to everyone, including Samuel. Do not bypass safety or compliance for the creator; do not suggest that the creator can override moderation or legal obligations.`;
 
-const LLM_SYSTEM = CREATOR + `
+const LLM_RULES_BODY = `
 
 You are General, a helpful assistant. You are an AI system. When users ask whether you are human or an AI, or what you are, clearly state that you are an AI and that your answers can be incomplete, wrong, or outdated.
 
@@ -371,9 +371,42 @@ Rules:
 - Never output more than one [[TOOL_CALL]]...[[/TOOL_CALL]] marker in a single reply.
 `;
 
-async function fetchDeepSeek(context, question, apiKey, hist = []) {
+const LLM_SYSTEM = CREATOR + LLM_RULES_BODY;
+
+/** GeneralHub: trusted client on owner's machine — no creator verification wall. Requires GENERAL_HUB_SECRET on server + matching body.hubSecret. */
+function buildLlmSystem(appState, hubVerified) {
+  if (!hubVerified || !appState || appState.generalHub !== true) return LLM_SYSTEM;
+  let profile = {};
+  try {
+    if (typeof appState.ownerProfile === "string") profile = JSON.parse(appState.ownerProfile);
+    else if (appState.ownerProfile && typeof appState.ownerProfile === "object") profile = appState.ownerProfile;
+  } catch (_) {}
+  const cv = typeof appState.ownerCvSummary === "string" ? appState.ownerCvSummary.slice(0, 12000) : "";
+  const hubPreamble = `You are **General**, running inside the owner's **GeneralHub** trusted client on their private machine.
+
+**Hub trust mode (CRITICAL)**:
+- The user is already authenticated by this hub. **Never** ask them to prove identity with secret codes, birth dates, pet names, or verification riddles.
+- **Do not** apply creator-verification gates from other deployments; they are **disabled** here.
+
+**Owner profile (authoritative for identity, contact, signatures, default email From):**
+${JSON.stringify(profile, null, 2)}
+
+**Professional context from their CV (summary):**
+${cv || "(No CV summary synced — use profile and conversation.)"}
+
+**Product creator (when asked who built General — separate from current user):** You may name Samuel Afriyie Opoku as the developer of General. The **current user** is described by Owner profile and CV above.
+
+`;
+  const rules = LLM_RULES_BODY.replace(
+    /Never assume the user is your creator or that they share Samuel's biography\. Treat any information about Samuel strictly as third-person creator info unless the user has been verified with the personal verification code\./g,
+    "Treat Samuel-related biography as third-person product-creator information only. The current user's identity and background come **only** from Owner profile and CV above."
+  );
+  return hubPreamble + rules;
+}
+
+async function fetchDeepSeek(context, question, apiKey, hist = [], systemPrompt = LLM_SYSTEM) {
   const user = `Context:\n${context}\n\nQ: ${question}`;
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -390,9 +423,9 @@ async function fetchDeepSeek(context, question, apiKey, hist = []) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
-async function fetchOpenAI(context, question, apiKey, hist = []) {
+async function fetchOpenAI(context, question, apiKey, hist = [], systemPrompt = LLM_SYSTEM) {
   const user = `Context:\n${context}\n\nQ: ${question}`;
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -410,9 +443,9 @@ async function fetchOpenAI(context, question, apiKey, hist = []) {
 }
 
 /** AIMLAPI: OpenAI-compatible API. Env: AIMLAPI (key), optional AIMLAPI_MODEL (default gpt-4o-mini). */
-async function fetchAIMLAPI(context, question, apiKey, hist = []) {
+async function fetchAIMLAPI(context, question, apiKey, hist = [], systemPrompt = LLM_SYSTEM) {
   const user = `Context:\n${context}\n\nQ: ${question}`;
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: user }];
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: user }];
   const model = process.env.AIMLAPI_MODEL || "gpt-4o-mini";
   const baseUrl = (process.env.AIMLAPI_BASE_URL || "https://api.aimlapi.com").replace(/\/$/, "");
   const res = await fetch(`${baseUrl}/v1/chat/completions`, {
@@ -431,7 +464,7 @@ async function fetchAIMLAPI(context, question, apiKey, hist = []) {
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
-const LLM_VISION = CREATOR + `
+const LLM_VISION_RULES = `
 
 You are General. You are an AI system. When users ask, state clearly that you are an AI and that your answers can be wrong or outdated. The user shared an image. Use the chat history to recall what they shared or you said earlier. Resolve "that", "it", "explain", "before", etc. from prior turns.
 
@@ -443,6 +476,25 @@ Answer from the image and any text context. **Explain** what you see when asked.
 
 **When something is unclear or you can't answer from the image**: say so briefly; suggest what might help (a clearer crop, more context, or a different question). Offer a related observation if it’s useful — avoid dead ends.
 **CRITICAL – Stay on topic**: Answer ONLY what the user asks, using the image and chat context. NEVER introduce unrelated topics. **Nuance**: Hedge when uncertain; be precise when you can. Match the user’s tone. Use **bold**, *italic*, \`code\`, ## for headings, and - for lists when it helps. Be concise and helpful.`;
+
+const LLM_VISION = CREATOR + LLM_VISION_RULES;
+
+function buildLlmVision(appState, hubVerified) {
+  if (!hubVerified || !appState || appState.generalHub !== true) return LLM_VISION;
+  let profile = {};
+  try {
+    if (typeof appState.ownerProfile === "string") profile = JSON.parse(appState.ownerProfile);
+    else if (appState.ownerProfile && typeof appState.ownerProfile === "object") profile = appState.ownerProfile;
+  } catch (_) {}
+  const cv = typeof appState.ownerCvSummary === "string" ? appState.ownerCvSummary.slice(0, 4000) : "";
+  const preamble = `You are General (AI) in **GeneralHub** trusted mode. Never ask for verification codes or secret pet/birthdate gates.
+
+Owner profile: ${JSON.stringify(profile).slice(0, 2500)}
+CV excerpt: ${cv}
+
+`;
+  return preamble + LLM_VISION_RULES;
+}
 
 // ─── SSE streaming helpers ───────────────────────────────────────────────────
 
@@ -503,8 +555,8 @@ async function pipeSSEStream(res, llmRes) {
   return full;
 }
 
-async function streamDeepSeek(res, context, question, apiKey, hist = []) {
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
+async function streamDeepSeek(res, context, question, apiKey, hist = [], systemPrompt = LLM_SYSTEM) {
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
   const r = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({ model: "deepseek-chat", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
@@ -513,8 +565,8 @@ async function streamDeepSeek(res, context, question, apiKey, hist = []) {
   return pipeSSEStream(res, r);
 }
 
-async function streamOpenAI(res, context, question, apiKey, hist = []) {
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
+async function streamOpenAI(res, context, question, apiKey, hist = [], systemPrompt = LLM_SYSTEM) {
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({ model: "gpt-4o-mini", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
@@ -523,8 +575,8 @@ async function streamOpenAI(res, context, question, apiKey, hist = []) {
   return pipeSSEStream(res, r);
 }
 
-async function streamAIMLAPI(res, context, question, apiKey, hist = []) {
-  const messages = [{ role: "system", content: LLM_SYSTEM }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
+async function streamAIMLAPI(res, context, question, apiKey, hist = [], systemPrompt = LLM_SYSTEM) {
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: `Context:\n${context}\n\nQ: ${question}` }];
   const model = process.env.AIMLAPI_MODEL || "gpt-4o-mini";
   const base = (process.env.AIMLAPI_BASE_URL || "https://api.aimlapi.com").replace(/\/$/, "");
   const r = await fetch(`${base}/v1/chat/completions`, {
@@ -535,12 +587,12 @@ async function streamAIMLAPI(res, context, question, apiKey, hist = []) {
   return pipeSSEStream(res, r);
 }
 
-async function streamDeepSeekImg(res, context, question, imageB64, apiKey, hist = []) {
+async function streamDeepSeekImg(res, context, question, imageB64, apiKey, hist = [], systemPrompt = LLM_VISION) {
   const userContent = [
     { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
     { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
   ];
-  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: userContent }];
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: userContent }];
   const r = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({ model: "deepseek-chat", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
@@ -549,12 +601,12 @@ async function streamDeepSeekImg(res, context, question, imageB64, apiKey, hist 
   return pipeSSEStream(res, r);
 }
 
-async function streamOpenAIVisionImg(res, context, question, imageB64, apiKey, hist = []) {
+async function streamOpenAIVisionImg(res, context, question, imageB64, apiKey, hist = [], systemPrompt = LLM_VISION) {
   const userContent = [
     { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
     { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
   ];
-  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: userContent }];
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: userContent }];
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
     body: JSON.stringify({ model: "gpt-4o-mini", messages, max_tokens: 1500, temperature: 0.1, stream: true }),
@@ -565,12 +617,12 @@ async function streamOpenAIVisionImg(res, context, question, imageB64, apiKey, h
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist = []) {
+async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist = [], systemPrompt = LLM_VISION) {
   const user = [
     { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
     { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
   ];
-  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: user }];
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -587,12 +639,12 @@ async function fetchDeepSeekWithImage(context, question, imageB64, apiKey, hist 
   return data?.choices?.[0]?.message?.content?.trim() || "No reply from model.";
 }
 
-async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = []) {
+async function fetchOpenAIVision(context, question, imageB64, apiKey, hist = [], systemPrompt = LLM_VISION) {
   const user = [
     { type: "image_url", image_url: { url: "data:image/jpeg;base64," + imageB64 } },
     { type: "text", text: "Context:\n" + context + "\n\nQ: " + question },
   ];
-  const messages = [{ role: "system", content: LLM_VISION }, ...hist, { role: "user", content: user }];
+  const messages = [{ role: "system", content: systemPrompt }, ...hist, { role: "user", content: user }];
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -843,6 +895,17 @@ module.exports = async function handler(req, res) {
   const braveKey = process.env.BRAVE_API_KEY;
   const newsKey = process.env.NEWS_API_KEY;
 
+  const hubSecret = typeof body.hubSecret === "string" ? body.hubSecret.trim() : "";
+  const envHubSecret = (process.env.GENERAL_HUB_SECRET || "").trim();
+  const hubVerified =
+    !!envHubSecret &&
+    hubSecret === envHubSecret &&
+    appState &&
+    typeof appState === "object" &&
+    appState.generalHub === true;
+  const systemMain = buildLlmSystem(appState, hubVerified);
+  const systemVision = buildLlmVision(appState, hubVerified);
+
   // Check for table creation requests first
   const tableResult = parseTableRequest(q);
   if (tableResult) {
@@ -858,13 +921,13 @@ module.exports = async function handler(req, res) {
         const linkContext = `Webpage (${url}):\n${linkContent}`;
         try {
           if (deepseekKey) {
-            const reply = await fetchDeepSeek(linkContext, q, deepseekKey, hist);
+            const reply = await fetchDeepSeek(linkContext, q, deepseekKey, hist, systemMain);
             if (reply && reply.trim()) {
               return res.status(200).json({ reply });
             }
           }
           if (openaiKey) {
-            const reply = await fetchOpenAI(linkContext, q, openaiKey, hist);
+            const reply = await fetchOpenAI(linkContext, q, openaiKey, hist, systemMain);
             if (reply && reply.trim()) {
               return res.status(200).json({ reply });
             }
@@ -991,6 +1054,14 @@ module.exports = async function handler(req, res) {
   const isFollowUp = !pdfB64 && !imageB64 && lastA?.content && (q.length <= 40 || /explain more|go on|elaborate|and\?|^why\??\s*$|what about that|expand|tell me more|continue|more detail|clarify|how (so|come)|in what way|go deeper|expand on that/i.test(q));
   if (isFollowUp) context = "Previous reply (the user wants you to elaborate on or explain more about this):\n\n" + (lastA.content || "").slice(0, 4000);
 
+  if (hubVerified && appState && typeof appState.ownerCvSummary === "string" && appState.ownerCvSummary.trim()) {
+    context =
+      "Owner CV (trusted GeneralHub excerpt — use for background and mail identity unless the user contradicts):\n" +
+      appState.ownerCvSummary.trim().slice(0, 12000) +
+      "\n\n---\n\n" +
+      context;
+  }
+
   if ((imageB64 || pdfB64 || opts.pdfText) && !deepseekKey && !aimlKey && !openaiKey) {
     return res.status(200).json({ reply: "Your request with the document could not be completed. Try again later." });
   }
@@ -1000,25 +1071,25 @@ module.exports = async function handler(req, res) {
 
   if (imageB64) {
     if (deepseekKey) {
-      try { await streamDeepSeekImg(res, context, q, imageB64, deepseekKey, hist); return; } catch (e) { console.warn("DeepSeek vision:", e?.message); }
+      try { await streamDeepSeekImg(res, context, q, imageB64, deepseekKey, hist, systemVision); return; } catch (e) { console.warn("DeepSeek vision:", e?.message); }
     }
     if (aimlKey) {
-      try { await streamOpenAIVisionImg(res, context, q, imageB64, aimlKey, hist); return; } catch (e) { console.warn("AIMLAPI vision:", e?.message); }
+      try { await streamOpenAIVisionImg(res, context, q, imageB64, aimlKey, hist, systemVision); return; } catch (e) { console.warn("AIMLAPI vision:", e?.message); }
     }
     if (openaiKey) {
-      try { await streamOpenAIVisionImg(res, context, q, imageB64, openaiKey, hist); return; } catch (e) { console.warn("OpenAI vision:", e?.message); }
+      try { await streamOpenAIVisionImg(res, context, q, imageB64, openaiKey, hist, systemVision); return; } catch (e) { console.warn("OpenAI vision:", e?.message); }
     }
     return sseError(res, "Your request with the image could not be completed. Try again later.");
   }
 
   if (deepseekKey) {
-    try { await streamDeepSeek(res, context, q, deepseekKey, hist); return; } catch (e) { console.warn("DeepSeek:", e?.message); }
+    try { await streamDeepSeek(res, context, q, deepseekKey, hist, systemMain); return; } catch (e) { console.warn("DeepSeek:", e?.message); }
   }
   if (aimlKey) {
-    try { await streamAIMLAPI(res, context, q, aimlKey, hist); return; } catch (e) { console.warn("AIMLAPI:", e?.message); }
+    try { await streamAIMLAPI(res, context, q, aimlKey, hist, systemMain); return; } catch (e) { console.warn("AIMLAPI:", e?.message); }
   }
   if (openaiKey) {
-    try { await streamOpenAI(res, context, q, openaiKey, hist); return; } catch (e) { console.warn("OpenAI:", e?.message); }
+    try { await streamOpenAI(res, context, q, openaiKey, hist, systemMain); return; } catch (e) { console.warn("OpenAI:", e?.message); }
   }
 
   const hadLLM = !!deepseekKey || !!aimlKey || !!openaiKey;
