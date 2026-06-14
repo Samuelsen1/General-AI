@@ -322,12 +322,12 @@
       flex-shrink: 0;
     }
     .s-icon-wrap svg { width: 18px; height: 18px; }
-    .s-icon-wrap.growth  { background: #eff6ff; color: #2563eb; }
+    .s-icon-wrap.news    { background: #eff6ff; color: #2563eb; }
     .s-icon-wrap.robot   { background: #f0fdf4; color: #16a34a; }
     .s-icon-wrap.weather { background: #fefce8; color: #ca8a04; }
     .s-icon-wrap.email   { background: #fdf4ff; color: #9333ea; }
     @media (prefers-color-scheme: dark) {
-      .s-icon-wrap.growth  { background: rgba(37,99,235,0.2);  color: #93c5fd; }
+      .s-icon-wrap.news    { background: rgba(37,99,235,0.2);  color: #93c5fd; }
       .s-icon-wrap.robot   { background: rgba(22,163,74,0.2);  color: #86efac; }
       .s-icon-wrap.weather { background: rgba(202,138,4,0.2);  color: #fde047; }
       .s-icon-wrap.email   { background: rgba(147,51,234,0.2); color: #d8b4fe; }
@@ -967,12 +967,12 @@
             Talk to General
           </button>
           <div class="suggestions" id="suggestions">
-            <button type="button" class="suggestion-card" data-prompt="How can I improve myself and grow as a person?">
-              <div class="s-icon-wrap growth">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5v7c0 8-9 10-9 10S3 18 3 15V8l9-5z"/><polyline points="12 12 16 9 12 6 8 9 12 12"/></svg>
+            <button type="button" class="suggestion-card" data-prompt="What's happening in the news today?">
+              <div class="s-icon-wrap news">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
               </div>
-              <span class="s-text">How to improve & grow</span>
-              <span class="s-sub">Personal development & self-care</span>
+              <span class="s-text">What's in the news today?</span>
+              <span class="s-sub">What's happening right now</span>
             </button>
             <button type="button" class="suggestion-card" data-prompt="Explain how large language models work in simple terms">
               <div class="s-icon-wrap robot">
@@ -1091,7 +1091,7 @@
         builtBy: "Built by Opoku Samuel.",
         conversationBlocked: "This conversation is blocked due to repeated violations. Start a new chat from History to continue.",
         suggestions: [
-          { icon: "🚀", text: "How to improve & grow", sub: "Personal development & self-care", prompt: "How can I improve myself and grow as a person?" },
+          { icon: "📰", text: "What's in the news today?", sub: "What's happening right now", prompt: "What's happening in the news today?" },
           { icon: "🤖", text: "How do AI language models work?", sub: "Language models explained simply", prompt: "Explain how large language models work in simple terms" },
           { icon: "🌤", text: "Check the weather", sub: "Live example – change the city", prompt: "What's the current weather in Berlin, Germany?" },
           { icon: "✉️", text: "Help me write an email", sub: "Professional & polished", prompt: "Help me write a professional email" },
@@ -1116,7 +1116,7 @@
         builtBy: "Gebaut von Opoku Samuel.",
         conversationBlocked: "Dieses Gespräch wurde wegen wiederholter Verstöße blockiert. Starten Sie einen neuen Chat in der Historie, um fortzufahren.",
         suggestions: [
-          { icon: "🚀", text: "Wie man sich verbessert und wächst", sub: "Persönliche Entwicklung & Selbstfürsorge", prompt: "Wie kann ich mich verbessern und als Person wachsen?" },
+          { icon: "📰", text: "Was gibt es heute in den Nachrichten?", sub: "Das ist gerade los", prompt: "Was passiert heute in den Nachrichten?" },
           { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", sub: "Sprachmodelle einfach erklärt", prompt: "Erkläre mir, wie große Sprachmodelle in einfachen Worten funktionieren" },
           { icon: "🌤", text: "Wetter prüfen", sub: "Live-Beispiel – Stadt ändern", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
           { icon: "✉️", text: "Hilf mir eine E-Mail zu schreiben", sub: "Professionell & poliert", prompt: "Hilf mir eine professionelle E-Mail zu schreiben" },
@@ -1207,7 +1207,7 @@
         btn.className = "suggestion-card";
         btn.dataset.prompt = s.prompt;
         btn.innerHTML = `
-          <div class="s-icon-wrap growth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5v7c0 8-9 10-9 10S3 18 3 15V8l9-5z"/><polyline points="12 12 16 9 12 6 8 9 12 12"/></svg></div>
+          <div class="s-icon-wrap news"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
           <span class="s-text">${s.text}</span>
           <span class="s-sub">${s.sub}</span>
         `;
