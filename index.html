@@ -263,86 +263,29 @@
       animation: fade-in 0.4s ease both;
     }
     .welcome-icon-wrap {
-      width: 140px; height: 140px;
+      width: 68px; height: 68px;
       background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
-      border-radius: 32px;
-      margin-bottom: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 20px 60px rgba(37,99,235,0.3), 0 0 40px rgba(37,99,235,0.15);
-      animation: logo-float 3s ease-in-out infinite;
-      position: relative;
-      overflow: hidden;
+      border-radius: 20px; margin-bottom: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 32px rgba(37,99,235,0.25);
     }
-
-    .welcome-icon-wrap::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
     .welcome-icon-wrap img {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      position: relative;
-      z-index: 1;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+      width: 42px; height: 42px;
       border-radius: 50%;
+      object-fit: contain;
       background: none;
       border: none;
       box-shadow: none;
     }
-
-    @keyframes logo-float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-12px); }
-    }
-
     .welcome-title {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      color: var(--text);
-      margin: 0 0 0.8rem;
+      font-size: 1.75rem; font-weight: 700;
+      letter-spacing: -0.04em; color: var(--text);
+      margin: 0 0 0.4rem;
     }
-
     .welcome-sub {
-      font-size: 0.93rem;
-      color: var(--text-dim);
-      margin: 0 0 2rem;
-      max-width: 420px;
-      line-height: 1.55;
-      min-height: auto;
-      animation: greeting-fade 0.5s ease both;
+      font-size: 0.93rem; color: var(--text-dim);
+      margin: 0 0 2rem; max-width: 380px; line-height: 1.55;
     }
-
-    @keyframes greeting-fade {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .greeting-emoji {
-      font-size: 1.2em;
-      display: inline-block;
-      margin-right: 0.35rem;
-      animation: emoji-bounce 1s ease-in-out;
-    }
-
-    @keyframes emoji-bounce {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-    }
-
     .suggestions {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -663,7 +606,7 @@
       display: flex; align-items: center; justify-content: center;
       padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;
       background: rgba(185, 28, 28, 0.12); border: 1px solid rgba(185, 28, 28, 0.35);
-      border-radius: var(--radius-md); color: var(--text);
+      border-radius: 12px; color: var(--text);
       font-size: 0.875rem; text-align: center; line-height: 1.4;
     }
     @media (prefers-color-scheme: dark) {
@@ -777,8 +720,8 @@
       .form-box { border-radius: 16px; }
       .welcome { padding: 1.5rem 1rem 1rem; }
       .welcome-title { font-size: 1.45rem; }
-      .welcome-icon-wrap { width: 120px; height: 120px; }
-      .welcome-icon-wrap img { width: 70px; height: 70px; }
+      .welcome-icon-wrap { width: 100px; height: 100px; margin-bottom: 1.5rem; }
+      .welcome-icon-wrap img { width: 60px; height: 60px; }
       #input { font-size: 16px; }
     }
 
@@ -1023,10 +966,7 @@
             <img src="/images/g.png" alt="General AI" />
           </div>
           <h1 class="welcome-title">General</h1>
-          <p class="welcome-sub">
-            <span class="greeting-emoji" id="greeting-emoji">👋</span>
-            <span id="greeting-text">Welcome back! What's on your mind today?</span>
-          </p>
+          <p class="welcome-sub" data-i18n="welcomeMessage">What's in the news today? What's happening right now</p>
           <button type="button" class="voice-cta" id="welcome-voice-btn" aria-label="Start voice conversation">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 20h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-2.5a2 2 0 0 0-1 .25M9 20H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h2"/></svg>
             Talk to General
@@ -1131,44 +1071,5 @@
       </div>
     </div>
   </div>
-
-  <script>
-    // ─── Rotating greetings system ───
-    const greetings = [
-      { emoji: '👋', text: 'Welcome back! What\'s on your mind today?' },
-      { emoji: '🤖', text: 'Ready to assist! What can I help you with?' },
-      { emoji: '💡', text: 'Looking for ideas? Ask me anything!' },
-      { emoji: '🚀', text: 'Let\'s explore something new together!' },
-      { emoji: '✨', text: 'How can I make your day easier?' },
-      { emoji: '📚', text: 'Got questions? I\'m here to help!' },
-      { emoji: '🎯', text: 'What would you like to discover today?' },
-      { emoji: '💬', text: 'Let\'s have an interesting conversation!' },
-      { emoji: '🌟', text: 'Ready to chat? What interests you?' },
-      { emoji: '🔍', text: 'Looking for information? Just ask!' }
-    ];
-
-    function updateGreeting() {
-      const greeting = greetings[Math.floor(Math.random() * greetings.length)];
-      const emojiEl = document.getElementById('greeting-emoji');
-      const textEl = document.getElementById('greeting-text');
-      
-      if (emojiEl && textEl) {
-        emojiEl.textContent = greeting.emoji;
-        textEl.textContent = greeting.text;
-      }
-    }
-
-    // Update greeting on page load and periodically
-    document.addEventListener('DOMContentLoaded', () => {
-      updateGreeting();
-      // Change greeting every 8 seconds when on welcome screen
-      setInterval(() => {
-        const welcomeState = document.getElementById('welcome-state');
-        if (welcomeState && welcomeState.offsetParent !== null) {
-          updateGreeting();
-        }
-      }, 8000);
-    });
-  </script>
 </body>
 </html>
