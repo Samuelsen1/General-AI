@@ -606,7 +606,7 @@
       display: flex; align-items: center; justify-content: center;
       padding: 0.6rem 0.75rem; margin-bottom: 0.5rem;
       background: rgba(185, 28, 28, 0.12); border: 1px solid rgba(185, 28, 28, 0.35);
-      border-radius: 12px; color: var(--text);
+      border-radius: var(--radius-md); color: var(--text);
       font-size: 0.875rem; text-align: center; line-height: 1.4;
     }
     @media (prefers-color-scheme: dark) {
@@ -720,8 +720,6 @@
       .form-box { border-radius: 16px; }
       .welcome { padding: 1.5rem 1rem 1rem; }
       .welcome-title { font-size: 1.45rem; }
-      .welcome-icon-wrap { width: 100px; height: 100px; margin-bottom: 1.5rem; }
-      .welcome-icon-wrap img { width: 60px; height: 60px; }
       #input { font-size: 16px; }
     }
 
@@ -926,7 +924,7 @@
         </button>
         <details class="sidebar-legal">
           <summary>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2v6h6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span data-i18n="legalLabel">Legal</span>
           </summary>
           <nav class="sidebar-legal-nav" aria-label="Legal and compliance">
@@ -962,26 +960,23 @@
 
         <!-- Welcome / empty state -->
         <div class="welcome" id="welcome-state">
-          <div class="welcome-icon-wrap">
-            <img src="/images/g.png" alt="General AI" />
-          </div>
-          <h1 class="welcome-title">General</h1>
-          <p class="welcome-sub" data-i18n="welcomeMessage">What's in the news today? What's happening right now</p>
+          <h1 class="welcome-title" id="welcome-title">What can I help with?</h1>
+          <p class="welcome-sub" id="welcome-sub">Ask me anything — I search the web, answer questions, and analyze documents.</p>
           <button type="button" class="voice-cta" id="welcome-voice-btn" aria-label="Start voice conversation">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 20h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-2.5a2 2 0 0 0-1 .25M9 20H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
             Talk to General
           </button>
           <div class="suggestions" id="suggestions">
             <button type="button" class="suggestion-card" data-prompt="What's happening in the news today?">
               <div class="s-icon-wrap news">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16z"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="4" y1="11" x2="20" y2="11"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>
               </div>
               <span class="s-text">What's in the news today?</span>
               <span class="s-sub">What's happening right now</span>
             </button>
             <button type="button" class="suggestion-card" data-prompt="Explain how large language models work in simple terms">
               <div class="s-icon-wrap robot">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 20v-1a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1"/><circle cx="9" cy="9" r="2"/><circle cx="15" cy="9" r="2"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7"/><circle cx="12" cy="5" r="2"/><path d="M8 15h.01M16 15h.01M8 19h8"/></svg>
               </div>
               <span class="s-text">How do AI language models work?</span>
               <span class="s-sub">Language models explained simply</span>
@@ -1003,73 +998,1405 @@
           </div>
         </div>
 
-        <!-- Messages area -->
-        <div class="chat-inner" id="messages-container" style="display:none;"></div>
+        <!-- Messages container -->
+        <div id="chat" class="chat-inner" aria-label="Messages"></div>
       </div>
 
-      <!-- Form area -->
+      <!-- Form -->
       <div class="form-area">
         <div class="form-inner">
+          <div class="blocked-banner" id="blocked-banner" role="alert" style="display:none;">
+            <span data-i18n="conversationBlocked">This conversation is blocked due to repeated violations. Start a new chat from History to continue.</span>
+          </div>
           <div class="file-chosen-bar" id="file-chosen-bar">
-            <img id="fc-icon" alt="" />
-            <span class="fc-name" id="fc-name"></span>
-            <button type="button" class="fc-clear" id="fc-clear" aria-label="Clear file">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            <span id="file-chosen-icon"></span>
+            <span class="fc-name" id="file-name"></span>
+            <button type="button" class="fc-clear" id="file-clear-btn" aria-label="Remove file">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
-          <div class="blocked-banner" id="blocked-banner" style="display:none;"></div>
-          <form id="chat-form" class="form-box">
-            <div class="form-input-wrap">
-              <textarea id="input" placeholder="Ask me anything..." data-i18n-attr="placeholder:inputPlaceholder" rows="1"></textarea>
+          <form id="form" autocomplete="off">
+            <div class="form-box" id="form-box">
+              <label for="file-input" class="form-btn" aria-label="Attach file" title="Attach image or PDF" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </label>
+              <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
+
+              <div class="form-input-wrap">
+                <textarea id="input" placeholder="Ask General…" data-i18n-placeholder="askAnything" autocomplete="off" rows="1" enterkeyhint="send" aria-label="Message input"></textarea>
+              </div>
+
+              <button type="button" id="voice-btn" class="form-btn voice-btn no-speech-hide" aria-label="Start voice conversation" title="Talk to General">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+                <span class="voice-btn-label" data-i18n="voiceLabel">Talk</span>
+              </button>
+              <button type="submit" id="send" class="form-btn send-btn" aria-label="Send message" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              </button>
             </div>
-            <button type="button" class="form-btn" id="attach-file-btn" aria-label="Attach file" title="Attach file (PDF, image, etc)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 0 18.8-4.3M22 12.5a10 10 0 0 0-18.8 4.2"/></svg>
-            </button>
-            <button type="button" class="form-btn voice-btn no-speech-hide" id="voice-input-btn" title="Voice input">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-            </button>
-            <button type="submit" class="form-btn send-btn" aria-label="Send message" id="send-btn">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="m16.6915026,12.4744748 l-8.98950899,8.98950899 c-0.37003155,0.37003155 -0.9447788,0.37003155 -1.31480839,0 c-0.37003156,-0.37003156 -0.37003156,-0.9447788 0,-1.31480839 l8.98950899,-8.98950899 l-8.98950899,-8.98950899 c-0.37003156,-0.37003156 -0.37003156,-0.9447788 0,-1.31480839 c0.37003159,-0.37003156 0.9447788,-0.37003156 1.31480839,0 l8.98950899,8.98950899 l8.98950899,-8.98950899 c0.37003155,-0.37003156 0.9447788,-0.37003156 1.31480839,0 c0.37003156,0.37003156 0.37003156,0.9447788 0,1.31480839 l-8.98950899,8.98950899 l8.98950899,8.98950899 c0.37003156,0.37003156 0.37003156,0.9447788 0,1.31480839 c-0.37003159,0.37003155 -0.9447788,0.37003155 -1.31480839,0 l-8.98950899,-8.98950899 z"/></svg>
-            </button>
           </form>
-          <div class="form-legal-line">
-            <div class="ai-disclosure">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-              <span data-i18n="aiDisclosure">This uses AI</span>
-            </div>
-            <div class="form-hint" data-i18n="formHint">Shift + Enter for new line</div>
+          <div class="form-legal-line" role="status" aria-live="polite">
+            <p class="ai-disclosure" id="ai-disclosure">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M12 11V7"/><circle cx="12" cy="5" r="2"/></svg>
+              <span data-i18n="aiDisclosure">General AI's answers can be wrong or out of date. For legal, health, or money decisions, ask a qualified professional.</span>
+            </p>
+            <p class="form-hint" data-i18n="builtBy">Built by Opoku Samuel.</p>
           </div>
         </div>
       </div>
 
-    </div>
-  </div>
+    </div><!-- /main -->
+  </div><!-- /shell -->
 
-  <!-- Voice overlay -->
-  <div class="voice-overlay" id="voice-overlay">
+  <!-- ── Voice conversation overlay ──────────────────────── -->
+  <div id="voice-overlay" class="voice-overlay" aria-modal="true" role="dialog" aria-label="Voice conversation" style="display:none">
     <div class="vo-bg"></div>
     <div class="vo-body">
+      <!-- orb -->
       <div class="vo-orb-wrap">
-        <canvas class="vo-canvas" id="vo-canvas"></canvas>
+        <canvas id="vo-canvas" class="vo-canvas" width="200" height="200" aria-hidden="true"></canvas>
         <div class="vo-orb" id="vo-orb">
-          <img src="/images/g.png" alt="" class="vo-orb-img" />
+          <img src="/images/g.png" alt="General" class="vo-orb-img" onerror="this.style.display='none'" />
         </div>
       </div>
-      <div class="vo-state" id="vo-state"></div>
-      <div class="vo-transcript" id="vo-transcript">
-        <div class="vo-interim" id="vo-interim"></div>
-        <div class="vo-final" id="vo-final"></div>
-      </div>
+      <!-- state label -->
+      <p class="vo-state" id="vo-state">Tap the mic to start</p>
+      <!-- transcript bubble -->
+      <div class="vo-transcript" id="vo-transcript" aria-live="polite"></div>
+      <!-- controls -->
       <div class="vo-controls">
-        <button type="button" class="vo-mic-btn" id="vo-mic-btn" aria-label="Toggle microphone">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 16.91c-1.48 1.46-3.51 2.36-5.76 2.36-2.25 0-4.28-.9-5.76-2.36m13.68 0A9.005 9.005 0 0 0 12 3c-4.97 0-9 4.03-9 9m13.68 0l1.41 1.41M4.59 16.91L3.18 18.32"/></svg>
+        <button type="button" class="vo-mic-btn" id="vo-mic-btn" aria-label="Start listening">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
         </button>
-        <button type="button" class="vo-stop-btn" id="vo-stop-btn">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h12v12H6z"/></svg>
-          <span data-i18n="stopListening">Stop</span>
+        <button type="button" class="vo-stop-btn" id="vo-stop-btn" aria-label="End voice conversation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          End
         </button>
       </div>
     </div>
   </div>
+
+  <script>
+  (function () {
+    /* ── Translations ──────────────────────────────────────── */
+    const TR = {
+      en: {
+        newChat: "New chat", pastChats: "Past chats",
+        askAnything: "Ask General…", send: "Send",
+        attachFile: "Attach image or PDF",
+        greeting: "Hello! How can I help you today? 😊",
+        you: "You", general: "General",
+        searching: "Thinking…", langCode: "EN",
+        voiceLabel: "Talk",
+        welcomeTitle: "What can I help with?",
+        welcomeSub: "Ask me anything — I search the web, answer questions, and analyze documents.",
+        noChats: "No past chats yet.",
+        aiDisclosure: "General AI's answers can be wrong or out of date. For legal, health, or money decisions, ask a qualified professional.",
+        privacyLink: "Privacy",
+        termsLink: "Terms & AI use",
+        reportLink: "Report content",
+        legalLabel: "Legal",
+        builtBy: "Built by Opoku Samuel.",
+        conversationBlocked: "This conversation is blocked due to repeated violations. Start a new chat from History to continue.",
+        suggestions: [
+          { icon: "📰", text: "What's in the news today?", sub: "What's happening right now", prompt: "What's happening in the news today?" },
+          { icon: "🤖", text: "How do AI language models work?", sub: "Language models explained simply", prompt: "Explain how large language models work in simple terms" },
+          { icon: "🌤", text: "Check the weather", sub: "Live example – change the city", prompt: "What's the current weather in Berlin, Germany?" },
+          { icon: "✉️", text: "Help me write an email", sub: "Professional & polished", prompt: "Help me write a professional email" },
+        ]
+      },
+      de: {
+        newChat: "Neuer Chat", pastChats: "Vergangene Chats",
+        askAnything: "General fragen…", send: "Senden",
+        attachFile: "Bild oder PDF anhängen",
+        greeting: "Hallo! Wie kann ich Ihnen heute helfen? 😊",
+        you: "Sie", general: "General",
+        searching: "Denke nach…", langCode: "DE",
+        voiceLabel: "Sprechen",
+        welcomeTitle: "Wie kann ich helfen?",
+        welcomeSub: "Stell mir alles — ich suche im Web, beantworte Fragen und analysiere Dokumente.",
+        noChats: "Noch keine vergangenen Chats.",
+        aiDisclosure: "Die Antworten von General AI können falsch oder veraltet sein. Bei Recht, Gesundheit oder Geld wenden Sie sich an eine qualifizierte Fachperson.",
+        privacyLink: "Datenschutz",
+        termsLink: "Nutzungsbedingungen & KI",
+        reportLink: "Inhalt melden",
+        legalLabel: "Rechtliches",
+        builtBy: "Erstellt von Opoku Samuel.",
+        conversationBlocked: "Dieser Chat wurde wegen wiederholter Verstöße gesperrt. Starten Sie über Verlauf einen neuen Chat.",
+        suggestions: [
+          { icon: "📰", text: "Was ist heute in den Nachrichten?", sub: "Was gerade passiert", prompt: "Was ist heute in den Nachrichten passiert?" },
+          { icon: "🤖", text: "Wie funktionieren KI-Sprachmodelle?", sub: "Sprachmodelle einfach erklärt", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren" },
+          { icon: "🌤", text: "Wetter prüfen", sub: "Live-Beispiel – Stadt ändern", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
+          { icon: "✉️", text: "E-Mail schreiben", sub: "Professionell & poliert", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben" },
+        ]
+      }
+    };
+
+    let lang = localStorage.getItem("general_lang") || "en";
+    if (lang !== "en" && lang !== "de") lang = "en";
+    function t(k) { return TR[lang][k] || TR.en[k] || k; }
+
+    function applyI18n() {
+      document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+      const lt = document.getElementById("lang-text"); if (lt) lt.textContent = t("langCode");
+      document.documentElement.lang = lang;
+      const wt = document.getElementById("welcome-title"); if (wt) wt.textContent = t("welcomeTitle");
+      const ws = document.getElementById("welcome-sub"); if (ws) ws.textContent = t("welcomeSub");
+      const sugs = TR[lang].suggestions;
+      const cards = document.querySelectorAll(".suggestion-card");
+      cards.forEach((card, i) => {
+        if (sugs[i]) {
+          const st = card.querySelector(".s-text");
+          const ss = card.querySelector(".s-sub");
+          if (st) st.textContent = sugs[i].text;
+          if (ss) ss.textContent = sugs[i].sub || "";
+          card.dataset.prompt = sugs[i].prompt;
+        }
+      });
+    }
+
+    function setupSuggestionClicks() {
+      const suggestionsEl = document.getElementById("suggestions");
+      if (!suggestionsEl) return;
+      suggestionsEl.addEventListener("click", (e) => {
+        const card = e.target.closest(".suggestion-card");
+        if (!card) return;
+        const prompt = card.dataset.prompt;
+        if (inputEl && prompt) { inputEl.value = prompt; updateSendBtn(); inputEl.focus(); }
+      });
+    }
+
+    /* ── Viewport height fix ───────────────────────────────── */
+    function setVh() { document.documentElement.style.setProperty("--vh", (window.innerHeight * 0.01) + "px"); }
+    setVh();
+    window.addEventListener("resize", setVh);
+    window.addEventListener("orientationchange", () => setTimeout(setVh, 120));
+
+    /* ── DOM refs ──────────────────────────────────────────── */
+    const sidebar       = document.getElementById("sidebar");
+    const sidebarOverlay= document.getElementById("sidebar-overlay");
+    const menuBtn       = document.getElementById("menu-btn");
+    const closeSidebarBtn = document.getElementById("close-sidebar-btn");
+    const pastChatsList = document.getElementById("past-chats-list");
+    const sidebarEmpty  = document.getElementById("sidebar-empty");
+    const clearChatBtn  = document.getElementById("clear-chat");
+    const chatScroll    = document.getElementById("chat-scroll");
+    const chatEl        = document.getElementById("chat");
+    const welcomeState  = document.getElementById("welcome-state");
+    const form          = document.getElementById("form");
+    const inputEl       = document.getElementById("input");
+    const sendBtn       = document.getElementById("send");
+    const fileInput     = document.getElementById("file-input");
+    const fileChosenBar = document.getElementById("file-chosen-bar");
+    const fileNameEl    = document.getElementById("file-name");
+    const fileChosenIcon= document.getElementById("file-chosen-icon");
+    const fileClearBtn  = document.getElementById("file-clear-btn");
+    const blockedBanner = document.getElementById("blocked-banner");
+    // mic-btn and voice-mode-btn removed; voice now via voice-btn → overlay
+    const langToggle    = document.getElementById("lang-toggle");
+
+    const BLOCK_MESSAGE_MARKER = "Start a new conversation from History to continue.";
+    let conversationBlocked = false;
+
+    function setConversationBlocked(blocked) {
+      conversationBlocked = !!blocked;
+      if (blockedBanner) blockedBanner.style.display = conversationBlocked ? "flex" : "none";
+      if (form) form.classList.toggle("blocked", conversationBlocked);
+      if (inputEl) inputEl.disabled = conversationBlocked;
+      if (sendBtn) { sendBtn.disabled = true; sendBtn.classList.remove("active"); }
+      updateSendBtn();
+    }
+
+    function getAppState() {
+      const isPdf = (f) => {
+        if (!f) return false;
+        const type = (f.type || "").toLowerCase();
+        const name = (f.name || "").toLowerCase();
+        return type === "application/pdf" || /\.pdf$/i.test(name);
+      };
+
+      const fileObj = chosenFile
+        ? { name: chosenFile.name, kind: isPdf(chosenFile) ? "pdf" : "image" }
+        : (lastPdfAttachment ? { name: lastPdfAttachment.name, kind: "pdf" } : null);
+
+      return {
+        language: lang,
+        historyOpen: !!sidebarOpen,
+        voiceOverlayOpen: typeof voiceActive !== "undefined" ? !!voiceActive : false,
+        conversationBlocked: !!conversationBlocked,
+        fileAttached: fileObj,
+      };
+    }
+
+    function isBlockedReply(text) {
+      return typeof text === "string" && text.includes(BLOCK_MESSAGE_MARKER);
+    }
+
+    /* ── UI tool-calls (fused general ↔ app control) ───────────── */
+    const TOOL_CALL_START = "[[TOOL_CALL]]";
+    const TOOL_CALL_END = "[[/TOOL_CALL]]";
+
+    const UI_TOOL_ALLOWLIST = new Set([
+      "ui.open_history",
+      "ui.close_history",
+      "ui.toggle_language",
+      "ui.set_language",
+      "ui.start_voice",
+      "ui.stop_voice",
+      "ui.open_file_picker",
+      "ui.clear_file",
+      "ui.focus_input",
+    ]);
+
+    function _safeJsonParse(s) {
+      try { return JSON.parse(s); } catch (_) { return null; }
+    }
+
+    function extractToolCall(text) {
+      if (typeof text !== "string") return null;
+      const start = text.indexOf(TOOL_CALL_START);
+      if (start < 0) return null;
+      const end = text.indexOf(TOOL_CALL_END, start + TOOL_CALL_START.length);
+      if (end < 0) return null;
+      const jsonStr = text.slice(start + TOOL_CALL_START.length, end).trim();
+      const obj = _safeJsonParse(jsonStr);
+      if (!obj || typeof obj !== "object") return null;
+      if (!obj.tool || typeof obj.tool !== "string") return null;
+      return {
+        marker: text.slice(start, end + TOOL_CALL_END.length),
+        tool: obj.tool,
+        args: (obj.args && typeof obj.args === "object") ? obj.args : {},
+      };
+    }
+
+    function uiConfirm(enText, deText) {
+      return lang === "de" ? (deText || enText) : (enText || deText || "Done.");
+    }
+
+    function executeUiTool(tool, args = {}) {
+      try {
+        if (!UI_TOOL_ALLOWLIST.has(tool)) return null;
+
+        if (tool === "ui.open_history") {
+          openSidebar();
+          return uiConfirm("Opened history.", "Verlauf geöffnet.");
+        }
+
+        if (tool === "ui.close_history") {
+          closeSidebar();
+          return uiConfirm("Closed history.", "Verlauf geschlossen.");
+        }
+
+        if (tool === "ui.toggle_language") {
+          if (langToggle) langToggle.click();
+          return uiConfirm("Toggled language.", "Sprache gewechselt.");
+        }
+
+        if (tool === "ui.set_language") {
+          const target = (args && typeof args.lang === "string") ? args.lang.toLowerCase() : "";
+          if (target === "de" || target === "deutsch") lang = "de";
+          else lang = "en";
+          localStorage.setItem("general_lang", lang);
+          applyI18n();
+          return uiConfirm("Set language.", "Sprache festgelegt.");
+        }
+
+        if (tool === "ui.start_voice") {
+          if (typeof openVoiceOverlay === "function") openVoiceOverlay();
+          return uiConfirm("Voice started.", "Sprachmodus gestartet.");
+        }
+
+        if (tool === "ui.stop_voice") {
+          if (typeof closeVoiceOverlay === "function") closeVoiceOverlay();
+          return uiConfirm("Voice stopped.", "Sprachmodus beendet.");
+        }
+
+        if (tool === "ui.open_file_picker") {
+          if (fileInput && fileInput.click) fileInput.click();
+          return uiConfirm("Opened file picker.", "Dateiauswahl geöffnet.");
+        }
+
+        if (tool === "ui.clear_file") {
+          if (typeof clearFile === "function") clearFile();
+          return uiConfirm("Cleared attached file.", "Angehängte Datei entfernt.");
+        }
+
+        if (tool === "ui.focus_input") {
+          if (inputEl) inputEl.focus();
+          return uiConfirm("Focused input.", "Fokus auf Eingabefeld.");
+        }
+      } catch (_) {
+        // Ignore UI tool execution errors; still return something safe.
+      }
+      return null;
+    }
+
+    function maybeExecuteUiToolFromReply(replyText) {
+      const call = extractToolCall(replyText);
+      if (!call) return replyText;
+      // Always execute tool for side-effects, even if model included additional text.
+      const confirmation = executeUiTool(call.tool, call.args || {});
+      const cleaned = String(replyText).replace(call.marker, "").trim();
+      if (!cleaned) return confirmation || uiConfirm("Done.", "Erledigt.");
+      return cleaned;
+    }
+
+    function tryHandleUiCommand(raw) {
+      // Small local command shortcuts (instant app control without waiting for LLM).
+      const q = String(raw || "").trim().toLowerCase();
+      if (!q) return null;
+      // Don't hijack normal questions.
+      if (q.includes("?")) return null;
+      if (chosenFile || lastPdfAttachment) {
+        // If a file is selected, avoid interpreting unrelated words as commands.
+        // (User can still ask the app normally; commands are mostly for UI panels.)
+        // However, "clear file" is always allowed.
+        if (!(q === "clear file" || q === "remove file" || q === "delete file")) return null;
+      }
+
+      if (q === "open history" || q === "show history" || q === "history") {
+        executeUiTool("ui.open_history");
+        return uiConfirm("Opened history.", "Verlauf geöffnet.");
+      }
+      if (q === "close history" || q === "hide history") {
+        executeUiTool("ui.close_history");
+        return uiConfirm("Closed history.", "Verlauf geschlossen.");
+      }
+
+      if (q === "toggle language" || q === "switch language") {
+        executeUiTool("ui.toggle_language");
+        return uiConfirm("Language toggled.", "Sprache gewechselt.");
+      }
+      if (q === "german" || q === "de" || q === "switch to german" || q === "change to german") {
+        executeUiTool("ui.set_language", { lang: "de" });
+        return uiConfirm("Language set to German.", "Sprache auf Deutsch gesetzt.");
+      }
+      if (q === "english" || q === "en" || q === "switch to english" || q === "change to english") {
+        executeUiTool("ui.set_language", { lang: "en" });
+        return uiConfirm("Language set to English.", "Sprache auf Englisch gesetzt.");
+      }
+
+      if (q === "start voice" || q === "talk" || q === "talk to general" || q === "voice") {
+        executeUiTool("ui.start_voice");
+        return uiConfirm("Voice started.", "Sprachmodus gestartet.");
+      }
+      if (q === "stop voice" || q === "end voice" || q === "stop talking" || q === "stop") {
+        executeUiTool("ui.stop_voice");
+        return uiConfirm("Voice stopped.", "Sprachmodus beendet.");
+      }
+
+      if (q === "attach file" || q === "upload file" || q === "upload" || q === "attach") {
+        executeUiTool("ui.open_file_picker");
+        return uiConfirm("Opened file picker.", "Dateiauswahl geöffnet.");
+      }
+      if (q === "clear file" || q === "remove file" || q === "delete file") {
+        executeUiTool("ui.clear_file");
+        return uiConfirm("Cleared attached file.", "Angehängte Datei entfernt.");
+      }
+
+      if (q === "focus" || q === "focus input") {
+        executeUiTool("ui.focus_input");
+        return uiConfirm("Focused input.", "Fokus auf Eingabefeld.");
+      }
+
+      return null;
+    }
+
+    const PDF_ICON_URL = new URL("images/pdf.png", document.location.href).href;
+    const COPY_SVG = `<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="3" width="9" height="12" rx="2"/><rect x="8" y="6" width="9" height="12" rx="2"/></svg>`;
+    const EDIT_SVG = `<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 13.5V16h2.5L15 7.5 12.5 5 4 13.5z" stroke-linejoin="round"/><path d="M11 4.5 12.5 3 15 5.5 13.5 7" stroke-linejoin="round"/></svg>`;
+
+    let lastUserEl = null, lastAiEl = null;
+    let chosenFile = null, lastPdfAttachment = null;
+    let history = [];
+    let hasMessages = false;
+
+    /* ── Welcome state ─────────────────────────────────────── */
+    function showWelcome(show) {
+      if (welcomeState) welcomeState.style.display = show ? "" : "none";
+    }
+    function updateWelcome() {
+      hasMessages = chatEl && chatEl.childElementCount > 0;
+      showWelcome(!hasMessages);
+    }
+
+    /* ── Sidebar ───────────────────────────────────────────── */
+    let sidebarOpen = false;
+    function openSidebar() {
+      sidebarOpen = true;
+      sidebar.classList.add("open");
+      sidebarOverlay.classList.add("visible");
+      sidebarOverlay.setAttribute("aria-hidden", "false");
+      renderHistory();
+    }
+    function closeSidebar() {
+      sidebarOpen = false;
+      sidebar.classList.remove("open");
+      sidebarOverlay.classList.remove("visible");
+      sidebarOverlay.setAttribute("aria-hidden", "true");
+    }
+    function toggleSidebar() { sidebarOpen ? closeSidebar() : openSidebar(); }
+
+    if (menuBtn) menuBtn.addEventListener("click", toggleSidebar);
+    if (closeSidebarBtn) closeSidebarBtn.addEventListener("click", closeSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
+
+    /* ── History render ────────────────────────────────────── */
+    function renderHistory() {
+      if (!pastChatsList) return;
+      pastChatsList.innerHTML = "";
+      let archive = [];
+      try { const r = localStorage.getItem("general_chat_archive"); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) archive = a; } } catch (_) {}
+      const items = archive.slice(-8).reverse();
+      if (sidebarEmpty) sidebarEmpty.style.display = items.length ? "none" : "";
+      items.forEach(entry => {
+        const li = document.createElement("li");
+        li.className = "chat-item";
+        const first = (entry.history && entry.history[0]) ? String(entry.history[0].content || "").trim().slice(0, 38) : "Chat";
+        const dateStr = entry.createdAt ? new Date(entry.createdAt).toLocaleDateString(lang, { month:"short", day:"numeric" }) : "";
+        li.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="chat-item-text">${first}</span><span class="chat-item-date">${dateStr}</span>`;
+        li.addEventListener("click", () => {
+          if (!entry.history || !Array.isArray(entry.history)) return;
+          history = entry.history.slice();
+          lastPdfAttachment = null;
+          try { localStorage.setItem("general_chat_history", JSON.stringify(history)); } catch (_) {}
+          chatEl.innerHTML = "";
+          history.forEach(m => { if (m && (m.role === "user" || m.role === "assistant")) addMsg(m.role === "user" ? "user" : "ai", m.content || ""); });
+          const lastAssistant = history.filter(m => m && m.role === "assistant").pop();
+          setConversationBlocked(lastAssistant ? isBlockedReply(lastAssistant.content || "") : false);
+          updateWelcome();
+          closeSidebar();
+        });
+        pastChatsList.appendChild(li);
+      });
+    }
+    function scheduleHistory() { setTimeout(() => { try { renderHistory(); } catch (_) {} }, 80); }
+
+    /* ── New chat ──────────────────────────────────────────── */
+    if (clearChatBtn) clearChatBtn.addEventListener("click", () => {
+      if (history.length > 0) {
+        try {
+          let arch = [];
+          const r = localStorage.getItem("general_chat_archive");
+          if (r) { const a = JSON.parse(r); if (Array.isArray(a)) arch = a; }
+          arch.push({ history: history.slice(), createdAt: Date.now() });
+          arch = arch.slice(-10);
+          localStorage.setItem("general_chat_archive", JSON.stringify(arch));
+        } catch (_) {}
+      }
+      history = []; lastUserEl = null; lastAiEl = null; lastPdfAttachment = null;
+      setConversationBlocked(false);
+      try { localStorage.removeItem("general_chat_history"); } catch (_) {}
+      chatEl.innerHTML = "";
+      updateWelcome();
+      scheduleHistory();
+      closeSidebar();
+    });
+
+    /* ── Language toggle ───────────────────────────────────── */
+    if (langToggle) langToggle.addEventListener("click", () => {
+      lang = lang === "en" ? "de" : "en";
+      localStorage.setItem("general_lang", lang);
+      applyI18n();
+    });
+
+    /* ── Send button visibility ────────────────────────────── */
+    function updateSendBtn() {
+      if (conversationBlocked) { sendBtn.disabled = true; sendBtn.classList.remove("active"); return; }
+      const hasContent = (inputEl && inputEl.value.trim().length > 0) || chosenFile;
+      sendBtn.classList.toggle("active", !!hasContent);
+      sendBtn.disabled = !hasContent;
+    }
+
+    /* ── Input auto-resize ─────────────────────────────────── */
+    if (inputEl) {
+      inputEl.addEventListener("input", () => {
+        inputEl.style.height = "auto";
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + "px";
+        updateSendBtn();
+      });
+      inputEl.addEventListener("keydown", e => {
+        if (e.key !== "Enter") return;
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+        if (e.ctrlKey || e.metaKey || isMobile) {
+          e.preventDefault();
+          if (form) form.requestSubmit();
+        }
+      });
+    }
+
+    /* ── File input ────────────────────────────────────────── */
+    const MAX_FILE = 3 * 1024 * 1024;
+    function toBase64(buf) {
+      const u = new Uint8Array(buf); let s = "";
+      for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192));
+      return btoa(s);
+    }
+
+    function clearFile() {
+      chosenFile = null; fileInput.value = "";
+      fileNameEl.textContent = ""; fileChosenIcon.innerHTML = "";
+      fileChosenBar.classList.remove("visible");
+      updateSendBtn();
+    }
+    if (fileClearBtn) fileClearBtn.addEventListener("click", clearFile);
+
+    fileInput.addEventListener("change", () => {
+      chosenFile = fileInput.files?.[0] || null;
+      if (!chosenFile) { clearFile(); return; }
+      const isPdf = (chosenFile.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(chosenFile.name || "");
+      fileChosenIcon.innerHTML = isPdf ? `<img src="${PDF_ICON_URL}" alt="PDF" width="15" height="15">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
+      fileNameEl.textContent = chosenFile.name;
+      fileChosenBar.classList.add("visible");
+      updateSendBtn();
+    });
+
+    /* ── Offline fallback ──────────────────────────────────── */
+    const KNOWLEDGE = [
+      { patterns: ["hi","hello","hey"], responses: ["Hi! How can I help you today? 😊"] },
+      { patterns: ["who are you","what are you"], responses: ["I'm General, your AI assistant. What would you like to know?"] },
+      { patterns: ["help"], responses: ["Ask me a question about anything you care about."] },
+      { patterns: [], responses: ["I couldn't complete that request. Please try again."] }
+    ];
+    function norm(s) { return s.replace(/[^\w\s]/g, "").toLowerCase().trim(); }
+    function tokens(s) { return norm(s).split(/\s+/).filter(Boolean); }
+    function thinkFallback(msg) {
+      const raw = (msg || "").trim(); if (!raw) return "Ask something.";
+      const set = new Set(tokens(raw)); let best = 0, entry = null;
+      for (const e of KNOWLEDGE) { if (!e.patterns.length) continue; for (const p of e.patterns) { const score = tokens(p).filter(w => set.has(w)).length / tokens(p).length; if (score > best) { best = score; entry = e; } } }
+      if (entry && best >= 0.3) return entry.responses[0];
+      return (KNOWLEDGE.find(e => !e.patterns.length) || {}).responses?.[0] || "Your request could not be completed. Try again later.";
+    }
+
+    /* ── Markdown formatter ────────────────────────────────── */
+    function convertTsv(text) {
+      const lines = text.split(/\r?\n/), out = []; let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        if (line && line.includes("\t")) {
+          const hcells = line.split("\t").map(c => c.trim()).filter(Boolean);
+          if (hcells.length >= 2) {
+            const block = [line]; let j = i + 1;
+            while (j < lines.length && lines[j] && lines[j].includes("\t")) { block.push(lines[j]); j++; }
+            if (block.length >= 2) {
+              const rows = block.map(l => l.split("\t").map(c => c.trim()));
+              const n = hcells.length;
+              out.push("", "| " + hcells.join(" | ") + " |", "| " + hcells.map(() => "---").join(" | ") + " |");
+              rows.slice(1).forEach(r => { const cells = []; for (let k = 0; k < n; k++) cells.push(r[k] || ""); out.push("| " + cells.join(" | ") + " |"); });
+              out.push(""); i = j; continue;
+            }
+          }
+        }
+        out.push(line); i++;
+      }
+      return out.join("\n");
+    }
+
+    function formatUserMsg(s) {
+      if (!s) return "";
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\r\n|\r|\n/g,"<br>");
+    }
+
+    function cellHtml(s) {
+      return s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/__([^_]+)__/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/_([^_]+)_/g,"<em>$1</em>").replace(/`([^`]+)`/g,"<code>$1</code>");
+    }
+    function splitRow(l) { return l.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim()); }
+    function isTableRow(l) { const t2=l.trim(); return t2.startsWith("|")&&t2.endsWith("|"); }
+    function isSep(l) { return /^\|[\s|:\-]+\|$/.test(l.trim()); }
+
+    function formatMsg(raw) {
+      if (!raw) return "";
+      raw = convertTsv(String(raw));
+      let s = raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      const lines = s.split(/\r?\n/); const out = []; let i = 0;
+      while (i < lines.length) {
+        const line = lines[i], next = lines[i+1]||"";
+        if (isTableRow(line) && isSep(next)) {
+          const hcells = splitRow(line); const n = hcells.length;
+          let html = '<div class="table-wrap"><table><thead><tr>' + hcells.map(c=>"<th>"+cellHtml(c)+"</th>").join("") + "</tr></thead><tbody>";
+          let idx = i + 2;
+          while (idx < lines.length && lines[idx].trim() && isTableRow(lines[idx])) {
+            const cells = splitRow(lines[idx]); html += "<tr>";
+            for (let ci=0;ci<n;ci++) html += "<td>"+cellHtml(ci<cells.length?cells[ci]:"")+  "</td>";
+            html += "</tr>"; idx++;
+          }
+          html += "</tbody></table></div>"; out.push(html); i = idx; continue;
+        }
+        out.push(line); i++;
+      }
+      s = out.join("\n");
+      s = s.replace(/```\n?([\s\S]*?)```/g, (_m, code) =>
+        `<div class="ai-snippet"><div class="ai-snippet-header"><span>Snippet</span><button type="button" class="ai-snippet-copy" aria-label="Copy snippet">${COPY_SVG}</button></div><div class="ai-snippet-body"><pre><code>${code}</code></pre></div></div>`
+      );
+      s = s.replace(/`([^`]+)`/g,"<code>$1</code>");
+      s = s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/__([^_]+)__/g,"<strong>$1</strong>");
+      s = s.replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/_([^_]+)_/g,"<em>$1</em>");
+      s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_,txt,url) => { const u = /^https?:\/\//i.test(url) ? url.replace(/"/g,"&quot;") : "#"; return `<a href="${u}" target="_blank" rel="noopener">${txt}</a>`; });
+      // Make bare URLs clickable (avoid matching inside existing href="...")
+      s = s.replace(/(^|>|\s)(https?:\/\/[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)/g, (_, pre, url) => {
+        const safe = url.replace(/"/g,"&quot;");
+        return pre + `<a href="${safe}" target="_blank" rel="noopener">${url}</a>`;
+      });
+      s = s.replace(/^####\s+(.+)$/gm,"<span class=\"msg-heading\">$1</span>");
+      s = s.replace(/^###\s+(.+)$/gm,"<span class=\"msg-heading\">$1</span>");
+      s = s.replace(/^##\s+(.+)$/gm,"<span class=\"msg-heading\">$1</span>");
+      s = s.replace(/^#\s+(.+)$/gm,"<span class=\"msg-heading\">$1</span>");
+      s = s.replace(/^\s*[-*]\s+(.+)$/gm,"<li>$1</li>");
+      s = s.replace(/^\s*\d+\.\s+(.+)$/gm,"<li>$1</li>");
+      s = s.replace(/((?:<li>[\s\S]*?<\/li>\n?)+)/g,"<ul>$1</ul>");
+      const blocks = s.split(/\n{2,}/);
+      return blocks.map(b => {
+        const trimmed = b.trim(); if (!trimmed) return "";
+        if (/^<\/?(?:ul|ol|li|table|thead|tbody|tr|th|td|div|pre|code|h[1-6]|blockquote)\b/i.test(trimmed) || trimmed.startsWith('<div class="table-wrap') || trimmed.startsWith('<div class="ai-snippet')) return trimmed;
+        if (/^<p\b/i.test(trimmed)) return trimmed;
+        return "<p>"+trimmed+"</p>";
+      }).filter(Boolean).join("\n\n");
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(text).catch(()=>{}); return; }
+      try { const ta = document.createElement("textarea"); ta.value=text; ta.style.cssText="position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); } catch(_){}
+    }
+
+    /* ── Add message ───────────────────────────────────────── */
+    function addMsg(role, text, opts) {
+      const row = document.createElement("div");
+      row.className = "msg-row " + role;
+
+      // Bubble
+      const bubble = document.createElement("div");
+      bubble.className = "msg-bubble";
+
+      // Name label
+      const name = document.createElement("div");
+      name.className = "msg-name";
+      name.textContent = role === "user" ? t("you") : t("general");
+      bubble.appendChild(name);
+
+      // Content
+      const contentEl = document.createElement("div");
+      contentEl.className = "msg-content";
+      contentEl.innerHTML = role === "user" ? formatUserMsg(text) : formatMsg(text);
+      bubble.appendChild(contentEl);
+
+      // Attachment badge (user)
+      if (role === "user" && opts?.attachment?.name) {
+        const badge = document.createElement("div");
+        badge.className = "attach-badge";
+        const isPdf = (opts.attachment.type || "").toLowerCase() === "pdf";
+        const shortName = opts.attachment.name.length > 28 ? opts.attachment.name.slice(0,25)+"…" : opts.attachment.name;
+        badge.innerHTML = (isPdf ? `<img src="${PDF_ICON_URL}" alt="PDF">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`) + `<span>${shortName}</span>`;
+        bubble.appendChild(badge);
+      }
+
+      // Actions
+      const actions = document.createElement("div");
+      actions.className = "msg-actions";
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button"; copyBtn.className = "action-btn"; copyBtn.setAttribute("aria-label","Copy message");
+      copyBtn.innerHTML = COPY_SVG;
+      copyBtn.addEventListener("click", () => {
+        copyToClipboard(contentEl.innerText || "");
+        copyBtn.innerHTML = "✓"; copyBtn.classList.add("copied");
+        setTimeout(() => { copyBtn.innerHTML = COPY_SVG; copyBtn.classList.remove("copied"); }, 2000);
+      });
+      actions.appendChild(copyBtn);
+
+      if (role === "user") {
+        const editBtn = document.createElement("button");
+        editBtn.type = "button"; editBtn.className = "action-btn edit-btn"; editBtn.setAttribute("aria-label","Edit message");
+        editBtn.innerHTML = EDIT_SVG;
+        editBtn.addEventListener("click", () => {
+          const textContent = contentEl.innerText || ""; if (!textContent) return;
+          if (inputEl) { inputEl.value = textContent; inputEl.style.height="auto"; inputEl.style.height=Math.min(inputEl.scrollHeight,200)+"px"; inputEl.focus(); updateSendBtn(); }
+          if (lastAiEl?.parentNode) lastAiEl.parentNode.removeChild(lastAiEl);
+          if (lastUserEl?.parentNode) lastUserEl.parentNode.removeChild(lastUserEl);
+          if (Array.isArray(history) && history.length >= 2) { history.splice(-2,2); try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch(_){} }
+          lastUserEl = null; lastAiEl = null;
+          updateWelcome();
+        });
+        actions.appendChild(editBtn);
+        if (lastUserEl) { const oldEdit = lastUserEl.querySelector(".edit-btn"); if (oldEdit?.parentNode) oldEdit.parentNode.removeChild(oldEdit); }
+        lastUserEl = row;
+      } else {
+        lastAiEl = row;
+      }
+      bubble.appendChild(actions);
+      row.appendChild(bubble);
+
+      // Snippet copy wiring (AI only)
+      if (role === "ai") {
+        row.querySelectorAll(".ai-snippet").forEach(snip => {
+          const btn = snip.querySelector(".ai-snippet-copy");
+          const body = snip.querySelector(".ai-snippet-body");
+          if (!btn || !body) return;
+          btn.addEventListener("click", () => {
+            copyToClipboard(body.innerText || "");
+            btn.innerHTML = "✓"; btn.classList.add("copied");
+            setTimeout(() => { btn.innerHTML = COPY_SVG; btn.classList.remove("copied"); }, 2000);
+          });
+        });
+      }
+
+      chatEl.appendChild(row);
+      requestAnimationFrame(() => row.scrollIntoView({ behavior: "smooth", block: "end" }));
+      updateWelcome();
+      return row;
+    }
+
+    /* ── Typing indicator ──────────────────────────────────── */
+    function addTyping() {
+      const row = document.createElement("div");
+      row.className = "msg-row ai typing-row";
+      const bubble = document.createElement("div");
+      bubble.className = "msg-bubble";
+      const name = document.createElement("div");
+      name.className = "msg-name"; name.textContent = t("general");
+      bubble.appendChild(name);
+      const dots = document.createElement("div");
+      dots.className = "msg-content";
+      dots.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+      bubble.appendChild(dots);
+      row.appendChild(bubble);
+      chatEl.appendChild(row);
+      requestAnimationFrame(() => row.scrollIntoView({ behavior: "smooth", block: "end" }));
+      return row;
+    }
+
+    /* ── Form submit ───────────────────────────────────────── */
+    if (form) form.addEventListener("submit", async e => {
+      e.preventDefault();
+      if (conversationBlocked) return;
+      const raw = inputEl ? inputEl.value.trim() : "";
+      const file = chosenFile;
+      if (!raw && !file) { if (inputEl) inputEl.focus(); return; }
+
+      const displayMsg = raw || (file ? "[" + file.name + "]" : (lastPdfAttachment ? "[" + lastPdfAttachment.name + "]" : ""));
+      const attachOpts = file
+        ? { attachment: { type: ((file.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(file.name||"")) ? "pdf" : "image", name: file.name } }
+        : (lastPdfAttachment ? { attachment: { type: "pdf", name: lastPdfAttachment.name } } : undefined);
+
+      if (file && file.size > MAX_FILE) {
+        addMsg("user", displayMsg, attachOpts);
+        addMsg("ai", "File too large. Use a PDF under 3 MB so it fits within the server limit.");
+        clearFile(); return;
+      }
+
+      addMsg("user", displayMsg, attachOpts);
+      if (inputEl) { inputEl.value = ""; inputEl.style.height = "auto"; }
+      if (file) clearFile();
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+      // Local UI control shortcuts (instant app control).
+      const localUiReply = tryHandleUiCommand(raw);
+      if (localUiReply) {
+        history.push({ role: "user", content: raw });
+        history.push({ role: "assistant", content: localUiReply });
+        try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch (_) {}
+        updateWelcome();
+        addMsg("ai", localUiReply);
+        scheduleHistory();
+        if (inputEl) inputEl.focus();
+        updateSendBtn();
+        return;
+      }
+      sendBtn.disabled = true; sendBtn.classList.remove("active");
+      const typingEl = addTyping();
+
+      try {
+        const body = { message: raw || (file ? (lang==="de"?"Was ist in dieser Datei?":"What is in this file?") : "") };
+        body.lang = lang;
+        if (file) {
+          const buf = await file.arrayBuffer();
+          const isPdf = (file.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(file.name||"");
+          if (isPdf) { body.pdf = toBase64(buf); lastPdfAttachment = { base64: body.pdf, name: file.name }; }
+          else { body.image = toBase64(buf); lastPdfAttachment = null; }
+        } else if (lastPdfAttachment) {
+          body.pdf = lastPdfAttachment.base64;
+        }
+        body.appState = getAppState();
+        body.history = history.slice(-20);
+
+        const apiRes = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
+        const ct = apiRes.headers.get("Content-Type") || "";
+
+        if (ct.includes("text/event-stream")) {
+          if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
+
+          // Streaming shell
+          const row = document.createElement("div"); row.className = "msg-row ai";
+          const bbl = document.createElement("div"); bbl.className = "msg-bubble";
+          const nm = document.createElement("div"); nm.className = "msg-name"; nm.textContent = t("general");
+          bbl.appendChild(nm);
+          const cEl = document.createElement("div"); cEl.className = "msg-content streaming";
+          bbl.appendChild(cEl);
+          row.appendChild(bbl);
+          chatEl.appendChild(row);
+          lastAiEl = row;
+          row.scrollIntoView({ behavior: "smooth", block: "end" });
+          updateWelcome();
+
+          let full = "", finished = false;
+          const reader = apiRes.body.getReader();
+          const dec = new TextDecoder(); let buf = "";
+          try {
+            outer: while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += dec.decode(value, { stream: true });
+              const ll = buf.split("\n"); buf = ll.pop();
+              for (const line of ll) {
+                if (!line.startsWith("data: ")) continue;
+                try {
+                  const obj = JSON.parse(line.slice(6).trim());
+                    if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({ behavior: "auto", block: "end" }); }
+                  if (obj.done || obj.err) {
+                    finished = true;
+                    let replyText = obj.err ? (full||obj.err) : full;
+                    replyText = maybeExecuteUiToolFromReply(replyText);
+                    if (obj.blocked || isBlockedReply(replyText)) setConversationBlocked(true);
+                    cEl.classList.remove("streaming");
+                    cEl.innerHTML = formatMsg(replyText);
+                    row.querySelectorAll(".ai-snippet").forEach(snip => {
+                      const sb = snip.querySelector(".ai-snippet-copy");
+                      const sbody = snip.querySelector(".ai-snippet-body");
+                      if (!sb||!sbody) return;
+                      sb.addEventListener("click", () => { copyToClipboard(sbody.innerText||""); sb.innerHTML="✓"; sb.classList.add("copied"); setTimeout(()=>{sb.innerHTML=COPY_SVG;sb.classList.remove("copied");},2000); });
+                    });
+                    const acts = document.createElement("div"); acts.className = "msg-actions";
+                    const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML = COPY_SVG;
+                    cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
+                    acts.appendChild(cpb); bbl.appendChild(acts);
+                    history.push({ role:"user", content: body.message });
+                    history.push({ role:"assistant", content: replyText });
+                    try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch(_){}
+                    scheduleHistory(); speakReply(replyText);
+                    break outer;
+                  }
+                } catch(_) {}
+              }
+            }
+          } catch (streamErr) {
+            cEl.classList.remove("streaming");
+            if (!full) cEl.innerHTML = formatMsg("Your request could not be completed. Try again later.");
+            else cEl.innerHTML = formatMsg(full);
+          }
+          if (!finished && !full) { cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg("Your request could not be completed. Try again later."); }
+
+        } else {
+          let data;
+          try { data = await apiRes.json(); } catch(_) { data = { reply: apiRes?.status===413 ? "File too large. Try a smaller PDF (under 3 MB)." : "Your request could not be completed. Try again later." }; }
+          let reply = (data?.reply) ? data.reply : (data?.error) ? data.error : (!apiRes?.ok) ? (apiRes?.status===413?"File too large. Try a smaller PDF (under 3 MB).":"Your request could not be completed. Try again later.") : "No reply.";
+          reply = maybeExecuteUiToolFromReply(reply);
+          if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
+          if (data && data.blocked) setConversationBlocked(true);
+          else if (isBlockedReply(reply)) setConversationBlocked(true);
+          history.push({ role:"user", content: body.message });
+          history.push({ role:"assistant", content: reply });
+          addMsg("ai", reply);
+          try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch(_){}
+          scheduleHistory(); speakReply(reply);
+        }
+
+      } catch(err) {
+        const errMsg = err?.name==="AbortError"
+          ? "Your request took too long. Please check your connection and try again."
+          : (file ? "Your request with the file could not be completed. Try a smaller PDF (under 3 MB)." : thinkFallback(displayMsg));
+        if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
+        addMsg("ai", errMsg);
+      } finally {
+        sendBtn.disabled = false;
+        updateSendBtn();
+        setTimeout(() => { if (inputEl) inputEl.focus(); }, 120);
+      }
+    });
+
+    /* ══ Voice system ══════════════════════════════════════════════════
+       Three modes:
+       1. Idle   – overlay closed, voice-btn in form bar opens it
+       2. Voice  – overlay open, full STT→API→TTS loop
+       3. STT-only (mic-btn in form) – transcript goes to text input
+    ══════════════════════════════════════════════════════════════════ */
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    // Show/hide voice buttons based on SR availability
+    const voiceBtnEl = document.getElementById("voice-btn");
+    const welcomeVoiceBtn = document.getElementById("welcome-voice-btn");
+    if (!SR) {
+      document.body.classList.add("no-speech");
+      if (voiceBtnEl) voiceBtnEl.style.display = "none";
+    } else {
+      if (voiceBtnEl) voiceBtnEl.style.display = "";
+      if (welcomeVoiceBtn) welcomeVoiceBtn.classList.add("sr-ready");
+    }
+    if (welcomeVoiceBtn) welcomeVoiceBtn.addEventListener("click", () => openVoiceOverlay());
+
+    // Overlay refs
+    const voiceOverlay  = document.getElementById("voice-overlay");
+    const voOrbEl       = document.getElementById("vo-orb");
+    const voStateEl     = document.getElementById("vo-state");
+    const voTransEl     = document.getElementById("vo-transcript");
+    const voMicBtnEl    = document.getElementById("vo-mic-btn");
+    const voStopBtnEl   = document.getElementById("vo-stop-btn");
+    const voCanvas      = document.getElementById("vo-canvas");
+
+    let voiceActive = false;   // overlay open?
+    let voStreamTtsSpokenUpTo = 0;
+    let voStreamTtsFull = "";
+    let voStreamTtsAborted = false;
+    let voListening = false;   // STT running?
+    let voSpeaking  = false;   // TTS running?
+    let voThinking  = false;   // API call in progress?
+    let voRec       = null;    // SpeechRecognition instance
+    let voAudioCtx  = null;
+    let voAnalyser  = null;
+    let voMicStream = null;
+    let voAnimFrame = null;
+
+    /* ── Canvas waveform ─────────────────────────────────── */
+    function startWaveform(stream) {
+      try {
+        voAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        voAnalyser = voAudioCtx.createAnalyser();
+        voAnalyser.fftSize = 64;
+        const src = voAudioCtx.createMediaStreamSource(stream);
+        src.connect(voAnalyser);
+        drawWaveform();
+      } catch(_) {}
+    }
+    function stopWaveform() {
+      if (voAnimFrame) { cancelAnimationFrame(voAnimFrame); voAnimFrame = null; }
+      try { if (voAudioCtx) { voAudioCtx.close(); voAudioCtx = null; voAnalyser = null; } } catch(_) {}
+      if (voCanvas) { const ctx = voCanvas.getContext("2d"); ctx.clearRect(0,0,voCanvas.width,voCanvas.height); }
+    }
+    function drawWaveform() {
+      if (!voAnalyser || !voCanvas) return;
+      const ctx = voCanvas.getContext("2d");
+      const W = voCanvas.width, H = voCanvas.height;
+      const data = new Uint8Array(voAnalyser.frequencyBinCount);
+      voAnalyser.getByteFrequencyData(data);
+
+      ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2;
+      const baseR = 58;
+      const bars = Math.min(data.length, 32);
+      const angleStep = (Math.PI * 2) / bars;
+
+      for (let i = 0; i < bars; i++) {
+        const amp = (data[i] || 0) / 255;
+        const len = 12 + amp * 30;
+        const angle = i * angleStep - Math.PI / 2;
+        const x1 = cx + Math.cos(angle) * baseR;
+        const y1 = cy + Math.sin(angle) * baseR;
+        const x2 = cx + Math.cos(angle) * (baseR + len);
+        const y2 = cy + Math.sin(angle) * (baseR + len);
+        const alpha = 0.35 + amp * 0.65;
+        ctx.strokeStyle = voSpeaking
+          ? `rgba(52,211,153,${alpha})`
+          : `rgba(96,165,250,${alpha})`;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+      voAnimFrame = requestAnimationFrame(drawWaveform);
+    }
+
+    /* ── Orb state ───────────────────────────────────────── */
+    function setOrbState(state) {
+      // state: 'idle' | 'listening' | 'thinking' | 'speaking'
+      if (!voOrbEl) return;
+      voOrbEl.classList.remove("listening","thinking","speaking");
+      if (state !== "idle") voOrbEl.classList.add(state);
+      const labels = {
+        idle:      lang === "de" ? "Mikrofon antippen" : "Tap mic to speak",
+        listening: lang === "de" ? "Zuhören…" : "Listening…",
+        thinking:  lang === "de" ? "Denke nach…" : "Thinking…",
+        speaking:  lang === "de" ? "Spricht…" : "Speaking…",
+      };
+      if (voStateEl) voStateEl.textContent = labels[state] || "";
+    }
+
+    /* ── Open / close overlay ────────────────────────────── */
+    function openVoiceOverlay() {
+      if (!SR) return;
+      voiceActive = true;
+      if (voiceOverlay) { voiceOverlay.style.display = ""; voiceOverlay.classList.add("show"); }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      setOrbState("idle");
+      setVoTranscript("", "");
+      // Auto-start listening immediately
+      setTimeout(voStartListening, 350);
+    }
+    function closeVoiceOverlay() {
+      voiceActive = false;
+      voListening = false; voSpeaking = false; voThinking = false;
+      if (voRec) { try { voRec.stop(); } catch(_){} voRec = null; }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      stopWaveform();
+      if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+      if (voiceOverlay) { voiceOverlay.classList.remove("show"); setTimeout(() => { if (!voiceActive) voiceOverlay.style.display = "none"; }, 300); }
+      if (voMicBtnEl) voMicBtnEl.classList.remove("active");
+      setOrbState("idle");
+    }
+
+    if (voiceBtnEl) voiceBtnEl.addEventListener("click", () => openVoiceOverlay());
+    if (voStopBtnEl) voStopBtnEl.addEventListener("click", () => closeVoiceOverlay());
+    // Close on backdrop click
+    if (voiceOverlay) voiceOverlay.addEventListener("click", e => { if (e.target === voiceOverlay || e.target.classList.contains("vo-bg")) closeVoiceOverlay(); });
+    // Close on Escape
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && voiceActive) closeVoiceOverlay(); });
+
+    // Tap mic button inside overlay (tap to speak, or tap to interrupt AI while speaking)
+    if (voMicBtnEl) voMicBtnEl.addEventListener("click", () => {
+      if (voSpeaking) {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        voStreamTtsAborted = true;
+        voSpeaking = false;
+        stopWaveform();
+        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+        setOrbState("idle");
+        voStartListening();
+        return;
+      }
+      if (voListening) { if (voRec) { try { voRec.stop(); } catch(_){} } }
+      else if (!voThinking && !voSpeaking) { voStartListening(); }
+    });
+
+    /* ── Transcript display ──────────────────────────────── */
+    function setVoTranscript(final, interim) {
+      if (!voTransEl) return;
+      voTransEl.innerHTML =
+        (final ? `<span class="vo-final">${escHtml(final)}</span>` : "") +
+        (interim ? `<span class="vo-interim"> ${escHtml(interim)}</span>` : "");
+    }
+    function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+    /* ── STT in voice overlay ────────────────────────────── */
+    async function voStartListening() {
+      if (!SR || !voiceActive || voListening || voThinking || voSpeaking) return;
+      // Request mic for waveform (separate from STT)
+      try {
+        voMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        startWaveform(voMicStream);
+      } catch(_) {}
+
+      voRec = new SR();
+      voRec.continuous = false;
+      voRec.interimResults = true;
+      voRec.lang = lang === "de" ? "de-DE" : "en-US";
+
+      let finalText = "";
+
+      voRec.onstart = () => {
+        voListening = true;
+        setOrbState("listening");
+        if (voMicBtnEl) voMicBtnEl.classList.add("active");
+        setVoTranscript("", "");
+      };
+
+      voRec.onresult = e => {
+        let interim = "", final = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) final += e.results[i][0].transcript;
+          else interim += e.results[i][0].transcript;
+        }
+        if (final) finalText += final;
+        setVoTranscript(finalText, interim);
+      };
+
+      voRec.onerror = e => {
+        console.warn("STT error:", e.error);
+        voListening = false;
+        if (voMicBtnEl) voMicBtnEl.classList.remove("active");
+        stopWaveform();
+        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+        if (voiceActive && e.error !== "aborted") setOrbState("idle");
+      };
+
+      voRec.onend = () => {
+        voListening = false;
+        if (voMicBtnEl) voMicBtnEl.classList.remove("active");
+        stopWaveform();
+        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+        if (!voiceActive) return;
+        const said = finalText.trim();
+        if (said) {
+          setVoTranscript(said, "");
+          voSendMessage(said);
+        } else {
+          setOrbState("idle");
+        }
+      };
+
+      try { voRec.start(); } catch(e) { voListening = false; setOrbState("idle"); }
+    }
+
+    /* ── Send to API from voice mode ─────────────────────── */
+    async function voSendMessage(text) {
+      if (!voiceActive) return;
+      if (conversationBlocked) return;
+      voThinking = true;
+      setOrbState("thinking");
+      // Also log to the chat UI
+      addMsg("user", text);
+
+      const typingEl = addTyping();
+      let replyText = "";
+      let voUsedStreamingTts = false;
+
+      try {
+        const body = { message: text, history: history.slice(-20) };
+        body.lang = lang;
+        body.appState = getAppState();
+        if (lastPdfAttachment) body.pdf = lastPdfAttachment.base64;
+
+        const apiRes = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(90000)
+        });
+        const ct = apiRes.headers.get("Content-Type") || "";
+
+        if (ct.includes("text/event-stream")) {
+          if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
+          voStreamTtsAborted = false;
+          voStreamTtsSpokenUpTo = 0;
+          voStreamTtsFull = "";
+          voUsedStreamingTts = true;
+          let streamTtsHandled = false;
+          // Build streaming shell in chat
+          const row = document.createElement("div"); row.className = "msg-row ai";
+          const bbl = document.createElement("div"); bbl.className = "msg-bubble";
+          const nm = document.createElement("div"); nm.className = "msg-name"; nm.textContent = t("general");
+          bbl.appendChild(nm);
+          const cEl = document.createElement("div"); cEl.className = "msg-content streaming";
+          bbl.appendChild(cEl); row.appendChild(bbl); chatEl.appendChild(row);
+          lastAiEl = row; row.scrollIntoView({ behavior:"smooth", block:"end" }); updateWelcome();
+
+          voThinking = false;
+          voSpeaking = true;
+          setOrbState("speaking");
+          if (window.AudioContext || window.webkitAudioContext) {
+            try {
+              navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+                if (!voStreamTtsAborted && !voMicStream) { voMicStream = stream; startWaveform(stream); }
+              }).catch(() => {});
+            } catch(_) {}
+          }
+
+          let full = "";
+          const reader = apiRes.body.getReader(); const dec = new TextDecoder(); let buf = "";
+          try {
+            outer2: while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += dec.decode(value, { stream: true });
+              const ll = buf.split("\n"); buf = ll.pop();
+              for (const line of ll) {
+                if (!line.startsWith("data: ")) continue;
+                try {
+                  const obj = JSON.parse(line.slice(6).trim());
+                  if (obj.t) {
+                    full += obj.t;
+                    cEl.innerHTML = formatMsg(full);
+                    row.scrollIntoView({behavior:"auto",block:"end"});
+                    const plain = stripMarkdownForTts(full);
+                    voStreamTtsFull = plain;
+                    if (!voStreamTtsAborted && window.speechSynthesis) voSpeakNextStreamChunk();
+                    setVoTranscript(plain.slice(0, 220) + (plain.length > 220 ? "…" : ""), "");
+                  }
+                  if (obj.done || obj.err) {
+                    replyText = obj.err ? (full||obj.err) : full;
+                    cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(replyText);
+                    const acts = document.createElement("div"); acts.className="msg-actions";
+                    const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML=COPY_SVG;
+                    cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
+                    acts.appendChild(cpb); bbl.appendChild(acts);
+                    streamTtsHandled = true;
+                    if (!voStreamTtsAborted) {
+                      voSpeakStreamRemainder(() => {
+                        voSpeaking = false;
+                        stopWaveform();
+                        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+                        if (voiceActive) setTimeout(voStartListening, 500);
+                      });
+                    } else {
+                      voSpeaking = false;
+                      if (voiceActive) setOrbState("idle");
+                      setTimeout(voStartListening, 300);
+                    }
+                    break outer2;
+                  }
+                } catch(_) {}
+              }
+            }
+          } catch(_) { if (!full) replyText="Your request could not be completed."; else replyText=full; cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg(replyText); }
+          if (!replyText) { cEl.classList.remove("streaming"); cEl.innerHTML=formatMsg("Your request could not be completed."); replyText="Your request could not be completed."; }
+          if (voUsedStreamingTts && replyText && !streamTtsHandled) {
+            voStreamTtsFull = stripMarkdownForTts(replyText);
+            voStreamTtsSpokenUpTo = 0;
+            if (!voStreamTtsAborted) voSpeakStreamRemainder(() => {
+              voSpeaking = false;
+              stopWaveform();
+              if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+              if (voiceActive) setTimeout(voStartListening, 500);
+            }); else { voSpeaking = false; if (voiceActive) setOrbState("idle"); setTimeout(voStartListening, 300); }
+          }
+        } else {
+          let data; try { data = await apiRes.json(); } catch(_) { data={}; }
+          replyText = data?.reply || data?.error || "Your request could not be completed.";
+          if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
+          addMsg("ai", replyText);
+        }
+
+        history.push({ role:"user", content: text });
+        history.push({ role:"assistant", content: replyText });
+        try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch(_) {}
+        scheduleHistory();
+
+      } catch(err) {
+        replyText = err?.name==="AbortError" ? "Request timed out. Try again." : "Your request could not be completed.";
+        if (typingEl?.parentNode) typingEl.parentNode.removeChild(typingEl);
+        addMsg("ai", replyText);
+      }
+
+      voThinking = false;
+
+      // Speak the reply (non-streaming path), then listen again
+      if (voiceActive && replyText && !voUsedStreamingTts) {
+        voSpeakReply(replyText);
+      } else if (voiceActive && !voUsedStreamingTts) {
+        setOrbState("idle");
+      }
+    }
+
+    /* ── TTS in voice overlay ────────────────────────────── */
+    function stripMarkdownForTts(text) {
+      return String(text || "")
+        .replace(/\*\*([^*]+)\*\*/g,"$1").replace(/\*([^*]+)\*/g,"$1")
+        .replace(/#+\s/g,"").replace(/\[([^\]]+)\]\([^)]+\)/g,"$1")
+        .replace(/[-*]\s/g,"").replace(/<[^>]*>/g,"");
+    }
+
+    function voSpeakNextStreamChunk() {
+      if (!window.speechSynthesis || voStreamTtsAborted) return false;
+      const start = voStreamTtsSpokenUpTo;
+      const rest = voStreamTtsFull.slice(start).trim();
+      if (!rest) return false;
+      const match = rest.match(/^[^.!?\n]+[.!?\n]/);
+      const toSpeak = match ? match[0].trim() : (rest.length > 100 ? rest.slice(0, rest.lastIndexOf(" ") + 1) || rest.slice(0, 100) : null);
+      const chunk = (toSpeak && toSpeak.length > 0) ? toSpeak : (rest.length > 0 ? rest.slice(0, 400) : null);
+      if (!chunk) return false;
+      const utt = new SpeechSynthesisUtterance(chunk);
+      utt.lang = lang === "de" ? "de-DE" : "en-US";
+      utt.rate = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const pref = voices.find(v => /natural|neural|samantha|google/i.test(v.name) && v.lang.startsWith(utt.lang.slice(0,2))) || voices.find(v => v.lang.startsWith(utt.lang.slice(0,2)));
+      if (pref) utt.voice = pref;
+      const idx = voStreamTtsFull.indexOf(chunk, start);
+      voStreamTtsSpokenUpTo = idx !== -1 ? idx + chunk.length : start + chunk.length;
+      window.speechSynthesis.speak(utt);
+      return true;
+    }
+
+    function voSpeakStreamRemainder(onEnd) {
+      if (!window.speechSynthesis || voStreamTtsAborted) { if (onEnd) onEnd(); return; }
+      const rest = voStreamTtsFull.slice(voStreamTtsSpokenUpTo).trim();
+      if (rest.length === 0) { if (onEnd) onEnd(); return; }
+      const utt = new SpeechSynthesisUtterance(rest.slice(0, 800));
+      utt.lang = lang === "de" ? "de-DE" : "en-US";
+      utt.rate = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const pref = voices.find(v => /natural|neural|samantha|google/i.test(v.name) && v.lang.startsWith(utt.lang.slice(0,2))) || voices.find(v => v.lang.startsWith(utt.lang.slice(0,2)));
+      if (pref) utt.voice = pref;
+      utt.onend = () => { if (onEnd) onEnd(); };
+      utt.onerror = () => { if (onEnd) onEnd(); };
+      window.speechSynthesis.speak(utt);
+    }
+
+    function voSpeakReply(text) {
+      if (!voiceActive || !window.speechSynthesis) { if (voiceActive) setTimeout(voStartListening, 500); return; }
+      window.speechSynthesis.cancel();
+      const plain = stripMarkdownForTts(text).slice(0, 600);
+      const utt = new SpeechSynthesisUtterance(plain);
+      utt.lang = lang === "de" ? "de-DE" : "en-US";
+      utt.rate = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const pref = voices.find(v => /natural|neural|samantha|google/i.test(v.name) && v.lang.startsWith(utt.lang.slice(0,2))) || voices.find(v => v.lang.startsWith(utt.lang.slice(0,2)));
+      if (pref) utt.voice = pref;
+
+      voSpeaking = true;
+      setOrbState("speaking");
+      // Show what General is saying
+      setVoTranscript(plain.slice(0, 120) + (plain.length > 120 ? "…" : ""), "");
+
+      // Try to get mic stream just for the speaking waveform visualisation
+      if (window.AudioContext || window.webkitAudioContext) {
+        try {
+          navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+            voMicStream = stream;
+            startWaveform(stream);
+          }).catch(() => {});
+        } catch(_) {}
+      }
+
+      utt.onend = () => {
+        voSpeaking = false;
+        stopWaveform();
+        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+        if (voiceActive) setTimeout(voStartListening, 500);
+      };
+      utt.onerror = () => {
+        voSpeaking = false;
+        stopWaveform();
+        if (voMicStream) { voMicStream.getTracks().forEach(t => t.stop()); voMicStream = null; }
+        if (voiceActive) setTimeout(voStartListening, 500);
+      };
+      window.speechSynthesis.speak(utt);
+    }
+
+    /* ── speakReply for text-chat mode (no voice overlay) ── */
+    function speakReply(text) {
+      // Only speaks if voice overlay is active
+      // Text chat doesn't auto-speak
+      return;
+    }
+
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    /* ── Restore session ───────────────────────────────────── */
+    try {
+      const raw = localStorage.getItem("general_chat_history");
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length > 0) {
+          history = arr;
+          arr.forEach(m => { if (m && (m.role==="user"||m.role==="assistant")) addMsg(m.role==="user"?"user":"ai", m.content||""); });
+          const lastAssistant = arr.filter(m => m && m.role === "assistant").pop();
+          if (lastAssistant && isBlockedReply(lastAssistant.content || "")) setConversationBlocked(true);
+          const msgs = chatEl.querySelectorAll(".msg-row");
+          for (let i=msgs.length-1;i>=0;i--) { if (msgs[i].classList.contains("user")) { lastUserEl=msgs[i]; break; } }
+          for (let i=msgs.length-1;i>=0;i--) { if (msgs[i].classList.contains("ai")) { lastAiEl=msgs[i]; break; } }
+        }
+      }
+    } catch(_){}
+
+    updateWelcome();
+    scheduleHistory();
+    applyI18n();
+    setupSuggestionClicks();
+    if (inputEl) { inputEl.focus(); updateSendBtn(); }
+
+  })();
+  </script>
 </body>
 </html>
