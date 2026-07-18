@@ -273,12 +273,13 @@
     .welcome > *:not(.welcome-glow) { position: relative; z-index: 1; }
     .welcome-icon-wrap {
       width: 116px; height: 116px;
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(148,163,184,0.18);
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(148,163,184,0.16);
       border-radius: 50%;
       margin-bottom: 1rem;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: none;
+      box-shadow: none !important;
+      filter: none !important;
       animation: logo-float 5s ease-in-out infinite;
     }
     .welcome-icon-wrap img {
@@ -287,8 +288,9 @@
       object-fit: contain;
       background: transparent;
       border: none;
-      box-shadow: none;
-      filter: none;
+      box-shadow: none !important;
+      filter: none !important;
+      display: block;
     }
     @keyframes logo-float {
       0%, 100% { transform: translateY(0); }
@@ -803,12 +805,12 @@
     }
     .vo-orb.speaking {
       animation: orb-pulse 0.6s ease-in-out infinite alternate;
-      box-shadow: 0 0 50px rgba(52,211,153,0.5), 0 0 100px rgba(52,211,153,0.2);
-      background: radial-gradient(circle at 38% 35%, #34d399 0%, #059669 40%, #047857 100%);
+      box-shadow: 0 0 50px rgba(255, 255, 255, 0), 0 0 100px rgba(52,211,153,0.2);
+      background: radial-gradient(circle at 38% 35%, #a78bfa 0%, #7c3aed 40%, #5b21b6 100%);
     }
     .vo-orb.thinking {
       animation: orb-spin-glow 2s linear infinite;
-      box-shadow: 0 0 30px rgba(167,139,250,0.4);
+      box-shadow: 0 0 30px rgba(167, 139, 250, 0);
       background: radial-gradient(circle at 38% 35%, #a78bfa 0%, #7c3aed 40%, #5b21b6 100%);
     }
     @keyframes orb-breathe {
@@ -820,9 +822,9 @@
       to   { transform: scale(1.12); }
     }
     @keyframes orb-spin-glow {
-      0%   { box-shadow: 0 0 30px rgba(167,139,250,0.4), 4px 0 20px rgba(167,139,250,0.25); }
-      50%  { box-shadow: 0 0 40px rgba(167,139,250,0.5), -4px 0 20px rgba(167,139,250,0.25); }
-      100% { box-shadow: 0 0 30px rgba(167,139,250,0.4), 4px 0 20px rgba(167,139,250,0.25); }
+      0%   { box-shadow: 0 0 30px rgba(167, 139, 250, 0), 4px 0 20px rgba(167, 139, 250, 0); }
+      50%  { box-shadow: 0 0 40px rgba(167, 139, 250, 0), -4px 0 20px rgba(167, 139, 250, 0); }
+      100% { box-shadow: 0 0 30px rgba(167, 139, 250, 0), 4px 0 20px rgba(167, 139, 250, 0); }
     }
     .vo-orb-img {
       width: 44px; height: 44px; object-fit: contain;
