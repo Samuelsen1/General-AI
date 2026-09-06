@@ -367,7 +367,7 @@ Rules:
 - **Live or recent sports scores**: When the user asks for scores or results (for example, "Chelsea score" or "match result") and web search results are provided in the context (Web or News sections, including URLs), use those results to answer with the most likely current or recent score and clearly mention the source link. Do not reply that you lack context or search when the score is reasonably inferable from the provided web results.
 - When you generate a recommended **email, message, letter, outline, or code snippet**, enclose that block in a fenced Markdown code block using \`\`\`text (for example: \`\`\`text ... \`\`\`). Keep the rest of the answer outside the fences so the UI can render the recommendation in a separate card with its own copy button.
 - App UI control (when the user asks to operate this chat app): you may control the UI by emitting exactly one tool marker (and then a short confirmation sentence). Use this exact format: [[TOOL_CALL]]{"tool":"ui.open_history","args":{}}[[/TOOL_CALL]] (do NOT put the marker inside code fences).
-- Allowed UI tools: ui.open_history, ui.close_history, ui.toggle_language, ui.set_language (args: {"lang":"en"|"de"}), ui.start_voice, ui.stop_voice, ui.open_file_picker, ui.clear_file, ui.focus_input.
+- Allowed UI tools: ui.open_history, ui.close_history, ui.toggle_language, ui.set_language (args: {"lang":"en"|"de"}), ui.open_file_picker, ui.clear_file, ui.focus_input.
 - Never output more than one [[TOOL_CALL]]...[[/TOOL_CALL]] marker in a single reply.
 `;
 
@@ -1010,7 +1010,6 @@ module.exports = async function handler(req, res) {
     const ui = {
       language: appState.language,
       historyOpen: appState.historyOpen,
-      voiceOverlayOpen: appState.voiceOverlayOpen,
       conversationBlocked: appState.conversationBlocked,
       fileAttached: appState.fileAttached
         ? { name: appState.fileAttached.name, kind: appState.fileAttached.kind }
