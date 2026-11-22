@@ -984,6 +984,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
               </label>
               <input type="file" id="file-input" accept="image/*,.pdf" style="display:none">
+              <label for="folder-input" class="form-btn" id="folder-btn" aria-label="Add folder" data-i18n-title="attachFolder" title="Add folder (reads text &amp; PDFs inside)" style="cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              </label>
+              <input type="file" id="folder-input" name="folder-input" webkitdirectory directory multiple style="display:none" />
 
               <div class="form-input-wrap">
                 <textarea id="input" placeholder="Ask General…" data-i18n-placeholder="askAnything" autocomplete="off" rows="1" enterkeyhint="send" aria-label="Message input"></textarea>
@@ -1048,6 +1052,7 @@
         newChat: "New chat", pastChats: "Past chats",
         askAnything: "Ask General…", send: "Send",
         attachFile: "Attach image or PDF",
+        attachFolder: "Add folder (text, PDF, code files)",
         you: "You", general: "General",
         searching: "Thinking…", langCode: "EN",
         welcomeBrand: "General AI",
@@ -1074,6 +1079,7 @@
         newChat: "Neuer Chat", pastChats: "Vergangene Chats",
         askAnything: "General fragen…", send: "Senden",
         attachFile: "Bild oder PDF anhängen",
+        attachFolder: "Ordner hinzufügen (Text, PDF, Code)",
         you: "Sie", general: "General",
         searching: "Denke nach…", langCode: "DE",
         welcomeBrand: "General AI",
@@ -1109,6 +1115,7 @@
     function applyI18n() {
       document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
       document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+      document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = t(el.dataset.i18nTitle); });
       const lt = document.getElementById("lang-text"); if (lt) lt.textContent = t("langCode");
       document.documentElement.lang = lang;
       const wb = document.querySelector(".welcome-brand"); if (wb) wb.textContent = t("welcomeBrand");
@@ -1170,6 +1177,7 @@
     const inputEl       = document.getElementById("input");
     const sendBtn       = document.getElementById("send");
     const fileInput     = document.getElementById("file-input");
+    const folderInput   = document.getElementById("folder-input");
     const fileChosenBar = document.getElementById("file-chosen-bar");
     const fileNameEl    = document.getElementById("file-name");
     const fileChosenIcon= document.getElementById("file-chosen-icon");
@@ -1207,6 +1215,8 @@
         } catch (_) {}
       }
       history = []; lastUserEl = null; lastAiEl = null; lastPdfAttachment = null;
+      chosenFolder = null;
+      if (folderInput) folderInput.value = "";
       setConversationBlocked(false);
       removeTypingIndicators();
       try { localStorage.removeItem("general_chat_history"); } catch (_) {}
@@ -1236,6 +1246,9 @@
         historyOpen: !!sidebarOpen,
         conversationBlocked: !!conversationBlocked,
         fileAttached: fileObj,
+        folderAttached: chosenFolder
+          ? { name: chosenFolder.label, fileCount: chosenFolder.files.length }
+          : null,
         voiceOverlayOpen: typeof voiceActive !== "undefined" ? !!voiceActive : false,
       };
     }
@@ -1436,7 +1449,7 @@
       if (!q) return null;
       // Don't hijack normal questions.
       if (q.includes("?")) return null;
-      if (chosenFile || lastPdfAttachment) {
+      if (chosenFile || chosenFolder || lastPdfAttachment) {
         // If a file is selected, avoid interpreting unrelated words as commands.
         // (User can still ask the app normally; commands are mostly for UI panels.)
         // However, "clear file" is always allowed.
@@ -1469,6 +1482,10 @@
         executeUiTool("ui.open_file_picker");
         return uiConfirm("Opened file picker.", "Dateiauswahl geöffnet.");
       }
+      if (q === "attach folder" || q === "upload folder" || q === "open folder" || q === "add folder") {
+        if (folderInput) folderInput.click();
+        return uiConfirm("Opened folder picker.", "Ordnerauswahl geöffnet.");
+      }
       if (q === "clear file" || q === "remove file" || q === "delete file") {
         executeUiTool("ui.clear_file");
         return uiConfirm("Cleared attached file.", "Angehängte Datei entfernt.");
@@ -1498,7 +1515,173 @@
     const EDIT_SVG = `<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 13.5V16h2.5L15 7.5 12.5 5 4 13.5z" stroke-linejoin="round"/><path d="M11 4.5 12.5 3 15 5.5 13.5 7" stroke-linejoin="round"/></svg>`;
 
     let lastUserEl = null, lastAiEl = null;
-    let chosenFile = null, lastPdfAttachment = null;
+    let chosenFile = null, chosenFolder = null, lastPdfAttachment = null;
+    const MAX_FOLDER_FILES = 32;
+    const MAX_FOLDER_BYTES = 2.8 * 1024 * 1024;
+    const MAX_FOLDER_TEXT = 9000;
+    const MAX_FOLDER_PDFS = 4;
+    const MAX_FOLDER_PDF_SIZE = 750 * 1024;
+    const TEXT_FILE_RE = /\.(txt|md|markdown|json|csv|tsv|xml|html?|css|js|mjs|cjs|ts|tsx|jsx|py|rb|go|rs|java|kt|swift|php|yaml|yml|toml|ini|log|sh|sql|rtf)$/i;
+
+    function isTextLikeFile(file) {
+      if (!file) return false;
+      const type = (file.type || "").toLowerCase();
+      if (type.startsWith("text/")) return true;
+      if (type === "application/json" || type === "application/xml") return true;
+      return TEXT_FILE_RE.test(file.name || "");
+    }
+
+    function isFolderAllowedFile(file) {
+      if (!file || file.size <= 0) return false;
+      const name = file.name || "";
+      if (name.startsWith(".") || name === ".DS_Store" || name === "Thumbs.db") return false;
+      const type = (file.type || "").toLowerCase();
+      const isPdf = type === "application/pdf" || /\.pdf$/i.test(name);
+      const isImg = type.startsWith("image/");
+      return isTextLikeFile(file) || isPdf || isImg;
+    }
+
+    function folderIconSvg() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`;
+    }
+
+    function showFolderInBar(label, count) {
+      if (fileChosenIcon) fileChosenIcon.innerHTML = folderIconSvg();
+      if (fileNameEl) fileNameEl.textContent = `${label} (${count} file${count === 1 ? "" : "s"})`;
+      if (fileChosenBar) fileChosenBar.classList.add("visible");
+      updateSendBtn();
+    }
+
+    function setChosenFolderFromFileList(fileList) {
+      if (!fileList || !fileList.length) return;
+      const all = Array.from(fileList).filter(isFolderAllowedFile);
+      if (!all.length) {
+        addMsg("ai", lang === "de"
+          ? "In diesem Ordner wurden keine unterstützten Dateien gefunden (Text, PDF, Bild)."
+          : "No supported files found in that folder (text, PDF, or images).");
+        return;
+      }
+      const root = (all[0].webkitRelativePath || all[0].name || "Folder").split("/")[0] || "Folder";
+      const picked = [];
+      let total = 0;
+      const skipped = [];
+      for (const f of all) {
+        if (picked.length >= MAX_FOLDER_FILES) { skipped.push(f.webkitRelativePath || f.name); continue; }
+        if (total + f.size > MAX_FOLDER_BYTES) { skipped.push(f.webkitRelativePath || f.name); continue; }
+        picked.push(f);
+        total += f.size;
+      }
+      chosenFile = null;
+      if (fileInput) fileInput.value = "";
+      chosenFolder = { label: root, files: picked, skipped };
+      showFolderInBar(root, picked.length);
+      if (skipped.length) {
+        const hint = lang === "de"
+          ? ` (${skipped.length} weitere Datei(en) wegen Größenlimit nicht geladen)`
+          : ` (${skipped.length} more file(s) skipped due to size limits)`;
+        if (fileNameEl) fileNameEl.textContent += hint;
+      }
+    }
+
+    async function buildFolderFilesPayload(files) {
+      const out = [];
+      let pdfCount = 0;
+      let firstImageSent = false;
+      let firstImageB64 = null;
+      for (const file of files) {
+        const path = file.webkitRelativePath || file.name;
+        const name = file.name;
+        const isPdf = (file.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(name);
+        const isImg = (file.type || "").startsWith("image/");
+        if (isTextLikeFile(file)) {
+          try {
+            const text = await file.text();
+            out.push({ path, name, kind: "text", text: text.slice(0, MAX_FOLDER_TEXT) });
+          } catch (_) {
+            out.push({ path, name, kind: "skip", reason: "unreadable" });
+          }
+          continue;
+        }
+        if (isPdf && pdfCount < MAX_FOLDER_PDFS && file.size <= MAX_FOLDER_PDF_SIZE) {
+          try {
+            pdfCount += 1;
+            const buf = await file.arrayBuffer();
+            out.push({ path, name, kind: "pdf", pdf: toBase64(buf) });
+          } catch (_) {
+            out.push({ path, name, kind: "skip", reason: "pdf-read-failed" });
+          }
+          continue;
+        }
+        if (isPdf) {
+          out.push({ path, name, kind: "skip", reason: "pdf-too-large-or-limit" });
+          continue;
+        }
+        if (isImg && !firstImageSent && file.size <= MAX_FILE) {
+          try {
+            firstImageSent = true;
+            const buf = await file.arrayBuffer();
+            firstImageB64 = toBase64(buf);
+            out.push({ path, name, kind: "image", note: "sent-as-primary-image" });
+          } catch (_) {
+            out.push({ path, name, kind: "skip", reason: "image-read-failed" });
+          }
+          continue;
+        }
+        if (isImg) {
+          out.push({ path, name, kind: "skip", reason: "image-not-included" });
+        }
+      }
+      return { folderFiles: out, image: firstImageB64 };
+    }
+
+    async function collectFilesFromDataTransfer(dt) {
+      const files = [];
+      const items = dt?.items;
+      if (items && items.length) {
+        const tasks = [];
+        for (let i = 0; i < items.length; i++) {
+          const entry = items[i].webkitGetAsEntry?.();
+          if (entry) tasks.push(readEntryRecursive(entry, files));
+        }
+        await Promise.all(tasks);
+      }
+      if (!files.length && dt?.files?.length) {
+        for (const f of dt.files) if (isFolderAllowedFile(f)) files.push(f);
+      }
+      return files;
+    }
+
+    function readEntryRecursive(entry, bucket) {
+      return new Promise(resolve => {
+        if (!entry) { resolve(); return; }
+        if (entry.isFile) {
+          entry.file(f => {
+            if (isFolderAllowedFile(f)) {
+              try {
+                if (entry.fullPath && !f.webkitRelativePath) {
+                  Object.defineProperty(f, "webkitRelativePath", { value: entry.fullPath.replace(/^\//, ""), configurable: true });
+                }
+              } catch (_) {}
+              bucket.push(f);
+            }
+            resolve();
+          }, () => resolve());
+          return;
+        }
+        if (entry.isDirectory) {
+          const reader = entry.createReader();
+          const readBatch = () => {
+            reader.readEntries(entries => {
+              if (!entries.length) { resolve(); return; }
+              Promise.all(entries.map(e => readEntryRecursive(e, bucket))).then(readBatch).catch(resolve);
+            }, resolve);
+          };
+          readBatch();
+          return;
+        }
+        resolve();
+      });
+    }
     let history = [];
     let hasMessages = false;
 
@@ -1582,7 +1765,7 @@
     function updateSendBtn() {
       if (!sendBtn) return;
       if (conversationBlocked) { sendBtn.disabled = true; sendBtn.classList.remove("active"); return; }
-      const hasContent = (inputEl && inputEl.value.trim().length > 0) || chosenFile;
+      const hasContent = (inputEl && inputEl.value.trim().length > 0) || chosenFile || (chosenFolder && chosenFolder.files.length);
       sendBtn.classList.toggle("active", !!hasContent);
       sendBtn.disabled = !hasContent;
     }
@@ -1594,6 +1777,8 @@
       const isPdf = type === "application/pdf" || /\.pdf$/i.test(name);
       const isImg = type.startsWith("image/");
       if (!isPdf && !isImg) return;
+      chosenFolder = null;
+      if (folderInput) folderInput.value = "";
       chosenFile = file;
       if (fileChosenIcon) {
         fileChosenIcon.innerHTML = isPdf
@@ -1620,8 +1805,19 @@
         onDrag(e);
         dragDepth = 0;
         el.classList.remove("drop-active");
-        const file = e.dataTransfer?.files?.[0];
-        if (file) assignDroppedFile(file);
+        const dt = e.dataTransfer;
+        if (!dt) return;
+        collectFilesFromDataTransfer(dt).then(files => {
+          if (files.length > 1) setChosenFolderFromFileList(files);
+          else if (files.length === 1) assignDroppedFile(files[0]);
+          else {
+            const file = dt.files?.[0];
+            if (file) assignDroppedFile(file);
+          }
+        }).catch(() => {
+          const file = dt.files?.[0];
+          if (file) assignDroppedFile(file);
+        });
       });
     }
 
@@ -1651,7 +1847,10 @@
     }
 
     function clearFile() {
-      chosenFile = null; fileInput.value = "";
+      chosenFile = null;
+      chosenFolder = null;
+      if (fileInput) fileInput.value = "";
+      if (folderInput) folderInput.value = "";
       fileNameEl.textContent = ""; fileChosenIcon.innerHTML = "";
       fileChosenBar.classList.remove("visible");
       updateSendBtn();
@@ -1661,11 +1860,19 @@
     if (fileInput) fileInput.addEventListener("change", () => {
       chosenFile = fileInput.files?.[0] || null;
       if (!chosenFile) { clearFile(); return; }
+      chosenFolder = null;
+      if (folderInput) folderInput.value = "";
       const isPdf = (chosenFile.type || "").toLowerCase() === "application/pdf" || /\.pdf$/i.test(chosenFile.name || "");
       fileChosenIcon.innerHTML = isPdf ? `<img src="${PDF_ICON_URL}" alt="PDF" width="15" height="15">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
       fileNameEl.textContent = chosenFile.name;
       fileChosenBar.classList.add("visible");
       updateSendBtn();
+    });
+
+    if (folderInput) folderInput.addEventListener("change", () => {
+      const list = folderInput.files;
+      if (!list || !list.length) { clearFile(); return; }
+      setChosenFolderFromFileList(list);
     });
 
     /* ── Offline fallback ──────────────────────────────────── */
@@ -1812,9 +2019,13 @@
       if (role === "user" && opts?.attachment?.name) {
         const badge = document.createElement("div");
         badge.className = "attach-badge";
-        const isPdf = (opts.attachment.type || "").toLowerCase() === "pdf";
+        const type = (opts.attachment.type || "").toLowerCase();
+        const isPdf = type === "pdf";
+        const isFolder = type === "folder";
         const shortName = opts.attachment.name.length > 28 ? opts.attachment.name.slice(0,25)+"…" : opts.attachment.name;
-        badge.innerHTML = (isPdf ? `<img src="${PDF_ICON_URL}" alt="PDF">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`) + `<span>${shortName}</span>`;
+        const icon = isFolder ? folderIconSvg()
+          : (isPdf ? `<img src="${PDF_ICON_URL}" alt="PDF">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`);
+        badge.innerHTML = icon + `<span>${shortName}</span>`;
         bubble.appendChild(badge);
       }
 
@@ -1901,12 +2112,17 @@
       if (conversationBlocked) return;
       const raw = inputEl ? inputEl.value.trim() : "";
       const file = chosenFile;
-      if (!raw && !file) { if (inputEl) inputEl.focus(); return; }
+      const folder = chosenFolder;
+      if (!raw && !file && !folder) { if (inputEl) inputEl.focus(); return; }
 
-      const displayMsg = raw || (file ? "[" + file.name + "]" : (lastPdfAttachment ? "[" + lastPdfAttachment.name + "]" : ""));
-      const attachOpts = file
-        ? { attachment: { type: ((file.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(file.name||"")) ? "pdf" : "image", name: file.name } }
-        : (lastPdfAttachment ? { attachment: { type: "pdf", name: lastPdfAttachment.name } } : undefined);
+      const displayMsg = raw
+        || (folder ? `[${folder.label}/ — ${folder.files.length} files]` : "")
+        || (file ? "[" + file.name + "]" : (lastPdfAttachment ? "[" + lastPdfAttachment.name + "]" : ""));
+      const attachOpts = folder
+        ? { attachment: { type: "folder", name: folder.label + ` (${folder.files.length})` } }
+        : (file
+          ? { attachment: { type: ((file.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(file.name||"")) ? "pdf" : "image", name: file.name } }
+          : (lastPdfAttachment ? { attachment: { type: "pdf", name: lastPdfAttachment.name } } : undefined));
 
       if (file && file.size > MAX_FILE) {
         addMsg("user", displayMsg, attachOpts);
@@ -1916,7 +2132,8 @@
 
       addMsg("user", displayMsg, attachOpts);
       if (inputEl) { inputEl.value = ""; inputEl.style.height = "auto"; }
-      if (file) clearFile();
+      const folderSnap = folder;
+      if (file || folder) clearFile();
       if (window.speechSynthesis) window.speechSynthesis.cancel();
 
       // Local UI control shortcuts (instant app control).
@@ -1936,9 +2153,16 @@
       const typingEl = addTyping();
 
       try {
-        const body = { message: raw || (file ? (lang==="de"?"Was ist in dieser Datei?":"What is in this file?") : "") };
+        const folderDefault = lang === "de"
+          ? "Lies die Dateien in diesem Ordner und fasse zusammen, was wichtig ist."
+          : "Read the files in this folder and summarize what matters.";
+        const body = { message: raw || (folderSnap ? folderDefault : (file ? (lang==="de"?"Was ist in dieser Datei?":"What is in this file?") : "")) };
         body.lang = lang;
-        if (file) {
+        if (folderSnap) {
+          const packed = await buildFolderFilesPayload(folderSnap.files);
+          body.folderFiles = packed.folderFiles;
+          if (packed.image) body.image = packed.image;
+        } else if (file) {
           const buf = await file.arrayBuffer();
           const isPdf = (file.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(file.name||"");
           if (isPdf) { body.pdf = toBase64(buf); lastPdfAttachment = { base64: body.pdf, name: file.name }; }

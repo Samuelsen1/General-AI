@@ -374,7 +374,7 @@ Rules:
 - **Disclaimer**: When giving factual answers, advice, or information that could affect decisions (e.g. health, legal, financial, or important life choices), add a brief disclaimer as a **separate final line/footnote**, after the main answer, for example: "Note: Double-check important information from authoritative sources when it matters." Keep it one short sentence, visually separated from the main paragraphs (own line), and do not repeat it in every message—use it only when the topic warrants it.
 - **Formatting (MANDATORY)**: Organise answers in perfect paragraphs (2–4 sentences each, one idea per paragraph, blank lines between) and lists (numbered for steps, bullets for 3+ items). Use **bold** for section labels. Do NOT use markdown headings (## ### ####) or horizontal rules (---). Use *italic* and \`code\` when helpful; [links](url) for URLs. Use Markdown pipe tables when useful.
 - **Diagrams (MANDATORY when helpful)**: For flows, processes, org charts, sequences, or timelines, output a **\`\`\`mermaid** fenced block with valid Mermaid syntax (e.g. \`flowchart TD\`, \`sequenceDiagram\`, \`classDiagram\`). One focused diagram per fence; keep node labels short.
-- **Documents & PDFs**: Users can attach **PDFs and images** in the chat. When they share a PDF, analyse the extracted text. When they ask for a **report, brief, or printable document**, structure it clearly (bold section labels, tables, lists, mermaid if helpful) and mention they can tap **Save PDF** on the reply to export.
+- **Documents, folders & PDFs**: Users can attach **PDFs, images, or whole folders** (text, code, PDFs inside). When they share a folder, use the Context file paths and contents. When they share a PDF, analyse the extracted text. For printable reports, mention **Save PDF** on the reply.
 - **Common-knowledge lists**: For simple factual lists where the information is widely known (for example, "birds and their colors", "planets and their order"), do **not** say you lack context or search results. Instead, answer directly from your general knowledge using bullet or numbered lists and groupings.
 - **Documents and PDFs**: When Context includes "Document (PDF)" or "USER'S UPLOADED FILE", read it and judge based on the content. Do not assume document type. Never mention CV, resume, or job description unless the user explicitly asked about those. Never say you cannot access files. Output your analysis; never repeat raw text or introduce unrelated topics.
 - **NO EXCUSES**: When Context contains pasted content or a document, ANALYZE IT. Never say "I don't have context", "I cannot access", "try rephrasing", "I need more information", or similar. Give your analysis—no excuses.
@@ -698,6 +698,18 @@ function buildContext(opts) {
   if (opts.pdfText) {
     parts.push("Document (PDF) – USER'S UPLOADED FILE. ANALYZE IT. Do not assume document type—judge from the content. No excuses—output your analysis:\n\n" + opts.pdfText);
   }
+  if (opts.folderText) {
+    parts.push(
+      "User uploaded a FOLDER (multiple files with relative paths). Read and analyze the included file contents below. Cite paths when referring to a file. Do not say you cannot access local folders.\n\n" +
+        opts.folderText
+    );
+  }
+  if (opts.folderSkipped?.length) {
+    parts.push(
+      "Additional files in the folder (not full content in this payload): " +
+        opts.folderSkipped.slice(0, 40).join(", ")
+    );
+  }
   if (opts.wiki?.length) {
     parts.push(
       "Wikipedia (background reference only; do **not** use it for live, time-sensitive updates—prefer Web and News for that):\n" +
@@ -857,6 +869,7 @@ module.exports = async function handler(req, res) {
   const message = body.message;
   const imageB64 = body.image;
   const pdfB64 = body.pdf;
+  const folderFiles = Array.isArray(body.folderFiles) ? body.folderFiles : [];
   const appState = body.appState;
   const reqLang = (typeof body.lang === "string" ? body.lang.trim().toLowerCase() : "");
   const uiLang = (appState && typeof appState === "object" && typeof appState.language === "string")
@@ -867,8 +880,14 @@ module.exports = async function handler(req, res) {
     .slice(-20)
     .map((m) => ({ role: m.role, content: String(m.content || "").slice(0, 4000) }));
   let q = (typeof message === "string" ? message.trim() : "") || "";
-  if ((imageB64 || pdfB64) && !q) q = "What is in this file?";
-  if (!q && !imageB64 && !pdfB64) return res.status(400).json({ error: "message or file required", reply: "Send a message or attach an image or PDF." });
+  if ((imageB64 || pdfB64 || folderFiles.length) && !q) {
+    q = folderFiles.length
+      ? "Summarize and analyze the files in this folder."
+      : "What is in this file?";
+  }
+  if (!q && !imageB64 && !pdfB64 && !folderFiles.length) {
+    return res.status(400).json({ error: "message or file required", reply: "Send a message or attach a file or folder." });
+  }
 
   // Safety: insults, harmful content, or illegal requests with 3-strike policy
   const priorViolations = countHarmfulFromHistory(hist);
@@ -990,6 +1009,36 @@ module.exports = async function handler(req, res) {
       const data = await pdfParse(buf);
       opts.pdfText = (data.text || "").slice(0, 12000);
     } catch (e) { console.warn("PDF:", e?.message); }
+  }
+
+  if (folderFiles.length) {
+    const pdfParse = require("pdf-parse");
+    const chunks = [];
+    const skipped = [];
+  for (const item of folderFiles.slice(0, 40)) {
+      if (!item || typeof item !== "object") continue;
+      const path = String(item.path || item.name || "file").slice(0, 280);
+      if (item.kind === "text" && typeof item.text === "string" && item.text.trim()) {
+        chunks.push(`### ${path}\n${item.text.slice(0, 12000)}`);
+        continue;
+      }
+      if (item.kind === "pdf" && typeof item.pdf === "string") {
+        try {
+          const data = await pdfParse(Buffer.from(item.pdf, "base64"));
+          chunks.push(`### ${path} (PDF)\n${(data.text || "").slice(0, 10000)}`);
+        } catch (_) {
+          skipped.push(path + " (PDF unreadable)");
+        }
+        continue;
+      }
+      if (item.kind === "skip" || item.kind === "image") {
+        const reason = item.reason || item.note || "not inlined";
+        skipped.push(path + (reason ? ` (${reason})` : ""));
+      }
+    }
+    const merged = chunks.join("\n\n").slice(0, 52000);
+    opts.folderText = merged || null;
+    opts.folderSkipped = skipped;
   }
 
   try { opts.wiki = await fetchWikipedia(q); } catch (e) { console.warn("Wikipedia:", e?.message); }
