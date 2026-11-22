@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" defer></script>
   <style>
     /* ─── Base tokens — Blue & White ─────────────────────── */
     :root {
@@ -32,6 +33,10 @@
       --mono: "JetBrains Mono", "SF Mono", "Consolas", monospace;
       --sidebar-w: 268px;
       --transition: 0.18s ease;
+      --glass-bg: rgba(255, 255, 255, 0.62);
+      --glass-border: rgba(255, 255, 255, 0.55);
+      --glass-blur: 20px;
+      --glass-shadow: 0 8px 32px rgba(37, 99, 235, 0.1);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -49,6 +54,9 @@
         --accent-soft2: rgba(96,165,250,0.12);
         --user-bg: #1e3a5f;
         --user-border: #60a5fa;
+        --glass-bg: rgba(15, 23, 42, 0.72);
+        --glass-border: rgba(148, 163, 184, 0.22);
+        --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
       }
       .history-rail .icon-btn {
         background: #020617;
@@ -81,6 +89,10 @@
       display: flex; height: 100vh; height: 100dvh;
       overflow: hidden;
       position: relative;
+      background:
+        radial-gradient(ellipse 85% 55% at 12% -8%, rgba(59, 130, 246, 0.14), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 92% 105%, rgba(124, 58, 237, 0.1), transparent 50%),
+        var(--bg);
     }
     @supports not (height: 100dvh) {
       .shell { height: calc(var(--vh, 1vh) * 100); }
@@ -103,9 +115,11 @@
       position: fixed; top: 0; left: 0; bottom: 0;
       width: var(--sidebar-w); max-width: 85vw;
       display: flex; flex-direction: column;
-      background: var(--surface);
-      border-right: 1px solid var(--border-solid);
-      box-shadow: 4px 0 32px rgba(37,99,235,0.08), 2px 0 12px rgba(0,0,0,0.06);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border-right: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow), 2px 0 12px rgba(0,0,0,0.06);
       transform: translateX(-100%);
       transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
       z-index: 50;
@@ -306,10 +320,44 @@
     }
     .welcome-sub {
       font-size: 0.97rem; color: var(--text-dim);
-      margin: 0 0 0.5rem; max-width: 400px; line-height: 1.6;
+      margin: 0 0 1.25rem; max-width: 400px; line-height: 1.6;
     }
 
-    /* ─── Messages ─────────────────────────────────────────── */
+    .suggestions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+      max-width: 540px; width: 100%;
+      margin-top: 0.25rem;
+    }
+    @media (max-width: 480px) {
+      .suggestions { grid-template-columns: 1fr; max-width: 340px; }
+    }
+    .suggestion-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 16px;
+      padding: 0.95rem 1rem;
+      text-align: left; cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      font-size: 0.84rem; color: var(--text-soft);
+      line-height: 1.45;
+      display: flex; flex-direction: column; gap: 0.35rem;
+      box-shadow: 0 2px 12px rgba(37, 99, 235, 0.06);
+    }
+    .suggestion-card:hover {
+      border-color: rgba(37, 99, 235, 0.45);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
+    }
+    .suggestion-card:active { transform: translateY(0); }
+    .suggestion-card .s-emoji { font-size: 1.25rem; line-height: 1; }
+    .suggestion-card .s-text { font-weight: 600; color: var(--text); }
+    .suggestion-card .s-sub { font-size: 0.76rem; color: var(--text-dim); }
+
+  /* ─── Messages ─────────────────────────────────────────── */
     .chat-inner {
       max-width: 720px; margin: 0 auto;
       padding: 1.5rem 1.25rem 0.5rem;
@@ -394,6 +442,16 @@
     .msg-content p:last-child { margin-bottom: 0; }
     .msg-content strong { font-weight: 700; color: var(--text); }
     .msg-content em { font-style: italic; }
+    .msg-content pre.mermaid.diagram-block,
+    .msg-content .mermaid-block {
+      margin: 0.75rem 0; padding: 0.85rem 1rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      box-shadow: 0 2px 16px rgba(37, 99, 235, 0.08);
+    }
+
     .msg-content code {
       font-family: var(--mono); font-size: 0.84em;
       background: var(--surface-hover); color: var(--accent);
@@ -504,7 +562,7 @@
     .form-area {
       flex-shrink: 0;
       padding: 0.75rem 1.25rem 1rem;
-      background: var(--bg);
+      background: transparent;
       position: relative; z-index: 10;
     }
     /* fade from transparent to bg above the form */
@@ -560,19 +618,25 @@
     .form-box {
       display: flex; align-items: flex-end; gap: 0.4rem;
       padding: 0.6rem 0.6rem 0.6rem 0.75rem;
-      background: var(--bg);
-      border: 1px solid var(--border-solid);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
       border-radius: var(--radius-lg);
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      transition: border-color var(--transition), box-shadow var(--transition);
+      box-shadow: var(--glass-shadow);
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
     }
     .form-box:focus-within {
       border-color: rgba(37,99,235,0.5);
-      box-shadow: 0 2px 20px rgba(37,99,235,0.12), 0 0 0 3px rgba(37,99,235,0.08);
+      box-shadow: 0 4px 28px rgba(37,99,235,0.16), 0 0 0 3px rgba(37,99,235,0.08);
+    }
+    .form-box.drop-active {
+      border-color: var(--accent);
+      background: var(--accent-soft2);
+      box-shadow: 0 0 0 3px var(--accent-soft), var(--glass-shadow);
     }
     @media (prefers-color-scheme: dark) {
-      .form-box { box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
-      .form-box:focus-within { box-shadow: 0 2px 20px rgba(96,165,250,0.2), 0 0 0 3px rgba(96,165,250,0.1); }
+      .form-box:focus-within { box-shadow: 0 4px 28px rgba(96,165,250,0.22), 0 0 0 3px rgba(96,165,250,0.12); }
     }
 
     .form-input-wrap { flex: 1; min-width: 0; }
@@ -755,6 +819,7 @@
           <p class="welcome-brand">General AI</p>
           <h1 class="welcome-title" id="welcome-title">Welcome back!</h1>
           <p class="welcome-sub" id="welcome-sub">What can I help you with today?</p>
+          <div class="suggestions" id="suggestions" role="list" aria-label="Suggested prompts"></div>
         </div>
 
         <!-- Messages container -->
@@ -823,6 +888,12 @@
         legalLabel: "Legal",
         builtBy: "Built by Opoku Samuel.",
         conversationBlocked: "This conversation is blocked due to repeated violations. Start a new chat from History to continue.",
+        suggestions: [
+          { icon: "🌱", text: "Grow & care", sub: "Habits for you and the people you love", prompt: "Give me a practical weekly plan to take better care of myself and show up more kindly for people I care about." },
+          { icon: "🤖", text: "How AI works", sub: "Large language models explained simply", prompt: "Explain how large language models work in simple terms." },
+          { icon: "🌤", text: "Check the weather", sub: "Live example — change the city", prompt: "What's the current weather in Berlin, Germany?" },
+          { icon: "✉️", text: "Write an email", sub: "Professional and polished", prompt: "Help me write a professional email." },
+        ],
         welcomeGreetings: [
           { title: "Welcome back!", sub: "What can I help you with today?" },
           { title: "Good to see you!", sub: "Ask me anything — I'm here to help." },
@@ -848,6 +919,12 @@
         legalLabel: "Rechtliches",
         builtBy: "Erstellt von Opoku Samuel.",
         conversationBlocked: "Dieser Chat wurde wegen wiederholter Verstöße gesperrt. Starten Sie über Verlauf einen neuen Chat.",
+        suggestions: [
+          { icon: "🌱", text: "Wachsen & fürsorge", sub: "Gewohnheiten für Sie und Ihre Nähe", prompt: "Gib mir einen praktischen Wochenplan, um besser für mich zu sorgen und für Menschen, die mir wichtig sind, liebevoller da zu sein." },
+          { icon: "🤖", text: "Wie KI funktioniert", sub: "Sprachmodelle einfach erklärt", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren." },
+          { icon: "🌤", text: "Wetter prüfen", sub: "Live-Beispiel — Stadt anpassen", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
+          { icon: "✉️", text: "E-Mail schreiben", sub: "Professionell formulieren", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben." },
+        ],
         welcomeGreetings: [
           { title: "Willkommen zurück!", sub: "Womit kann ich Ihnen heute helfen?" },
           { title: "Schön, Sie zu sehen!", sub: "Fragen Sie mich alles — ich bin für Sie da." },
@@ -864,12 +941,43 @@
     if (lang !== "en" && lang !== "de") lang = "en";
     function t(k) { return TR[lang][k] || TR.en[k] || k; }
 
+    function escAttr(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+    function escHtml(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function buildSuggestions() {
+      const root = document.getElementById("suggestions");
+      if (!root) return;
+      const items = (TR[lang] && TR[lang].suggestions) || TR.en.suggestions || [];
+      root.innerHTML = items.map(s => (
+        `<button type="button" class="suggestion-card" role="listitem" data-prompt="${escAttr(s.prompt)}">` +
+        `<span class="s-emoji" aria-hidden="true">${s.icon || "✨"}</span>` +
+        `<span class="s-text">${escHtml(s.text)}</span>` +
+        `<span class="s-sub">${escHtml(s.sub || "")}</span>` +
+        `</button>`
+      )).join("");
+      root.querySelectorAll(".suggestion-card").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const prompt = btn.getAttribute("data-prompt");
+          if (!inputEl || !prompt) return;
+          inputEl.value = prompt;
+          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+          updateSendBtn();
+          inputEl.focus();
+        });
+      });
+    }
+
     function applyI18n() {
       document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
       document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
       const lt = document.getElementById("lang-text"); if (lt) lt.textContent = t("langCode");
       document.documentElement.lang = lang;
       const wb = document.querySelector(".welcome-brand"); if (wb) wb.textContent = t("welcomeBrand");
+      buildSuggestions();
       if (!hasMessages) refreshWelcomeGreetingForLang();
     }
 
@@ -998,7 +1106,27 @@
     }
 
     function isBlockedReply(text) {
-      return typeof text === "string" && text.includes(BLOCK_MESSAGE_MARKER);
+      if (typeof text !== "string" || !text.includes(BLOCK_MESSAGE_MARKER)) return false;
+      return /will no longer respond|repeated harmful|antworte in diesem Chat nicht mehr|wiederholter Verst/i.test(text);
+    }
+
+    let mermaidConfigured = false;
+    function ensureMermaid() {
+      if (mermaidConfigured || !window.mermaid) return;
+      try {
+        const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        window.mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict" });
+        mermaidConfigured = true;
+      } catch (_) {}
+    }
+    async function renderMermaidIn(container) {
+      if (!container) return;
+      const nodes = container.querySelectorAll("pre.mermaid:not([data-rendered])");
+      if (!nodes.length) return;
+      ensureMermaid();
+      if (!window.mermaid) return;
+      nodes.forEach(n => n.setAttribute("data-rendered", "1"));
+      try { await window.mermaid.run({ nodes: Array.from(nodes) }); } catch (_) {}
     }
 
     /* ── UI tool-calls (fused general ↔ app control) ───────────── */
@@ -1237,10 +1365,49 @@
 
     /* ── Send button visibility ────────────────────────────── */
     function updateSendBtn() {
+      if (!sendBtn) return;
       if (conversationBlocked) { sendBtn.disabled = true; sendBtn.classList.remove("active"); return; }
       const hasContent = (inputEl && inputEl.value.trim().length > 0) || chosenFile;
       sendBtn.classList.toggle("active", !!hasContent);
       sendBtn.disabled = !hasContent;
+    }
+
+    function assignDroppedFile(file) {
+      if (!file || conversationBlocked) return;
+      const type = (file.type || "").toLowerCase();
+      const name = file.name || "";
+      const isPdf = type === "application/pdf" || /\.pdf$/i.test(name);
+      const isImg = type.startsWith("image/");
+      if (!isPdf && !isImg) return;
+      chosenFile = file;
+      if (fileChosenIcon) {
+        fileChosenIcon.innerHTML = isPdf
+          ? `<img src="${PDF_ICON_URL}" alt="PDF" width="15" height="15">`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`;
+      }
+      if (fileNameEl) fileNameEl.textContent = name;
+      if (fileChosenBar) fileChosenBar.classList.add("visible");
+      updateSendBtn();
+    }
+
+    function wireFileDropZone(el) {
+      if (!el) return;
+      let dragDepth = 0;
+      const onDrag = e => { e.preventDefault(); e.stopPropagation(); };
+      el.addEventListener("dragenter", e => { onDrag(e); dragDepth += 1; el.classList.add("drop-active"); });
+      el.addEventListener("dragover", onDrag);
+      el.addEventListener("dragleave", e => {
+        onDrag(e);
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0) el.classList.remove("drop-active");
+      });
+      el.addEventListener("drop", e => {
+        onDrag(e);
+        dragDepth = 0;
+        el.classList.remove("drop-active");
+        const file = e.dataTransfer?.files?.[0];
+        if (file) assignDroppedFile(file);
+      });
     }
 
     /* ── Input auto-resize ─────────────────────────────────── */
@@ -1360,6 +1527,12 @@
         out.push(line); i++;
       }
       s = out.join("\n");
+      s = s.replace(/```mermaid\n?([\s\S]*?)```/g, (_m, code) => {
+        const body = String(code).trim();
+        if (!body) return "";
+        const safe = body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return `<pre class="mermaid diagram-block">${safe}</pre>`;
+      });
       s = s.replace(/```\n?([\s\S]*?)```/g, (_m, code) =>
         `<div class="ai-snippet"><div class="ai-snippet-header"><span>Snippet</span><button type="button" class="ai-snippet-copy" aria-label="Copy snippet">${COPY_SVG}</button></div><div class="ai-snippet-body"><pre><code>${code}</code></pre></div></div>`
       );
@@ -1475,6 +1648,7 @@
       }
 
       chatEl.appendChild(row);
+      if (role === "ai") renderMermaidIn(contentEl);
       requestAnimationFrame(() => row.scrollIntoView({ behavior: "smooth", block: "end" }));
       updateWelcome();
       return row;
@@ -1593,6 +1767,7 @@
                     if (obj.blocked || isBlockedReply(replyText)) setConversationBlocked(true);
                     cEl.classList.remove("streaming");
                     cEl.innerHTML = formatMsg(replyText);
+                    renderMermaidIn(cEl);
                     row.querySelectorAll(".ai-snippet").forEach(snip => {
                       const sb = snip.querySelector(".ai-snippet-copy");
                       const sbody = snip.querySelector(".ai-snippet-body");
@@ -1657,14 +1832,15 @@
         if (Array.isArray(arr) && arr.length > 0) {
           history = arr;
           arr.forEach(m => { if (m && (m.role==="user"||m.role==="assistant")) addMsg(m.role==="user"?"user":"ai", m.content||""); });
-          const lastAssistant = arr.filter(m => m && m.role === "assistant").pop();
-          if (lastAssistant && isBlockedReply(lastAssistant.content || "")) setConversationBlocked(true);
           const msgs = chatEl.querySelectorAll(".msg-row");
           for (let i=msgs.length-1;i>=0;i--) { if (msgs[i].classList.contains("user")) { lastUserEl=msgs[i]; break; } }
           for (let i=msgs.length-1;i>=0;i--) { if (msgs[i].classList.contains("ai")) { lastAiEl=msgs[i]; break; } }
         }
       }
     } catch(_){}
+
+    wireFileDropZone(document.getElementById("form-box"));
+    wireFileDropZone(chatScroll);
 
     updateWelcome();
     scheduleHistory();
