@@ -320,65 +320,8 @@
     }
     .welcome-sub {
       font-size: 0.97rem; color: var(--text-dim);
-      margin: 0 0 1.25rem; max-width: 400px; line-height: 1.6;
+      margin: 0 0 0.5rem; max-width: 400px; line-height: 1.6;
     }
-
-    .suggestions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.7rem;
-      max-width: 540px; width: 100%;
-      margin-top: 0.25rem;
-    }
-    @media (max-width: 480px) {
-      .suggestions { grid-template-columns: 1fr; max-width: 340px; }
-    }
-    .suggestion-card {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-radius: 16px;
-      padding: 0.95rem 1rem;
-      text-align: left; cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-      font-size: 0.84rem; color: var(--text-soft);
-      line-height: 1.45;
-      display: flex; flex-direction: column; gap: 0.35rem;
-      box-shadow: 0 2px 12px rgba(37, 99, 235, 0.06);
-    }
-    .suggestion-card:hover {
-      border-color: rgba(37, 99, 235, 0.45);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.14);
-    }
-    .suggestion-card:active { transform: translateY(0); }
-    .suggestion-card .s-emoji { font-size: 1.25rem; line-height: 1; }
-    .suggestion-card .s-text { font-weight: 600; color: var(--text); }
-    .suggestion-card .s-sub { font-size: 0.76rem; color: var(--text-dim); }
-
-    .voice-cta {
-      display: none; /* shown only when SR available */
-      align-items: center; gap: 0.6rem;
-      padding: 0.7rem 1.4rem;
-      background: var(--surface);
-      color: var(--text-soft);
-      border: 1px solid var(--border-solid);
-      border-radius: 999px;
-      font: inherit; font-size: 0.9rem; font-weight: 600;
-      cursor: pointer;
-      margin-top: 0.25rem;
-      transition: all 0.2s ease;
-      box-shadow: none;
-    }
-    .voice-cta:hover {
-      background: var(--surface-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 3px 10px rgba(15,23,42,0.08);
-    }
-    .voice-cta:active { transform: translateY(0); }
-    .voice-cta svg { width: 18px; height: 18px; }
-    .voice-cta.sr-ready { display: flex; }
 
   /* ─── Messages ─────────────────────────────────────────── */
     .chat-inner {
@@ -994,11 +937,6 @@
           <p class="welcome-brand">General AI</p>
           <h1 class="welcome-title" id="welcome-title">Welcome back!</h1>
           <p class="welcome-sub" id="welcome-sub">What can I help you with today?</p>
-          <button type="button" class="voice-cta" id="welcome-voice-btn" aria-label="Start voice conversation">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-            <span data-i18n="voiceCta">Talk to General</span>
-          </button>
-          <div class="suggestions" id="suggestions" role="list" aria-label="Suggested prompts"></div>
         </div>
 
         <!-- Messages container -->
@@ -1100,14 +1038,7 @@
         legalLabel: "Legal",
         builtBy: "Built by Opoku Samuel.",
         voiceLabel: "Talk",
-        voiceCta: "Talk to General",
         conversationBlocked: "This conversation is blocked due to repeated violations. Start a new chat from History to continue.",
-        suggestions: [
-          { icon: "🌱", text: "Grow & care", sub: "Habits for you and the people you love", prompt: "Give me a practical weekly plan to take better care of myself and show up more kindly for people I care about." },
-          { icon: "🤖", text: "How AI works", sub: "Large language models explained simply", prompt: "Explain how large language models work in simple terms." },
-          { icon: "🌤", text: "Check the weather", sub: "Live example — change the city", prompt: "What's the current weather in Berlin, Germany?" },
-          { icon: "✉️", text: "Write an email", sub: "Professional and polished", prompt: "Help me write a professional email." },
-        ],
         welcomeGreetings: [
           { title: "Welcome back!", sub: "What can I help you with today?" },
           { title: "Good to see you!", sub: "Ask me anything — I'm here to help." },
@@ -1133,14 +1064,7 @@
         legalLabel: "Rechtliches",
         builtBy: "Erstellt von Opoku Samuel.",
         voiceLabel: "Sprechen",
-        voiceCta: "Mit General sprechen",
         conversationBlocked: "Dieser Chat wurde wegen wiederholter Verstöße gesperrt. Starten Sie über Verlauf einen neuen Chat.",
-        suggestions: [
-          { icon: "🌱", text: "Wachsen & fürsorge", sub: "Gewohnheiten für Sie und Ihre Nähe", prompt: "Gib mir einen praktischen Wochenplan, um besser für mich zu sorgen und für Menschen, die mir wichtig sind, liebevoller da zu sein." },
-          { icon: "🤖", text: "Wie KI funktioniert", sub: "Sprachmodelle einfach erklärt", prompt: "Erkläre einfach, wie große Sprachmodelle funktionieren." },
-          { icon: "🌤", text: "Wetter prüfen", sub: "Live-Beispiel — Stadt anpassen", prompt: "Wie ist das aktuelle Wetter in Berlin, Deutschland?" },
-          { icon: "✉️", text: "E-Mail schreiben", sub: "Professionell formulieren", prompt: "Hilf mir, eine professionelle E-Mail zu schreiben." },
-        ],
         welcomeGreetings: [
           { title: "Willkommen zurück!", sub: "Womit kann ich Ihnen heute helfen?" },
           { title: "Schön, Sie zu sehen!", sub: "Fragen Sie mich alles — ich bin für Sie da." },
@@ -1157,34 +1081,8 @@
     if (lang !== "en" && lang !== "de") lang = "en";
     function t(k) { return TR[lang][k] || TR.en[k] || k; }
 
-    function escAttr(s) {
-      return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-    }
     function escHtml(s) {
       return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    function buildSuggestions() {
-      const root = document.getElementById("suggestions");
-      if (!root) return;
-      const items = (TR[lang] && TR[lang].suggestions) || TR.en.suggestions || [];
-      root.innerHTML = items.map(s => (
-        `<button type="button" class="suggestion-card" role="listitem" data-prompt="${escAttr(s.prompt)}">` +
-        `<span class="s-emoji" aria-hidden="true">${s.icon || "✨"}</span>` +
-        `<span class="s-text">${escHtml(s.text)}</span>` +
-        `<span class="s-sub">${escHtml(s.sub || "")}</span>` +
-        `</button>`
-      )).join("");
-      root.querySelectorAll(".suggestion-card").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const prompt = btn.getAttribute("data-prompt");
-          if (!inputEl || !prompt) return;
-          inputEl.value = prompt;
-          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-          updateSendBtn();
-          inputEl.focus();
-        });
-      });
     }
 
     function applyI18n() {
@@ -1193,7 +1091,6 @@
       const lt = document.getElementById("lang-text"); if (lt) lt.textContent = t("langCode");
       document.documentElement.lang = lang;
       const wb = document.querySelector(".welcome-brand"); if (wb) wb.textContent = t("welcomeBrand");
-      buildSuggestions();
       if (!hasMessages) refreshWelcomeGreetingForLang();
     }
 
@@ -2091,15 +1988,12 @@
 
     // Show/hide voice buttons based on SR availability
     const voiceBtnEl = document.getElementById("voice-btn");
-    const welcomeVoiceBtn = document.getElementById("welcome-voice-btn");
     if (!SR) {
       document.body.classList.add("no-speech");
       if (voiceBtnEl) voiceBtnEl.style.display = "none";
-    } else {
-      if (voiceBtnEl) voiceBtnEl.style.display = "";
-      if (welcomeVoiceBtn) welcomeVoiceBtn.classList.add("sr-ready");
+    } else if (voiceBtnEl) {
+      voiceBtnEl.style.display = "";
     }
-    if (welcomeVoiceBtn) welcomeVoiceBtn.addEventListener("click", () => openVoiceOverlay());
 
     // Overlay refs
     const voiceOverlay  = document.getElementById("voice-overlay");
