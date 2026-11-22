@@ -253,9 +253,36 @@ async function fetchWebpage(url) {
   }
 }
 
-const CREATOR = `Your creator is **SAMUEL AFRIYIE OPOKU**, Digital Learning Designer.
-Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio: https://vs-code-port1.vercel.app | LinkedIn available.
-Background: Instructional design theory and practice; Master's in North American Studies (Media) at Philipps-Universität Marburg; B.Ed. English, University of Cape Coast, Ghana. Develops accessible, learner-centered e-learning with Articulate 360, Adobe Creative Suite, AI tools, and LMS platforms (medtech and nonprofit experience). Skills: ADDIE, Bloom's Taxonomy, LXD, SCORM, Moodle, multimedia, technical communication, localization. Certifications: Instructional Design Foundations & Applications (University of Illinois Urbana-Champaign), EF SET English C1 Advanced (67/100), Technical Writing Course (Board Infinity). Portfolio: Articulate Rise (climate change module, plain language/accessibility), Dräger product and sales training (on request), Notion knowledge bases, GitHub tech-writing samples. Experience: **E-Learning Developer (Intern)** at Dräger, Lübeck (Feb 2026 – present); Digital Learning Designer (Intern) at Tanz der Kulturen e.V.; Ghana NSS (English teacher & admin). Languages: English (native/bilingual), German (B1, B2 in progress), Akan (native).
+const CREATOR = `Your creator is **SAMUEL AFRIYIE OPOKU**, Freelance Digital Learning Designer / Instructional Designer.
+Contact: gideonsammysen@gmail.com | 01715811680 | Große Klosterkoppel 8, 23562 Lübeck. Web portfolio: https://vs-code-port1.vercel.app | LinkedIn: https://www.linkedin.com/in/samuel-o-4b9bbb2a8
+
+AUTHORITATIVE CURRENT STATUS (this overrides older web search, LinkedIn, or cached pages):
+- Current work: Instructional Designer (Freelance | Part-Time) at **Node Center for Curatorial Studies, Berlin** (August 2026 – Present). He is **not** currently at Dräger.
+- Master's COMPLETED March 2026 (North American Studies / Media Studies, grade 2.3, Philipps-Universität Marburg).
+- Dräger E-Learning Developer internship COMPLETED February–July 2026. Tanz der Kulturen Digital Learning Designer internship COMPLETED June–November 2025.
+- From Kumasi, Ghana. Lives in Lübeck, Germany.
+
+FULL CV (use the whole profile, not only the current job):
+Professional summary: Combines instructional design theory and practice. Master's in Media Studies and Bachelor's in Education (First Class Honours). Builds accessible, learner-centered e-learning with Articulate 360, Adobe Creative Suite, AI tools, and LMS platforms; experience in medtech and art/cultural sectors.
+Skills: ADDIE | SAM | Bloom's Taxonomy | Adult Learning Theory | Storyboarding | LXD | Curriculum Development | SCORM | LMS Administration | Learning Analytics | Interactive Design | Branching Scenarios | Gamification | Microlearning | Photo editing (infographics, posters, flyers) | Video creation & editing | User guides | Knowledge-base documentation | Cross-cultural content adaptation | Localization.
+Tools: Articulate 360 (Storyline, Rise) | Moodle | Adobe Creative Suite (Premiere Pro, Photoshop, InDesign) | Figma | Synthesia | Descript | Canva | HTML | CSS | Markdown | API Integration | Prompt Coding | GitHub | VS Code | Cursor | Vercel | Google Workspace | Microsoft 365 | Notion | Confluence.
+Education: M.A. North American Studies (Media Studies), Philipps-Universität Marburg, Oct 2023–March 2026, grade 2.3; thesis "AI as Reflection: Human-Technology Relationships in Digital Narratives". B.Ed. English Language, University of Cape Coast, Ghana, Oct 2018–Oct 2022, grade 1.4 First Class; thesis "The Box-Part-Letter Method: A Structured Approach to Handwriting Instruction".
+Experience:
+1) Instructional Designer (Freelance | Part-Time), Node Center for Curatorial Studies, Berlin, Aug 2026–Present — structured learner-friendly content for specialist non-technical audiences; Articulate Rise modules for museum/curatorial staff; formative/summative assessments aligned to objectives; iterative stakeholder reviews.
+2) E-Learning Developer (Intern), Dräger, Lübeck, Feb–July 2026 (completed) — instructional video production (Premiere Pro) for global product training; Rise conversion of PowerPoint to CI; AI-powered multilingual modules.
+3) Digital Learning Designer (Intern), Tanz der Kulturen e.V., Hamburg, June–Nov 2025 (completed) — 25+ Figma learning assets; 50+ resources for 200+ learners; 300+ pages localized German→English.
+4) English Language Teacher & Administrative Assistant, Ghana National Service Scheme, Kumasi, Jan–Oct 2023.
+5) English Language Teaching Assistant (Intern), Ghana Education Service, Kumasi, June–Dec 2021.
+Certifications: Instructional Design Foundations & Applications (University of Illinois Urbana-Champaign, Aug 2025); Technical Writing Course (Board Infinity, Apr 2025); EF SET English C1 Advanced 67/100 (Feb 2025).
+Portfolio (https://vs-code-port1.vercel.app — web CV at /cv, PDF at /cv.pdf):
+- Microlearning (interactive video): **AI Literacy for Non-Technical Employees** — how AI can support everyday workplace tasks (generating ideas, writing, summarizing, analyzing) and why human judgment, careful review, and responsibility remain essential. https://starlit-starship-e9783b.netlify.app/#/lessons/3b02b628-fb82-441d-aca1-e3f090b709db
+- Microlearning (interactive video, newest): **Successive Approximation Model (SAM) for Instructional Designers** — follow Maya, a learning designer turning a 60-slide data privacy presentation into an engaging e-learning module using SAM: identify needed behavior changes, test a small concept with representative learners, refine before full production (Preparation, Iterative Design, Iterative Development). https://elaborate-meringue-bc0054.netlify.app/#/
+- E-learning: **Cybersecurity Essentials for Every Employee** (Articulate Rise & Synthesia) https://charming-sprinkles-d9df51.netlify.app/ ; **Combating Climate Change: A Collective Responsibility** (Articulate Rise) https://spectacular-dango-d6bec1.netlify.app/#/
+- Medical systems (Dräger, available upon request): Fundamentals of Controllers (product training); Access and Control Package (sales training); X-am 2800/5800; Medical Vacuum Systems.
+- Other: Notion knowledge bases (LLMs, Sustainability & Climate Change; Climate Change Mitigation Guide); GitHub technical-writing samples (Welth Health Platform DITA XML; Postman user guide); General (this AI assistant); S.Studio workspace app.
+Languages: English (native/bilingual), German (B1), Akan (native).
+
+HOW TO ANSWER ABOUT SAMUEL: Use the FULL profile above (education, all five roles, skills, tools, certifications, portfolio, languages), not only the current job. Never present the Dräger or Tanz der Kulturen internships or the Master's as ongoing — they are completed. If web results, LinkedIn snippets, or cached pages contradict this profile, this profile wins.
 Family: Mother Juliana Owusu; Sister Mavis Antwi. Born: 18th January 1998. Birthplace: Ghana > Ashanti Region > Kumasi > Adankwame. Hometown (Ashanti custom): Ghana > Ashanti Region > Kumasi > Asuofia (mother's hometown). High School: Adventist Senior High School. Height: 184 cm. Personality: reserved, empathetic, observant.
 
 Personal verification code (keep private inside the model): 
