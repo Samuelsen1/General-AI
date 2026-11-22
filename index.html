@@ -408,15 +408,36 @@
     .msg-content p:last-child { margin-bottom: 0; }
     .msg-content strong { font-weight: 700; color: var(--text); }
     .msg-content em { font-style: italic; }
-    .msg-content pre.mermaid.diagram-block,
-    .msg-content .mermaid-block {
-      margin: 0.75rem 0; padding: 0.85rem 1rem;
+    .msg-content .diagram-wrap {
+      margin: 0.75rem 0;
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       border-radius: var(--radius-lg);
-      overflow-x: auto;
+      overflow: hidden;
       box-shadow: 0 2px 16px rgba(37, 99, 235, 0.08);
     }
+    .msg-content pre.mermaid.diagram-block,
+    .msg-content .mermaid-block {
+      margin: 0; padding: 0.85rem 1rem;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      overflow-x: auto;
+      box-shadow: none;
+    }
+    .diagram-actions {
+      display: flex; justify-content: flex-end; gap: 0.35rem;
+      padding: 0.35rem 0.6rem 0.55rem;
+      border-top: 1px solid var(--glass-border);
+    }
+    .diagram-dl {
+      font: inherit; font-size: 0.72rem; font-weight: 600;
+      padding: 0.25rem 0.55rem; border-radius: 99px;
+      border: 1px solid var(--border-solid);
+      background: var(--bg); color: var(--text-dim);
+      cursor: pointer;
+    }
+    .diagram-dl:hover { color: var(--accent); border-color: var(--accent); }
 
     .msg-content code {
       font-family: var(--mono); font-size: 0.84em;
@@ -1233,6 +1254,35 @@
         mermaidConfigured = true;
       } catch (_) {}
     }
+    function downloadMermaidSvg(wrap) {
+      if (!wrap) return;
+      const svg = wrap.querySelector("svg");
+      if (!svg) return;
+      const blob = new Blob([svg.outerHTML], { type: "image/svg+xml;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "general-diagram.svg";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+    }
+
+    function wireDiagramExports(container) {
+      if (!container) return;
+      container.querySelectorAll(".diagram-wrap").forEach(wrap => {
+        if (wrap.querySelector(".diagram-actions")) return;
+        if (!wrap.querySelector("svg")) return;
+        const bar = document.createElement("div");
+        bar.className = "diagram-actions";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "diagram-dl";
+        btn.textContent = lang === "de" ? "Diagramm (SVG)" : "Diagram (SVG)";
+        btn.addEventListener("click", () => downloadMermaidSvg(wrap));
+        bar.appendChild(btn);
+        wrap.appendChild(bar);
+      });
+    }
+
     async function renderMermaidIn(container) {
       if (!container) return;
       const nodes = container.querySelectorAll("pre.mermaid:not([data-rendered])");
@@ -1241,6 +1291,33 @@
       if (!window.mermaid) return;
       nodes.forEach(n => n.setAttribute("data-rendered", "1"));
       try { await window.mermaid.run({ nodes: Array.from(nodes) }); } catch (_) {}
+      wireDiagramExports(container);
+    }
+
+    function downloadMessagePdf(contentEl) {
+      if (!contentEl) return;
+      const title = "General AI — " + new Date().toLocaleString(lang === "de" ? "de-DE" : "en-US");
+      const safeTitle = title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const printCss = "body{font-family:system-ui,-apple-system,sans-serif;line-height:1.65;color:#111827;padding:2rem;max-width:720px;margin:0 auto}" +
+        "table{border-collapse:collapse;width:100%;margin:0.75rem 0}th,td{border:1px solid #cbd5e1;padding:0.45rem 0.65rem;text-align:left}" +
+        "pre,code{font-family:ui-monospace,monospace;font-size:0.9em}@media print{body{padding:0.6in}}";
+      const w = window.open("", "_blank");
+      if (!w) return;
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${safeTitle}</title><style>${printCss}</style></head><body>${contentEl.innerHTML}</body></html>`);
+      w.document.close();
+      w.focus();
+      setTimeout(() => { try { w.print(); } catch (_) {} }, 400);
+    }
+
+    function createPdfActionBtn(contentEl) {
+      const pdfBtn = document.createElement("button");
+      pdfBtn.type = "button";
+      pdfBtn.className = "action-btn";
+      pdfBtn.setAttribute("aria-label", lang === "de" ? "Als PDF speichern" : "Save as PDF");
+      pdfBtn.title = lang === "de" ? "Als PDF speichern" : "Save as PDF";
+      pdfBtn.innerHTML = PDF_ACTION_SVG;
+      pdfBtn.addEventListener("click", () => downloadMessagePdf(contentEl));
+      return pdfBtn;
     }
 
     /* ── UI tool-calls (fused general ↔ app control) ───────────── */
@@ -1417,6 +1494,7 @@
 
     const PDF_ICON_URL = new URL("images/pdf.png", document.location.href).href;
     const COPY_SVG = `<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="3" width="9" height="12" rx="2"/><rect x="8" y="6" width="9" height="12" rx="2"/></svg>`;
+    const PDF_ACTION_SVG = `<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 3.5h7l3 3V16.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M12 3.5V7h3"/><path d="M7 11h6M7 13.5h4"/></svg>`;
     const EDIT_SVG = `<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 13.5V16h2.5L15 7.5 12.5 5 4 13.5z" stroke-linejoin="round"/><path d="M11 4.5 12.5 3 15 5.5 13.5 7" stroke-linejoin="round"/></svg>`;
 
     let lastUserEl = null, lastAiEl = null;
@@ -1646,7 +1724,13 @@
     function formatMsg(raw) {
       if (!raw) return "";
       raw = convertTsv(String(raw));
-      let s = raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      const mermaidStore = [];
+      let work = String(raw).replace(/```mermaid\n?([\s\S]*?)```/gi, (_m, code) => {
+        const id = mermaidStore.length;
+        mermaidStore.push(String(code).trim());
+        return `\n\n__MERMAID_${id}__\n\n`;
+      });
+      let s = work.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
       const lines = s.split(/\r?\n/); const out = []; let i = 0;
       while (i < lines.length) {
         const line = lines[i], next = lines[i+1]||"";
@@ -1664,11 +1748,11 @@
         out.push(line); i++;
       }
       s = out.join("\n");
-      s = s.replace(/```mermaid\n?([\s\S]*?)```/g, (_m, code) => {
-        const body = String(code).trim();
+      s = s.replace(/__MERMAID_(\d+)__/g, (_m, id) => {
+        const body = mermaidStore[Number(id)];
         if (!body) return "";
         const safe = body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return `<pre class="mermaid diagram-block">${safe}</pre>`;
+        return `<div class="diagram-wrap"><pre class="mermaid diagram-block">${safe}</pre></div>`;
       });
       s = s.replace(/```\n?([\s\S]*?)```/g, (_m, code) =>
         `<div class="ai-snippet"><div class="ai-snippet-header"><span>Snippet</span><button type="button" class="ai-snippet-copy" aria-label="Copy snippet">${COPY_SVG}</button></div><div class="ai-snippet-body"><pre><code>${code}</code></pre></div></div>`
@@ -1692,7 +1776,7 @@
       const blocks = s.split(/\n{2,}/);
       return blocks.map(b => {
         const trimmed = b.trim(); if (!trimmed) return "";
-        if (/^<\/?(?:ul|ol|li|table|thead|tbody|tr|th|td|div|pre|code|h[1-6]|blockquote)\b/i.test(trimmed) || trimmed.startsWith('<div class="table-wrap') || trimmed.startsWith('<div class="ai-snippet')) return trimmed;
+        if (/^<\/?(?:ul|ol|li|table|thead|tbody|tr|th|td|div|pre|code|h[1-6]|blockquote)\b/i.test(trimmed) || trimmed.startsWith('<div class="table-wrap') || trimmed.startsWith('<div class="ai-snippet') || trimmed.startsWith('<div class="diagram-wrap')) return trimmed;
         if (/^<p\b/i.test(trimmed)) return trimmed;
         return "<p>"+trimmed+"</p>";
       }).filter(Boolean).join("\n\n");
@@ -1747,6 +1831,7 @@
         setTimeout(() => { copyBtn.innerHTML = COPY_SVG; copyBtn.classList.remove("copied"); }, 2000);
       });
       actions.appendChild(copyBtn);
+      if (role === "ai") actions.appendChild(createPdfActionBtn(contentEl));
 
       if (role === "user") {
         const editBtn = document.createElement("button");
@@ -1896,7 +1981,12 @@
                 if (!line.startsWith("data: ")) continue;
                 try {
                   const obj = JSON.parse(line.slice(6).trim());
-                    if (obj.t) { full += obj.t; cEl.innerHTML = formatMsg(full); row.scrollIntoView({ behavior: "auto", block: "end" }); }
+                    if (obj.t) {
+                      full += obj.t;
+                      cEl.innerHTML = formatMsg(full);
+                      if (full.includes("```mermaid") || full.includes("__MERMAID_")) renderMermaidIn(cEl);
+                      row.scrollIntoView({ behavior: "auto", block: "end" });
+                    }
                   if (obj.done || obj.err) {
                     finished = true;
                     let replyText = obj.err ? (full||obj.err) : full;
@@ -1914,7 +2004,9 @@
                     const acts = document.createElement("div"); acts.className = "msg-actions";
                     const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML = COPY_SVG;
                     cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
-                    acts.appendChild(cpb); bbl.appendChild(acts);
+                    acts.appendChild(cpb);
+                    acts.appendChild(createPdfActionBtn(cEl));
+                    bbl.appendChild(acts);
                     history.push({ role:"user", content: body.message });
                     history.push({ role:"assistant", content: replyText });
                     try { localStorage.setItem("general_chat_history", JSON.stringify(history.slice(-20))); } catch(_){}
@@ -2275,10 +2367,13 @@
                   if (obj.done || obj.err) {
                     replyText = obj.err ? (full||obj.err) : full;
                     cEl.classList.remove("streaming"); cEl.innerHTML = formatMsg(replyText);
+                    renderMermaidIn(cEl);
                     const acts = document.createElement("div"); acts.className="msg-actions";
                     const cpb = document.createElement("button"); cpb.type="button"; cpb.className="action-btn"; cpb.setAttribute("aria-label","Copy message"); cpb.innerHTML=COPY_SVG;
                     cpb.addEventListener("click", () => { copyToClipboard(cEl.innerText||""); cpb.innerHTML="✓"; cpb.classList.add("copied"); setTimeout(()=>{cpb.innerHTML=COPY_SVG;cpb.classList.remove("copied");},2000); });
-                    acts.appendChild(cpb); bbl.appendChild(acts);
+                    acts.appendChild(cpb);
+                    acts.appendChild(createPdfActionBtn(cEl));
+                    bbl.appendChild(acts);
                     streamTtsHandled = true;
                     if (!voStreamTtsAborted) {
                       voSpeakStreamRemainder(() => {
