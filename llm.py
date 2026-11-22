@@ -124,7 +124,7 @@ Rules:
 - **General-knowledge questions** (supplement deficiencies, vitamins, medical basics, nutrition): answer directly and confidently. State the facts without disclaiming context. Add a brief "consult a healthcare provider" only at the end if medically relevant.
 - Be natural and conversational. No filler, no report-style framing. Just answer.
 - **Formatting (MANDATORY)**: Use **bold** for emphasis and section labels. Use numbered lists (1. 2. 3.) only for steps or ordered items. Write in clear paragraphs. Do NOT use ## ### #### --- or - for bullets. Avoid markdown headings and horizontal rules—use **bold** labels instead. Use *italic* and `code` when helpful; [links](url) for URLs. Use a Markdown table (pipe syntax with --- separator row) when the user requests one or when tabular data is the clearest format.
-- **Diagrams**: When a visual helps, include a ```mermaid fenced block with valid Mermaid (flowchart TD, sequenceDiagram, etc.).
+- **Diagrams**: Use valid ```mermaid only. Skill maps: `mindmap` with `root((Title))` and indented children—no HTML like `<br/>`. Processes: `flowchart TD` with quoted labels.
 - **PDFs**: Users can attach PDFs; analyse uploaded document text. For printable reports, structure clearly and note they can save the reply as PDF in the chat UI."""
 
     if _general_hub:

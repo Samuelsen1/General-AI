@@ -438,6 +438,64 @@
       cursor: pointer;
     }
     .diagram-dl:hover { color: var(--accent); border-color: var(--accent); }
+    .diagram-viewport {
+      padding: 0.75rem 0.85rem 0.5rem;
+      overflow-x: auto;
+      background: linear-gradient(180deg, var(--accent-soft2) 0%, transparent 100%);
+    }
+    .diagram-viewport svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .diagram-viewport [class*="error"] {
+      display: none;
+    }
+    .diagram-fallback {
+      padding: 1rem 1.05rem 0.9rem;
+      border-top: 1px solid var(--glass-border);
+    }
+    .diagram-fallback-title {
+      margin: 0 0 0.65rem;
+      font-size: 0.88rem;
+      font-weight: 650;
+      color: var(--text);
+    }
+    .diagram-fallback-note {
+      margin: 0 0 0.75rem;
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      line-height: 1.45;
+    }
+    .diagram-skill-section {
+      margin: 0 0 0.85rem;
+    }
+    .diagram-skill-section h5 {
+      margin: 0 0 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .diagram-skill-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .diagram-skill-chip {
+      font-size: 0.78rem;
+      line-height: 1.35;
+      padding: 0.32rem 0.62rem;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--border-solid);
+      color: var(--text-soft);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .diagram-viewport svg { animation: none; }
+    }
 
     .msg-content code {
       font-family: var(--mono); font-size: 0.84em;
@@ -1111,6 +1169,9 @@
     function escHtml(s) {
       return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
+    function escAttr(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
 
     function applyI18n() {
       document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -1258,12 +1319,137 @@
       return /will no longer respond|repeated harmful|antworte in diesem Chat nicht mehr|wiederholter Verst/i.test(text);
     }
 
+    const DIAGRAM_SECTIONS = /^(tools|languages|web\s*&\s*ai|skills|experience|education|competencies)$/i;
+
+    function cleanDiagramLine(line) {
+      return String(line || "")
+        .replace(/&lt;br\s*\/?&gt;/gi, " ")
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function mermaidSafeToken(label) {
+      const t = cleanDiagramLine(label).replace(/[()[\]{}]/g, "").replace(/&/g, "and").trim();
+      if (!t) return "Item";
+      if (/[^\w\s\-./+'&]/.test(t)) return `"${t.replace(/"/g, "'")}"`;
+      return t;
+    }
+
+    function convertPlainLinesToMindmap(text) {
+      const lines = text.split(/\r?\n/).map(cleanDiagramLine).filter(Boolean);
+      if (!lines.length) return "mindmap\n  root((Overview))";
+      const root = cleanDiagramLine(lines[0]).replace(/[()]/g, "").slice(0, 72) || "Overview";
+      let out = `mindmap\n  root((${root}))\n`;
+      let section = null;
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (DIAGRAM_SECTIONS.test(line)) {
+          section = line;
+          out += `    ${mermaidSafeToken(line)}\n`;
+        } else if (section) {
+          out += `      ${mermaidSafeToken(line)}\n`;
+        } else {
+          out += `    ${mermaidSafeToken(line)}\n`;
+        }
+      }
+      return out;
+    }
+
+    function prepareMermaidSource(raw) {
+      let s = String(raw || "").trim();
+      s = s.replace(/&lt;br\s*\/?&gt;/gi, "\n").replace(/<br\s*\/?>/gi, "\n");
+      if (/&lt;|&gt;|&amp;/.test(s)) {
+        s = s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+        s = s.replace(/<br\s*\/?>/gi, "\n");
+      }
+      s = s.replace(/<br\s*\/?>/gi, "\n");
+      const hasType = /^(%%\s*\{[\s\S]*?\}%%\s*)?(flowchart|graph|mindmap|sequenceDiagram|classDiagram|erDiagram|timeline|stateDiagram|pie|gantt|quadrantChart|sankey-beta|block-beta)\b/im.test(s);
+      if (!hasType) s = convertPlainLinesToMindmap(s);
+      return s.trim();
+    }
+
+    function buildDiagramFallbackHtml(source) {
+      const lines = String(source || "").split(/\r?\n/).map(cleanDiagramLine).filter(Boolean);
+      if (!lines.length) return "";
+      const title = escHtml(lines[0]);
+      let section = null;
+      const sections = [];
+      let general = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (DIAGRAM_SECTIONS.test(line)) {
+          if (section && (section.items.length || section.name)) sections.push(section);
+          section = { name: line, items: [] };
+        } else if (section) {
+          section.items.push(line);
+        } else {
+          general.push(line);
+        }
+      }
+      if (section) sections.push(section);
+      let html = `<div class="diagram-fallback" role="region" aria-label="Skill map">`;
+      html += `<p class="diagram-fallback-title">${title}</p>`;
+      html += `<p class="diagram-fallback-note">${lang === "de"
+        ? "Übersicht als zugängliche Liste — optimiert für Lesen und Export."
+        : "Accessible skill map — optimized for reading and export."}</p>`;
+      const chipGrid = (items) => items.map(it => `<span class="diagram-skill-chip">${escHtml(it)}</span>`).join("");
+      if (general.length) {
+        html += `<div class="diagram-skill-section"><div class="diagram-skill-grid">${chipGrid(general)}</div></div>`;
+      }
+      sections.forEach(sec => {
+        html += `<div class="diagram-skill-section"><h5>${escHtml(sec.name)}</h5><div class="diagram-skill-grid">${chipGrid(sec.items)}</div></div>`;
+      });
+      html += `</div>`;
+      return html;
+    }
+
+    function diagramHasRendered(pre) {
+      return !!(pre && (pre.querySelector("svg") || pre.querySelector(".mermaid svg")));
+    }
+
+    function showDiagramFallback(pre, source) {
+      const wrap = pre?.closest(".diagram-wrap");
+      if (!wrap || wrap.querySelector(".diagram-fallback")) return;
+      const viewport = wrap.querySelector(".diagram-viewport") || pre.parentElement;
+      if (viewport) viewport.style.display = "none";
+      wrap.insertAdjacentHTML("beforeend", buildDiagramFallbackHtml(source));
+      wrap.classList.add("diagram-render-fallback");
+    }
+
     let mermaidConfigured = false;
     function ensureMermaid() {
       if (mermaidConfigured || !window.mermaid) return;
       try {
         const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        window.mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict" });
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: dark ? "dark" : "base",
+          securityLevel: "strict",
+          fontFamily: "Inter, system-ui, sans-serif",
+          flowchart: { htmlLabels: false, curve: "basis", padding: 14 },
+          mindmap: { padding: 16 },
+          themeVariables: dark ? {
+            fontSize: "15px",
+            fontFamily: "Inter, system-ui, sans-serif",
+            primaryColor: "#1e3a5f",
+            primaryTextColor: "#e5e7eb",
+            primaryBorderColor: "#60a5fa",
+            lineColor: "#94a3b8",
+            secondaryColor: "#0f172a",
+            tertiaryColor: "#1e293b",
+          } : {
+            fontSize: "15px",
+            fontFamily: "Inter, system-ui, sans-serif",
+            primaryColor: "#dbeafe",
+            primaryTextColor: "#0f172a",
+            primaryBorderColor: "#3b82f6",
+            lineColor: "#64748b",
+            secondaryColor: "#eef2ff",
+            tertiaryColor: "#f8fafc",
+          },
+        });
         mermaidConfigured = true;
       } catch (_) {}
     }
@@ -1281,7 +1467,7 @@
 
     function wireDiagramExports(container) {
       if (!container) return;
-      container.querySelectorAll(".diagram-wrap").forEach(wrap => {
+      container.querySelectorAll(".diagram-wrap:not(.diagram-render-fallback)").forEach(wrap => {
         if (wrap.querySelector(".diagram-actions")) return;
         if (!wrap.querySelector("svg")) return;
         const bar = document.createElement("div");
@@ -1301,9 +1487,28 @@
       const nodes = container.querySelectorAll("pre.mermaid:not([data-rendered])");
       if (!nodes.length) return;
       ensureMermaid();
-      if (!window.mermaid) return;
-      nodes.forEach(n => n.setAttribute("data-rendered", "1"));
-      try { await window.mermaid.run({ nodes: Array.from(nodes) }); } catch (_) {}
+      if (!window.mermaid) {
+        nodes.forEach(n => {
+          const source = n.getAttribute("data-diagram-raw") || n.textContent || "";
+          showDiagramFallback(n, source);
+        });
+        return;
+      }
+      for (const node of nodes) {
+        node.setAttribute("data-rendered", "1");
+        const source = node.getAttribute("data-diagram-raw") || node.textContent || "";
+        const prepared = prepareMermaidSource(source);
+        if (prepared !== node.textContent) node.textContent = prepared;
+        let ok = false;
+        try {
+          await window.mermaid.run({ nodes: [node] });
+          ok = diagramHasRendered(node);
+          if (!ok && /syntax error/i.test(node.textContent || "")) ok = false;
+        } catch (_) {
+          ok = false;
+        }
+        if (!ok) showDiagramFallback(node, source);
+      }
       wireDiagramExports(container);
     }
 
@@ -1958,8 +2163,12 @@
       s = s.replace(/__MERMAID_(\d+)__/g, (_m, id) => {
         const body = mermaidStore[Number(id)];
         if (!body) return "";
-        const safe = body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return `<div class="diagram-wrap"><pre class="mermaid diagram-block">${safe}</pre></div>`;
+        const prepared = prepareMermaidSource(body);
+        const safe = prepared.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const note = lang === "de" ? "Diagramm" : "Diagram";
+        return `<div class="diagram-wrap" role="group" aria-label="${escAttr(note)}">` +
+          `<div class="diagram-viewport"><pre class="mermaid diagram-block" data-diagram-raw="${escAttr(body)}">${safe}</pre></div>` +
+          `</div>`;
       });
       s = s.replace(/```\n?([\s\S]*?)```/g, (_m, code) =>
         `<div class="ai-snippet"><div class="ai-snippet-header"><span>Snippet</span><button type="button" class="ai-snippet-copy" aria-label="Copy snippet">${COPY_SVG}</button></div><div class="ai-snippet-body"><pre><code>${code}</code></pre></div></div>`
